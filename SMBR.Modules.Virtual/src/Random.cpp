@@ -16,8 +16,8 @@ int Random::nextInt(int min, int max) {
     return min + rand() % (max - min + 1);
 }
 
-void Random::randomDelay() {
+void Random::randomDelay(int maxMs) {
     //make random number between 100 and 1000
-    int rndSleep = rand() % 1000 + 100;
+    int rndSleep = rand() % maxMs + (maxMs / 10);
     std::this_thread::sleep_for(std::chrono::milliseconds(rndSleep));
 }

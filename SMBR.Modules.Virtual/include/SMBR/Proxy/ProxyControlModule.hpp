@@ -10,16 +10,16 @@ public:
     ProxyControlModule(IControlModule::Ptr m, Transform t) : mName(Modules::Control), m(m), t(t) {}
 
     std::future <bool> setIntensity(float intensity, int channel) override {
-        return t.template transform<bool>(mName, "setIntensity", m->setIntensity(intensity, channel));
+        return t.template transform<bool>(mName, "setIntensity (ch=" + std::to_string(channel) + " inten=" + std::to_string((int)intensity * 100) + "%)", m->setIntensity(intensity, channel));
     }
     std::future <float> getIntensity(int channel) override {
-        return t.template transform<float>(mName, "getIntensity", m->getIntensity(channel));
+        return t.template transform<float>(mName, "getIntensity (ch=" + std::to_string(channel) + ")", m->getIntensity(channel));
     }
     std::future <float> getLedTemperature() override {
         return t.template transform<float>(mName, "getLedTemperature", m->getLedTemperature());
     }
     std::future <bool> setHeaterIntensity(float intensity) override {
-        return t.template transform<bool>(mName, "setHeaterIntensity", m->setHeaterIntensity(intensity));
+        return t.template transform<bool>(mName, "setHeaterIntensity (inten=" + std::to_string((int)intensity * 100) + "%)", m->setHeaterIntensity(intensity));
     }
     std::future <float> getHeaterIntensity() override {
         return t.template transform<float>(mName, "getHeaterIntensity", m->getHeaterIntensity());
@@ -49,7 +49,7 @@ public:
         return t.template transform<float>(mName, "getCuvettePumpFlowrate", m->getCuvettePumpFlowrate());
     }
     std::future <bool> moveCuvettePump(float volume, float flowrate) override {
-        return t.template transform<bool>(mName, "moveCuvettePump", m->moveCuvettePump(volume, flowrate));
+        return t.template transform<bool>(mName, "moveCuvettePump (vol=" + std::to_string((int)volume) + " flow=" + std::to_string((int)flowrate) + ")", m->moveCuvettePump(volume, flowrate));
     }
     std::future <bool> primeCuvettePump() override {
         return t.template transform<bool>(mName, "primeCuvettePump", m->primeCuvettePump());
@@ -91,7 +91,7 @@ public:
         return t.template transform<float>(mName, "getMixerRpm", m->getMixerRpm());
     }
     std::future <bool> stirMixer(float rpm, float time) override {
-        return t.template transform<bool>(mName, "stirMixer", m->stirMixer(rpm, time));
+        return t.template transform<bool>(mName, "stirMixer (rpm=" + std::to_string((int)rpm) + " time=" + std::to_string((int)time) + ")", m->stirMixer(rpm, time));
     }
     std::future <bool> stopMixer() override {
         return t.template transform<bool>(mName, "stopMixer", m->stopMixer());

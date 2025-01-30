@@ -540,13 +540,22 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         if (!body || !body->intensity || body->intensity->size() != 4) {
             return createResponse(Status::CODE_400, "Invalid intensity array. Must contain exactly 4 values.");
         }
+
         for (size_t i = 0; i < body->intensity->size(); i++) {
-                auto intensity = body->intensity->at(i); 
-                if (!intensity || *intensity < 0.0f || *intensity > 1.0f) {
-                    return createResponse(Status::CODE_400, "Invalid intensity value. Must be between 0.0 and 1.0.");
-                }
+            auto intensity = body->intensity->at(i); 
+            if (!intensity){
+                continue;
+            }
+            
+            if (*intensity < 0.0f || *intensity > 1.0f) {
+                return createResponse(Status::CODE_400, "Invalid intensity value. Must be between 0.0 and 1.0.");
+            }
+            auto future = systemModule->controlModule()->setIntensity(*intensity, i);
+            future.wait();
+            if (!future.get()) {
+                return createResponse(Status::CODE_500, "Failed to set intensity.");
+            }
         }
-        //TODO parallel set intensities
         return createResponse(Status::CODE_200, "Intensities set successfully.");
     });
 }

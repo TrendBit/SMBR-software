@@ -4,12 +4,16 @@
 #include <future>
 #include <chrono>
 #include <string>
-
+#include <iomanip>
 
 class LoggingProxyTransformation {
 
 public:
-
+    static std::string number(int num, int length){
+        std::stringstream s;
+        s << std::setfill('0') << std::setw(length) << num;
+        return s.str();
+    }
 
     template <class T>
     std::future<T> transform(Modules module, std::string method, std::future <T> from){
@@ -19,6 +23,17 @@ public:
         auto shared = from.share();    
         return std::async(std::launch::async, [module, method, shared, timestamp]() {
             std::stringstream s;
+
+            //write minutes, seconds and ms of local datetime HH:MM:SS.mmm
+            {
+                auto now = std::chrono::system_clock::now();
+                auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+                auto timer = std::chrono::system_clock::to_time_t(now);
+                auto localTime = std::localtime(&timer);
+                //print with leading zeros
+                s << number(localTime->tm_hour,2) << ":" << number(localTime->tm_min,2) << ":" << number(localTime->tm_sec, 2) << "." << number(ms.count(), 3) << " | ";
+            }    
+
             {
                 std::stringstream sm;
                 sm << module;

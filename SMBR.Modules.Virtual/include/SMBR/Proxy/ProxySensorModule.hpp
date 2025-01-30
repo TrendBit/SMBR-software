@@ -7,8 +7,12 @@
 template <class Transform>
 class ProxySensorModule : public ISensorModule {
 public:
-    ProxySensorModule(ISensorModule::Ptr m) : mName(Modules::Sensor), m(m) {}
-    ProxySensorModule(ISensorModule::Ptr m, Transform t) : mName(Modules::Sensor), m(m), t(t) {}
+    ProxySensorModule(ISensorModule::Ptr mm) : mName(mm->id()), m(mm) {}
+    ProxySensorModule(ISensorModule::Ptr mm, Transform t) : mName(mm->id()), m(mm), t(t){} 
+
+    ModuleID id() const override {
+        return mName;
+    }
 
     std::future <float> getBottleTemperature() override {
         return t.template transform<float>(mName, "getBottleTemperature", m->getBottleTemperature());
@@ -27,7 +31,7 @@ public:
     }
     
     private:
-        Modules mName;
+        ModuleID mName;
         ISensorModule::Ptr m;
         Transform t;
 };

@@ -7,8 +7,14 @@ template <class Transform>
 class ProxyCommonModule : public ICommonModule {
 public:
 
-    ProxyCommonModule(Modules mName, ICommonModule::Ptr m) : mName(mName), m(m) {}
-    ProxyCommonModule(Modules mName, ICommonModule::Ptr m, Transform t) : mName(mName), m(m), t(t) {}
+    ProxyCommonModule(ICommonModule::Ptr mm) : m(mm), mName(mm->id()) {
+
+    }
+    ProxyCommonModule(ICommonModule::Ptr mm, Transform t) : m(mm), mName(mm->id()), t(t) {}
+
+    ModuleID id() const override {
+        return mName;
+    }
 
     std::future <float> ping() override {
         return t.template transform<float>(mName, "ping", m->ping());
@@ -33,7 +39,7 @@ public:
     }
     
     private:
-        Modules mName;
         ICommonModule::Ptr m;
+        ModuleID mName;
         Transform t;
 };

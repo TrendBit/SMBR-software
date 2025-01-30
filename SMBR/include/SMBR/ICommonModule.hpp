@@ -5,7 +5,7 @@
 #include <vector>
 #include <functional>
 #include <future>
-
+#include "SMBR/SMBR.hpp"
 
 
 class ICommonModule {
@@ -13,6 +13,8 @@ public:
     typedef std::shared_ptr <ICommonModule> Ptr;
 
     virtual ~ICommonModule() = default;
+
+    virtual ModuleID id() const = 0;
     /**
      * @brief Sends a ping request
      */

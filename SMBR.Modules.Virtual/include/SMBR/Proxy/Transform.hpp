@@ -16,7 +16,7 @@ public:
     }
 
     template <class T>
-    std::future<T> transform(Modules module, std::string method, std::future <T> from){
+    std::future<T> transform(ModuleID module, std::string method, std::future <T> from){
         //measure time
         auto timestamp = std::chrono::system_clock::now();
 
@@ -37,7 +37,7 @@ public:
             {
                 std::stringstream sm;
                 sm << module;
-                s << align(sm.str(), 8) << " | " << align(method, 30) << " | ";
+                s << align(sm.str(), 10) << " | " << align(method, 40) << " | ";
             }
             
             try {
@@ -52,7 +52,7 @@ public:
                 {
                     std::stringstream ts;
                     ts << value;
-                    s << align(ts.str(), 20, false) << " | ";
+                    s << align(ts.str(), 15, false) << " | ";
                 }
                 std::cout << s.str() << std::endl;
                 return value;

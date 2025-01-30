@@ -5,11 +5,15 @@
 #include <vector>
 #include <functional>
 #include <future>
-
+#include "SMBR/SMBR.hpp"
 
 class IControlModule {
 public:
     typedef std::shared_ptr <IControlModule> Ptr;
+
+    virtual ~IControlModule() = default;
+
+    virtual ModuleID id() const = 0;
 
    /**
     * @brief Sets the intensity of LEDs on a module.

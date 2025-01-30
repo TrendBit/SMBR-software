@@ -5,6 +5,9 @@
 
 class VirtualControlModule : public IControlModule {
 public:
+    ModuleID id() const override {
+        return {Control, 2};
+    }
     std::future <bool> setIntensity(float intensity, int channel) override;
     std::future <float> getIntensity(int channel) override;
     std::future <float> getLedTemperature() override;

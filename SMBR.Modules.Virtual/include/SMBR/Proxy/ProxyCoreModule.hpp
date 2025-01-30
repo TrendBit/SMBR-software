@@ -7,8 +7,12 @@ template <class Transform>
 class ProxyCoreModule : public ICoreModule {
 public:
 
-    ProxyCoreModule(ICoreModule::Ptr m) : mName(Modules::Core), m(m) {}
-    ProxyCoreModule(ICoreModule::Ptr m, Transform t) : mName(Modules::Core), m(m), t(t) {}
+    ProxyCoreModule(ICoreModule::Ptr mm) : mName(mm->id()), m(mm) {}
+    ProxyCoreModule(ICoreModule::Ptr mm, Transform t) : mName(mm->id()), m(mm), t(t) {}
+
+    ModuleID id() const override {
+        return mName;
+    }
 
     std::future <std::string> getShortID() override {
         return t.template transform<std::string>(mName, "getShortID", m->getShortID());
@@ -43,7 +47,7 @@ public:
 
     
     private:
-        Modules mName;
+        ModuleID mName;
         ICoreModule::Ptr m;
         Transform t;
 };

@@ -6,6 +6,7 @@
 #include <functional>
 #include <future>
 #include <ostream>
+#include "SMBR/SMBR.hpp"
 
 class ICoreModule {
 public:
@@ -13,6 +14,9 @@ public:
 
     virtual ~ICoreModule() = default;
     
+    virtual ModuleID id() const = 0;
+
+
     /**
      * @brief Retrieves the short ID (SID) of the device.
      */

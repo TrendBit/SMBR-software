@@ -117,7 +117,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         } else {
             moduleInfoDto->module_type = "unknown";
         }
-        //TODO
+        //TODO UID
         moduleInfoDto->uid = moduleInfoDto->module_type;
         dtoList->push_back(moduleInfoDto);
     }

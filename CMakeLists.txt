@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 
+project(SMBR.SW)
+
 #build libraries in subdirectories
 add_subdirectory(SMBR)
 #add_subdirectory(SMBR.Modules.Can)

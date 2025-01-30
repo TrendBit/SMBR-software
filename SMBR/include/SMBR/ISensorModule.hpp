@@ -5,11 +5,15 @@
 #include <vector>
 #include <functional>
 #include <future>
-
+#include "SMBR/SMBR.hpp"
 
 class ISensorModule {
 public:
     typedef std::shared_ptr <ISensorModule> Ptr;
+
+    virtual ~ISensorModule() = default;
+
+    virtual ModuleID id() const = 0;
     /** 
      * @brief Retrieves the measured temperature from the top sensor of the bottle.
      */

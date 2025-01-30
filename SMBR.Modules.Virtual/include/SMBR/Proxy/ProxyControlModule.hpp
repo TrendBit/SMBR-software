@@ -6,8 +6,12 @@ template <class Transform>
 class ProxyControlModule : public IControlModule {
 public:
 
-    ProxyControlModule(IControlModule::Ptr m) : mName(Modules::Control), m(m){}
-    ProxyControlModule(IControlModule::Ptr m, Transform t) : mName(Modules::Control), m(m), t(t) {}
+    ProxyControlModule(IControlModule::Ptr mm) : mName(mm->id()), m(mm){}
+    ProxyControlModule(IControlModule::Ptr mm, Transform tt) : mName(mm->id()), m(mm), t(tt) {}
+
+    ModuleID id() const override {
+        return mName;
+    }
 
     std::future <bool> setIntensity(float intensity, int channel) override {
         return t.template transform<bool>(mName, "setIntensity (ch=" + std::to_string(channel) + " inten=" + std::to_string((int)intensity * 100) + "%)", m->setIntensity(intensity, channel));
@@ -25,7 +29,7 @@ public:
         return t.template transform<float>(mName, "getHeaterIntensity", m->getHeaterIntensity());
     }
     std::future <bool> setHeaterTargetTemperature(float targetTemperature) override {
-        return t.template transform<bool>(mName, "setHeaterTargetTemperature", m->setHeaterTargetTemperature(targetTemperature));
+        return t.template transform<bool>(mName, "setHeaterTargetTemperature (temp=" + std::to_string((int)targetTemperature) + ")", m->setHeaterTargetTemperature(targetTemperature));
     }
     std::future <float> getHeaterTargetTemperature() override {
         return t.template transform<float>(mName, "getHeaterTargetTemperature", m->getHeaterTargetTemperature());
@@ -37,13 +41,13 @@ public:
         return t.template transform<bool>(mName, "turnOffHeater", m->turnOffHeater());
     }
     std::future <bool> setCuvettePumpSpeed(float speed) override {
-        return t.template transform<bool>(mName, "setCuvettePumpSpeed", m->setCuvettePumpSpeed(speed));
+        return t.template transform<bool>(mName, "setCuvettePumpSpeed (speed=" + std::to_string((int)speed) + ")", m->setCuvettePumpSpeed(speed));
     }
     std::future <float> getCuvettePumpSpeed() override {
         return t.template transform<float>(mName, "getCuvettePumpSpeed", m->getCuvettePumpSpeed());
     }
     std::future <bool> setCuvettePumpFlowrate(float flowrate) override {
-        return t.template transform<bool>(mName, "setCuvettePumpFlowrate", m->setCuvettePumpFlowrate(flowrate));
+        return t.template transform<bool>(mName, "setCuvettePumpFlowrate (flow=" + std::to_string((int)flowrate) + ")", m->setCuvettePumpFlowrate(flowrate));
     }
     std::future <float> getCuvettePumpFlowrate() override {
         return t.template transform<float>(mName, "getCuvettePumpFlowrate", m->getCuvettePumpFlowrate());
@@ -61,31 +65,31 @@ public:
         return t.template transform<bool>(mName, "stopCuvettePump", m->stopCuvettePump());
     }
     std::future <bool> setAeratorSpeed(float speed) override {
-        return t.template transform<bool>(mName, "setAeratorSpeed", m->setAeratorSpeed(speed));
+        return t.template transform<bool>(mName, "setAeratorSpeed (speed=" + std::to_string((int)speed) + ")", m->setAeratorSpeed(speed));
     }
     std::future <float> getAeratorSpeed() override {
         return t.template transform<float>(mName, "getAeratorSpeed", m->getAeratorSpeed());
     }
     std::future <bool> setAeratorFlowrate(float flowrate) override {
-        return t.template transform<bool>(mName, "setAeratorFlowrate", m->setAeratorFlowrate(flowrate));
+        return t.template transform<bool>(mName, "setAeratorFlowrate (flow=" + std::to_string((int)flowrate) + ")", m->setAeratorFlowrate(flowrate));
     }
     std::future <float> getAeratorFlowrate() override {
         return t.template transform<float>(mName, "getAeratorFlowrate", m->getAeratorFlowrate());
     }
     std::future <bool> moveAerator(float volume, float flowrate) override {
-        return t.template transform<bool>(mName, "moveAerator", m->moveAerator(volume, flowrate));
+        return t.template transform<bool>(mName, "moveAerator (vol=" + std::to_string((int)volume) + " flow=" + std::to_string((int)flowrate) + ")", m->moveAerator(volume, flowrate));
     }
     std::future <bool> stopAerator() override {
         return t.template transform<bool>(mName, "stopAerator", m->stopAerator());
     }
     std::future <bool> setMixerSpeed(float speed) override {
-        return t.template transform<bool>(mName, "setMixerSpeed", m->setMixerSpeed(speed));
+        return t.template transform<bool>(mName, "setMixerSpeed (speed=" + std::to_string((int)speed) + ")", m->setMixerSpeed(speed));
     }
     std::future <float> getMixerSpeed() override {
         return t.template transform<float>(mName, "getMixerSpeed", m->getMixerSpeed());
     }
     std::future <bool> setMixerRpm(float rpm) override {
-        return t.template transform<bool>(mName, "setMixerRpm", m->setMixerRpm(rpm));
+        return t.template transform<bool>(mName, "setMixerRpm (rpm=" + std::to_string((int)rpm) + ")", m->setMixerRpm(rpm));
     }
     std::future <float> getMixerRpm() override {
         return t.template transform<float>(mName, "getMixerRpm", m->getMixerRpm());
@@ -99,7 +103,7 @@ public:
 
 
     private:
-        Modules mName;
+        ModuleID mName;
         IControlModule::Ptr m;
         Transform t;
 };

@@ -40,8 +40,7 @@ public:
     /**
      * @brief Retrieves the type of power supply powering the device.
      */
-    struct PowerSupplyType {
-        bool isSuccess; 
+    struct PowerSupplyType { 
         bool isVIN;
         bool isPoE;
         bool isPoE_Hb;

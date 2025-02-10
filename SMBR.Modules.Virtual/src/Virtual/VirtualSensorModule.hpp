@@ -5,7 +5,7 @@
 class VirtualSensorModule : public ISensorModule {
 public:
     ModuleID id() const override {
-        return {Sensor, 3};
+        return {Sensor, "0x03"};
     }
 
     std::future <float> getBottleTemperature() override;

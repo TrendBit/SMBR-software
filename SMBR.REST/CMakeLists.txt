@@ -9,7 +9,7 @@ find_package(oatpp-swagger 1.4.0 REQUIRED)
 
 
 add_definitions(
-  -DOATPP_SWAGGER_RES_PATH="/usr/local/include/oatpp-1.4.0/bin/oatpp-swagger/res"
+  -DOATPP_SWAGGER_RES_PATH="/usr/include/oatpp-1.4.0/bin/oatpp-swagger/res"
 )
 
 add_library(${PROJECT_NAME}

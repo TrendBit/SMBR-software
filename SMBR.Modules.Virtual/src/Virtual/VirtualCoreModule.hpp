@@ -5,7 +5,7 @@
 class VirtualCoreModule : public ICoreModule {
 public:
     ModuleID id() const override {
-        return {Core, 1};
+        return {Core, "0x01"};
     }
     std::future <std::string> getShortID() override;
     std::future <std::string> getIpAddress() override;

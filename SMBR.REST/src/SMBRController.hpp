@@ -859,9 +859,6 @@ public:
     */
 
 private:
-    std::future<bool> checkModuleAndUidAvailability(
-        const oatpp::data::type::EnumObjectWrapper<dto::ModuleEnum, oatpp::data::type::EnumInterpreterAsString<dto::ModuleEnum, false>>& module,
-        const std::string& uid);
     
     std::shared_ptr<ICommonModule> getModule(const oatpp::Enum<dto::ModuleEnum>::AsString& module);
     int getChannel(const dto::ChannelEnum& channel);

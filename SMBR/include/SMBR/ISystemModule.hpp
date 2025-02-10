@@ -5,6 +5,7 @@
 #include <functional>
 #include <future>
 #include <ostream>
+#include <set>
 
 #include "SMBR.hpp"
 #include "ISensorModule.hpp"
@@ -27,6 +28,8 @@ class ISystemModule {
         virtual std::shared_ptr <ICoreModule> coreModule() = 0;
 
         virtual std::shared_ptr <ICommonModule> commonModule(ModuleID module) = 0;
+
+        virtual std::set <ModuleID> existing() = 0;
 
 };
 

@@ -46,6 +46,13 @@ public:
     std::shared_ptr <ICommonModule> commonModule(ModuleID module) override {
         return common[module];
     }
+    std::set <ModuleID> existing() override {
+        std::set <ModuleID>  ret;
+        for (auto m : common){
+            ret.insert(m.first);
+        }
+        return ret;
+    }
 private:
     ISystemModule::Ptr m;
     Transform t;

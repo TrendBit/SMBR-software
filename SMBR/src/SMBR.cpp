@@ -19,6 +19,6 @@ std::ostream& operator<<(std::ostream& os, const Modules& module){
 }
 
 std::ostream& operator<<(std::ostream& os, const ModuleID& moduleid){
-    os << moduleid.type << ":" << moduleid.uid;
+    os << moduleid.type << ":" << moduleid.uidHex;
     return os;
 }

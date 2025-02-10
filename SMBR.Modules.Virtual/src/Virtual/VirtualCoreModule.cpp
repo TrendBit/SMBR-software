@@ -35,7 +35,7 @@ std::future <int64_t> VirtualCoreModule::getSerialNumber() {
 std::future <ICoreModule::PowerSupplyType> VirtualCoreModule::getPowerSupplyType() {
     return std::async(std::launch::async, []() {
         Random::randomDelay();
-        return ICoreModule::PowerSupplyType{true, true, true, true};
+        return ICoreModule::PowerSupplyType{true, true, true};
     });
 }
 

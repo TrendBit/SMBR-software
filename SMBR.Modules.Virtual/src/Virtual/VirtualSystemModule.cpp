@@ -44,5 +44,13 @@ std::shared_ptr <ICommonModule> VirtualSystemModule::commonModule(ModuleID m) {
     return common.at(m);
 }
 
+std::set <ModuleID> VirtualSystemModule::existing() {
+    std::set <ModuleID>  ret;
+    for (auto m : common){
+        ret.insert(m.first);
+    }
+    return ret;
+}
+
 
 

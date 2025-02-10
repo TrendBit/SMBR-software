@@ -10,14 +10,14 @@ target_link_libraries(${PROJECT_NAME}
   SMBR
   SMBR.REST
   SMBR.Modules.Virtual
-  #SMBR.Modules.Can
+  SMBR.Modules.Can
 )
 
 add_dependencies(${PROJECT_NAME} 
   SMBR
   SMBR.REST
   SMBR.Modules.Virtual
-  #SMBR.Modules.Can
+  SMBR.Modules.Can
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
@@ -29,16 +29,16 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 
 
 install(TARGETS api-server
-  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  RUNTIME DESTINATION ${SMBR_INSTALL_HOME}
 )
 
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/api-server.service
-  DESTINATION /etc/systemd/system
-)
+#install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/api-server.service
+#  DESTINATION /etc/systemd/system
+#)
 
-add_custom_target(install-service
-  COMMAND ${CMAKE_COMMAND} -E copy
-          ${CMAKE_CURRENT_SOURCE_DIR}/api-server.service
-          /etc/systemd/system/api-server.service
-  DEPENDS ${PROJECT_NAME}
-)
+#add_custom_target(install-service
+#  COMMAND ${CMAKE_COMMAND} -E copy
+#          ${CMAKE_CURRENT_SOURCE_DIR}/api-server.service
+#          /etc/systemd/system/api-server.service
+#  DEPENDS ${PROJECT_NAME}
+#)

@@ -34,9 +34,9 @@ all software running on SMBR main unit (RPI)
     ```sh
     sudo apt install can-utils
     ```
-5. Install Boost Asio:
+5. Install Poco libraries:
     ```sh
-    sudo apt-get install libboost-all-dev
+    sudo apt-get install libpoco-dev
     ```
 
 ## Building the Project

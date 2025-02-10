@@ -1,0 +1,13 @@
+start:
+    light on
+    loop
+
+loop:
+    for 3
+        my_measure
+        wait 10
+
+my_measure:
+    light on
+    mix
+    measure

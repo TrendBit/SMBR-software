@@ -17,7 +17,9 @@ class BaseModule {
         std::string uidHex() const;
         ModuleID id() const;
 
-        
+        ICanChannel::Ptr ch(){
+            return channel;
+        }
 
         CanID createRequestId(Codes::Message_type messageType, Codes::Instance instance, bool emergencyFlag);
 

@@ -9,6 +9,7 @@ public:
         return {Control, "0x02"};
     }
     std::future <bool> setIntensity(float intensity, int channel) override;
+    std::future <bool> setIntensities(float i0, float i1, float i2, float i3) override;
     std::future <float> getIntensity(int channel) override;
     std::future <float> getLedTemperature() override;
     std::future <bool> setHeaterIntensity(float intensity) override;

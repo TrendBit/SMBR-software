@@ -314,6 +314,31 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 // ==========================================
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::setIntensities(const oatpp::Object<MyIntensitiesDto>& body) {
 
+    return processBool(__FUNCTION__, [&](){
+        if (!body || !body->intensity || body->intensity->size() != 4) {
+            throw ArgumentException("Invalid intensity array. Must contain exactly 4 values.");
+        }
+
+        float ii0, ii1, ii2, ii3;
+
+        auto processIntensity = [](float & i, const oatpp::Float32 & intensity){
+            if (!intensity){
+                throw ArgumentException("Invalid intensity value. Must be between 0.0 and 1.0.");
+            }
+            if (*intensity < 0.0f || *intensity > 1.0f) {
+                throw ArgumentException("Invalid intensity value. Must be between 0.0 and 1.0.");
+            }
+            i = *intensity;
+        };
+
+        processIntensity(ii0, body->intensity->at(0));
+        processIntensity(ii1, body->intensity->at(1));
+        processIntensity(ii2, body->intensity->at(2));
+        processIntensity(ii3, body->intensity->at(3));
+        
+        return wait(systemModule->controlModule()->setIntensities(ii0, ii1, ii2, ii3));
+    });
+/*
     return process(__FUNCTION__, [&](){
         if (!body || !body->intensity || body->intensity->size() != 4) {
             return createResponse(Status::CODE_400, "Invalid intensity array. Must contain exactly 4 values.");
@@ -343,7 +368,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         }
 
         return createResponse(Status::CODE_200, "Intensities set successfully.");
-    });
+    });*/
 }
 
 int SMBRController::getChannel(const dto::ChannelEnum& channel) {

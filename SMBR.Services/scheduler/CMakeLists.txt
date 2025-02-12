@@ -8,10 +8,16 @@ add_executable(${PROJECT_NAME} src/scheduler.cpp)
 
 target_link_libraries(${PROJECT_NAME} 
   SMBR
+  SMBR.Scheduler
+  SMBR.Modules.Virtual
+  SMBR.Modules.Can
 )
 
 add_dependencies(${PROJECT_NAME} 
   SMBR
+  SMBR.Scheduler
+  SMBR.Modules.Virtual
+  SMBR.Modules.Can
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES

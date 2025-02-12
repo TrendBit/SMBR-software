@@ -20,6 +20,10 @@ public:
     */
     virtual std::future <bool> setIntensity(float intensity, int channel) = 0;
 
+   /**
+    * @brief Sets the intensities of LEDs on a module.
+    */
+    virtual std::future <bool> setIntensities(float i0, float i1, float i2, float i3) = 0;
     /**
      * @brief Retrieves the current intensity of LEDs for a specified module and channel.
      */

@@ -10,6 +10,13 @@ std::future <bool> VirtualControlModule::setIntensity(float intensity, int chann
     });
 }
 
+std::future <bool> VirtualControlModule::setIntensities(float i0, float i1, float i2, float i3){
+    return std::async(std::launch::async, [i0, i1, i2, i3]() {
+        Random::randomDelay(100);
+        return true;
+    });
+}
+
 std::future <float> VirtualControlModule::getIntensity(int channel){
     return std::async(std::launch::async, [channel]() {
         Random::randomDelay(100);

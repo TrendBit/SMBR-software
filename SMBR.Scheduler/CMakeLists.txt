@@ -1,16 +1,16 @@
 cmake_minimum_required(VERSION 3.20)
-project(SMBR)
+project(SMBR.Scheduler)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_library(${PROJECT_NAME}
-  src/Exceptions.cpp
-  src/ICoreModule.cpp
-  src/ISystemModule.cpp
-  src/SMBR.cpp
- )
+# Source files
+file(GLOB_RECURSE SOURCES
+    "src/*.cpp"
+)
 
-file(GLOB_RECURSE SMBR_HEADERS "include/*.hpp")
+add_library(${PROJECT_NAME}
+    ${SOURCES}
+ )
 
 target_include_directories(${PROJECT_NAME}
   PUBLIC include
@@ -19,5 +19,8 @@ target_include_directories(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
   PUBLIC PocoFoundation
+  PUBLIC SMBR
 )
+
+
 

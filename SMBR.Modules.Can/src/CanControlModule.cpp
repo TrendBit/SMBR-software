@@ -54,9 +54,45 @@ ModuleID CanControlModule::id() const {
 }
 
 std::future <bool> CanControlModule::setIntensity(float intensity, int channel) {
-
+    
     App_messages::LED_panel::Set_intensity r((uint8_t)channel, (float)intensity);
     return base.set(r);
+}
+
+std::future <bool> CanControlModule::setIntensities(float i0, float i1, float i2, float i3) {
+    
+    std::vector <App_messages::LED_panel::Set_intensity> requests;
+    requests.push_back(App_messages::LED_panel::Set_intensity(0, i0));
+    requests.push_back(App_messages::LED_panel::Set_intensity(1, i1));
+    requests.push_back(App_messages::LED_panel::Set_intensity(2, i2));
+    requests.push_back(App_messages::LED_panel::Set_intensity(3, i3));
+        
+    std::shared_ptr <std::promise <bool>> promise = std::make_shared<std::promise <bool>>();
+    int successCount = 0;
+    int failCount = 0;
+
+    std::shared_ptr <std::pair <int, int>> counters = std::make_shared<std::pair <int, int>>(0, 0);
+    for (auto & request : requests) {
+        auto requestId = base.createRequestId(request.Type(), Codes::Instance::Exclusive, false);
+        RequestData requestData(requestId, request.Export_data());
+        CanRequest canRequest(requestData);
+        base.ch()->send(canRequest, [&, promise, counters](ICanChannel::Response response){
+            if (response.status == CanRequestStatus::Success) {
+                counters->first++;
+            } else {
+                counters->second++;
+            }
+            if (counters->first + counters->second == 4) {
+                if (counters->second > 0) {
+                    promise->set_exception(std::make_exception_ptr(std::runtime_error("Failed to send request")));
+                } else {
+                    promise->set_value(true);
+                }
+            }
+        });
+    }
+    
+    return promise->get_future();
 }
 
 std::future <float> CanControlModule::getIntensity(int channel) {

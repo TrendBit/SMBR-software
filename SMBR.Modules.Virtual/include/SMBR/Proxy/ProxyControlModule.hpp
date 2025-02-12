@@ -16,6 +16,9 @@ public:
     std::future <bool> setIntensity(float intensity, int channel) override {
         return t.template transform<bool>(mName, "setIntensity (ch=" + std::to_string(channel) + " inten=" + std::to_string((int)intensity * 100) + "%)", m->setIntensity(intensity, channel));
     }
+    std::future <bool> setIntensities(float i0, float i1, float i2, float i3) override {
+        return t.template transform<bool>(mName, "setIntensities (i0=" + std::to_string((int)i0 * 100) + "% i1=" + std::to_string((int)i1 * 100) + "% i2=" + std::to_string((int)i2 * 100) + "% i3=" + std::to_string((int)i3 * 100) + "%)", m->setIntensities(i0, i1, i2, i3));
+    }
     std::future <float> getIntensity(int channel) override {
         return t.template transform<float>(mName, "getIntensity (ch=" + std::to_string(channel) + ")", m->getIntensity(channel));
     }

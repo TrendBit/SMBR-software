@@ -1,13 +1,24 @@
-start:
-    light on
-    loop
+main:
+    print "start"
 
-loop:
-    for 3
+    for 2
         my_measure
-        wait 10
+        wait 1000
+
+    print "done"
 
 my_measure:
-    light on
-    mix
-    measure
+    print "measure routine begin"
+    illumination 0.05 0.05 0.05 0.05
+    
+    heat 0.5
+    mix 1000 10 
+    air 50
+    pump 3
+
+    wait 2000
+
+    
+    heat 0.0
+    illumination 0 0 0 0
+    print "measure routine end"

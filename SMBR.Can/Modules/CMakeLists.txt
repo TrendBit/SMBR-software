@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(SMBR.Modules.Can)
+project(SMBR.Can.Modules)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -18,18 +18,15 @@ add_library(${PROJECT_NAME}
   src/CanModulesFactory.cpp
 )
 
-file(GLOB_RECURSE ${PROJECT_NAME}_HEADERS "include/*.hpp")
-
 target_include_directories(${PROJECT_NAME}
   PUBLIC include
   PRIVATE src
   PRIVATE src/can
-  PRIVATE src/codes
-  PRIVATE src/codes/messages
 )
 
 target_link_libraries(${PROJECT_NAME}
-  PUBLIC SMBR
-  PUBLIC PocoFoundation
+  PocoFoundation
+  SMBR
+  SMBR.Can.Codes
 )
 

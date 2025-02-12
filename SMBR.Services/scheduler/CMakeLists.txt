@@ -16,8 +16,8 @@ target_link_libraries(${PROJECT_NAME}
 add_dependencies(${PROJECT_NAME} 
   SMBR
   SMBR.Scheduler
-  SMBR.Modules.Virtual
-  SMBR.Modules.Can
+  SMBR.Virtual
+  SMBR.Can.Modules
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES

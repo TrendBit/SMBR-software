@@ -9,15 +9,15 @@ add_executable(${PROJECT_NAME} src/main-api-server.cpp)
 target_link_libraries(${PROJECT_NAME} 
   SMBR
   SMBR.REST
-  SMBR.Modules.Virtual
-  SMBR.Modules.Can
+  SMBR.Virtual
+  SMBR.Can.Modules
 )
 
 add_dependencies(${PROJECT_NAME} 
   SMBR
   SMBR.REST
-  SMBR.Modules.Virtual
-  SMBR.Modules.Can
+  SMBR.Virtual
+  SMBR.Can.Modules
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES

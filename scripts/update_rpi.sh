@@ -17,11 +17,11 @@ echo "IP_ADDRESS: $IP_ADDRESS"
 ./scripts/build_rpi.sh
 
 #stop services over ssh
-ssh root@${IP_ADDRESS} systemctl stop smbr-api-server.service
+ssh root@${IP_ADDRESS} systemctl stop avahi-daemon.service can0.service smbr-core-module.service smbr-api-server.service
 
 #rsync to rpi
-rsync -av build/rpi/install/filesystem/ root@$IP_ADDRESS:/
+rsync -av \build/rpi/install/filesystem/ root@$IP_ADDRESS:/
 
 #start services over ssh
-ssh root@$IP_ADDRESS systemctl start smbr-api-server.service
+ssh root@$IP_ADDRESS systemctl start avahi-daemon.service can0.service smbr-core-module.service smbr-api-server.service
 

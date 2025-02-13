@@ -13,7 +13,7 @@ int main(int argc, char ** argv){
 
     try {
 
-    system("ip link set can0 up type can bitrate 500000");
+    //system("ip link set can0 up type can bitrate 500000");
 
     bool isVirtual = false;
 

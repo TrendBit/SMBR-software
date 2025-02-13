@@ -5,7 +5,7 @@ set(SMBR_INSTALL_BASE filesystem)
 set(SMBR_INSTALL_HOME ${SMBR_INSTALL_BASE}/home/root/)
 set(SMBR_INSTALL_BIN ${SMBR_INSTALL_BASE}/usr/local/bin/)
 set(SMBR_INSTALL_SERVICES ${SMBR_INSTALL_BASE}/etc/systemd/system/)
-
+set(SMBR_INSTALL_ETC ${SMBR_INSTALL_BASE}/etc/)
 
 project(SMBR.SW)
 
@@ -17,9 +17,12 @@ add_subdirectory(SMBR.Virtual)
 add_subdirectory(SMBR.Scheduler)
 add_subdirectory(SMBR.REST)
 
-
+#build services
+add_subdirectory(SMBR.Services/can0)
 add_subdirectory(SMBR.Services/smbr-api-server)
 add_subdirectory(SMBR.Services/smbr-core-module)
+add_subdirectory(SMBR.Services/avahi)
+
 #tests
 add_subdirectory(SMBR.Services/scheduler)
 add_subdirectory(SMBR.Services/scheduler2)

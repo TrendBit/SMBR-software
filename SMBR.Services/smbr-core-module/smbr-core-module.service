@@ -1,6 +1,9 @@
 [Unit]
 Description=SMBR Core Module Service
 After=network.target
+After=can0.service
+Wants=can0.service
+
 
 [Service]
 Type=simple

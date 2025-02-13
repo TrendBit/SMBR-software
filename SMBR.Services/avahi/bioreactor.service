@@ -1,0 +1,13 @@
+<?xml version="1.0" standalone='no'?>
+<!DOCTYPE service-group SYSTEM "avahi-service.dtd">
+<service-group>
+  <name replace-wildcards="yes">BioReactor_%h</name>
+  <service>
+    <type>_bioreactor_api._tcp</type>
+    <port>8089</port>
+    <txt-record>path=/swagger/ui</txt-record>
+    <txt-record>version=1.0</txt-record>
+    <txt-record>type=rest</txt-record>
+    <txt-record>description=SMPBR Control API</txt-record>
+  </service>
+</service-group>

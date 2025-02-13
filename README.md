@@ -54,11 +54,11 @@ all software running on SMBR main unit (RPI)
 ## Crosscompilation
 1. Flash image to SD card 
     ```sh
-    wget https://trendbit.cz/downloads/smbr/smbr-image-smbr.rootfs.wic.img
+    wget https://trendbit.cz/download/smbr/smbr-image-smbr.rootfs.wic.img
     ```
 2. Install toolchain
     ```sh
-    wget https://trendbit.cz/downloads/smbr/poky-glibc-x86_64-smbr-image-cortexa72-smbr-toolchain-5.0.6.sh
+    wget https://trendbit.cz/download/smbr/poky-glibc-x86_64-smbr-image-cortexa72-smbr-toolchain-5.0.6.sh
     chmod +x poky-glibc-x86_64-smbr-image-cortexa72-smbr-toolchain-5.0.6.sh
     sudo ./poky-glibc-x86_64-smbr-image-cortexa72-smbr-toolchain-5.0.6.sh -d /usr/local/smbr-kas/
     ```

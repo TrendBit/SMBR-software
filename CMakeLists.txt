@@ -1,9 +1,10 @@
 cmake_minimum_required(VERSION 3.20)
 
 #set installation directory
-set(SMBR_INSTALL_BASE install_dst)
+set(SMBR_INSTALL_BASE filesystem)
 set(SMBR_INSTALL_HOME ${SMBR_INSTALL_BASE}/home/root/)
-
+set(SMBR_INSTALL_BIN ${SMBR_INSTALL_BASE}/usr/local/bin/)
+set(SMBR_INSTALL_SERVICES ${SMBR_INSTALL_BASE}/etc/systemd/system/)
 
 
 project(SMBR.SW)
@@ -17,6 +18,8 @@ add_subdirectory(SMBR.Scheduler)
 add_subdirectory(SMBR.REST)
 
 
-add_subdirectory(SMBR.Services/api-server)
+add_subdirectory(SMBR.Services/smbr-api-server)
+add_subdirectory(SMBR.Services/smbr-core-module)
+#tests
 add_subdirectory(SMBR.Services/scheduler)
 add_subdirectory(SMBR.Services/scheduler2)

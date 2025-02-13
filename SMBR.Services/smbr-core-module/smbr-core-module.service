@@ -1,10 +1,10 @@
 [Unit]
-Description=API Server Service
+Description=SMBR Core Module Service
 After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/api-server
+ExecStart=/usr/local/bin/smbr-core-module
 Restart=always
 User=root
 

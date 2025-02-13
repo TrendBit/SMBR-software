@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(api-server)
+project(smbr-api-server)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -9,6 +9,7 @@ add_executable(${PROJECT_NAME} src/main-api-server.cpp)
 target_link_libraries(${PROJECT_NAME} 
   SMBR
   SMBR.REST
+  SMBR.Scheduler
   SMBR.Virtual
   SMBR.Can.Modules
 )
@@ -16,6 +17,7 @@ target_link_libraries(${PROJECT_NAME}
 add_dependencies(${PROJECT_NAME} 
   SMBR
   SMBR.REST
+  SMBR.Scheduler
   SMBR.Virtual
   SMBR.Can.Modules
 )
@@ -28,13 +30,13 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 
 
 
-install(TARGETS api-server
-  RUNTIME DESTINATION ${SMBR_INSTALL_HOME}
+install(TARGETS ${PROJECT_NAME}
+  RUNTIME DESTINATION ${SMBR_INSTALL_BIN}
 )
 
-#install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/api-server.service
-#  DESTINATION /etc/systemd/system
-#)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/smbr-api-server.service
+  DESTINATION ${SMBR_INSTALL_SERVICES}
+)
 
 #add_custom_target(install-service
 #  COMMAND ${CMAKE_COMMAND} -E copy

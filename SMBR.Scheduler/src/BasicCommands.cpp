@@ -11,7 +11,14 @@ WaitCommand::WaitCommand(Block::Ptr block, ParseContext::Ptr pctx){
 
 void WaitCommand::run(RunContext::Ptr rctx){
     rctx->stack->updateTop(line);
-    Poco::Thread::sleep(static_cast<int>(timeMs));
+
+    long remainingSleep = timeMs;
+    while (remainingSleep > 0) {
+        rctx->checkRunning();
+        long sleepTime = std::min(remainingSleep, 1000L);
+        Poco::Thread::sleep(static_cast<int>(sleepTime));
+        remainingSleep -= sleepTime;
+    }
 }
 
 PrintCommand::PrintCommand(Block::Ptr block, ParseContext::Ptr pctx){
@@ -25,12 +32,16 @@ PrintCommand::PrintCommand(Block::Ptr block, ParseContext::Ptr pctx){
 void PrintCommand::run(RunContext::Ptr rctx){
     rctx->stack->updateTop(line);
     std::cout << "PRINT: " << content << std::endl;
+    if (rctx->printCb) {
+        rctx->printCb(content);
+    }
+    
 }
 
 
 void registerBasicBlocks(CommandFactory & f){
-    f.registerCommand("for", [](Block::Ptr block, ParseContext::Ptr ctx) {
-        return std::make_shared<ForCommand>(block, ctx);
+    f.registerCommand("loop", [](Block::Ptr block, ParseContext::Ptr ctx) {
+        return std::make_shared<LoopCommand>(block, ctx);
     });    
     f.registerCommand("wait", [](Block::Ptr block, ParseContext::Ptr ctx) {
         return std::make_shared<WaitCommand>(block, ctx);

@@ -32,7 +32,7 @@ class ScriptLine {
         int lineNumber_ = 0;
         std::string lineContent_;
         std::vector <std::string> tokens_;
-
+        
 };
 
 

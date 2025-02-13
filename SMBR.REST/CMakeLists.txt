@@ -28,6 +28,7 @@ target_include_directories(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
   PUBLIC SMBR
+  PUBLIC SMBR.Scheduler
   PUBLIC oatpp::oatpp
   PUBLIC oatpp::oatpp-swagger
 )

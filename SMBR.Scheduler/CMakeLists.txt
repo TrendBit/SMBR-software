@@ -22,5 +22,8 @@ target_link_libraries(${PROJECT_NAME}
   PUBLIC SMBR
 )
 
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/scripts
+  DESTINATION ${SMBR_INSTALL_HOME}
+)
 
 

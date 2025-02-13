@@ -51,7 +51,7 @@ int main(int argc, char* argv[]) {
         //sleep for 1s
         std::this_thread::sleep_for(std::chrono::seconds(1));
 
-        Script script = Parser::parse(argv[1]);
+        Script script = Parser::parseFile(argv[1]);
 
         std::cout << "parsing ok" << std::endl;
 

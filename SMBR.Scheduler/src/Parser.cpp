@@ -9,24 +9,31 @@
 #include <iostream>
 #include <Poco/String.h>
 
-Script Parser::parse(const std::string & scriptFile){
+
+Script Parser::parseContent(std::string name, const std::string & content){
+    std::istringstream iss(content);
+    return parseStream(name, iss);
+}
+
+Script Parser::parseFile(const std::string & scriptFile){
     
     std::ifstream file(scriptFile);
     if (!file) {
         throw std::runtime_error("Cannot open file " + scriptFile);
     }
+    return parseStream(scriptFile, file);
+}
 
+Script Parser::parseStream(std::string name, std::istream & s){
     std::string line;
     int lineNumber = 0;
 
     std::list <Block::Ptr> blockStack;
 
-
-
     Script script;
-    script.addLine(scriptFile);
+    script.addLine(name);
 
-    while (getline(file, line)) {
+    while (getline(s, line)) {
         lineNumber++;
         
         script.addLine(line);
@@ -38,13 +45,13 @@ Script Parser::parse(const std::string & scriptFile){
         int indent = 0;
         while (indent < line.size() && line[indent] == ' ') indent++;
 
-        std::cout << "line: " << lineNumber << " indent: " << indent << " blockStack: " << blockStack.size() << " content: " << line << std::endl;
+        //std::cout << "line: " << lineNumber << " indent: " << indent << " blockStack: " << blockStack.size() << " content: " << line << std::endl;
 
         if (line.back() == ':' && indent == 0) { // Block definition
             
             std::string name = line.substr(0, line.size() - 1);
 
-            std::cout << "Block definition " << name << std::endl;
+            //std::cout << "Block definition " << name << std::endl;
 
             Block::Ptr namedBlock = std::make_shared<Block>();
             namedBlock->line = ScriptLine(lineNumber, name);
@@ -100,3 +107,5 @@ Script Parser::parse(const std::string & scriptFile){
     }
     return script;
 }
+
+

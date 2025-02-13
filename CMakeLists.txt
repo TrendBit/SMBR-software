@@ -13,8 +13,10 @@ add_subdirectory(SMBR)
 add_subdirectory(SMBR.Can/Codes)
 add_subdirectory(SMBR.Can/Modules)
 add_subdirectory(SMBR.Virtual)
-add_subdirectory(SMBR.REST)
 add_subdirectory(SMBR.Scheduler)
+add_subdirectory(SMBR.REST)
+
 
 add_subdirectory(SMBR.Services/api-server)
 add_subdirectory(SMBR.Services/scheduler)
+add_subdirectory(SMBR.Services/scheduler2)

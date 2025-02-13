@@ -24,9 +24,10 @@
 #include "dto/MyVoltageDto.hpp"
 #include "dto/MyCurrentDto.hpp"
 #include "dto/MyPowerDrawDto.hpp"
+#include "dto/MyScriptDto.hpp"
+#include "dto/MyScriptRuntimeInfoDto.hpp"
 
 #include "oatpp/data/mapping/ObjectMapper.hpp"
-#include "SMBR/ISystemModule.hpp"
 
 #include <future>
 #include <iomanip>
@@ -39,6 +40,9 @@
 #include <chrono> 
 
 #include <iostream>
+
+#include "SMBR/ISystemModule.hpp"
+#include "SMBR/Scheduler.hpp"
 
 #include OATPP_CODEGEN_BEGIN(ApiController)
 
@@ -858,6 +862,78 @@ public:
     ENDPOINT("GET", "/ping-direct", pingDirect);
     */
 
+// ==========================================
+// Scheduler
+// ==========================================   
+
+    /**
+    * @brief Uploads and checks the syntax of a script to be run by the scheduler.
+    */
+    ENDPOINT_INFO(uploadScript) {
+        info->summary = "Upload script to scheduler";
+        info->addTag("Scheduler");
+        info->description = "Upload script to scheduler. It will just upload and check syntax. It will not run the script.";
+        info->addConsumes<Object<MyScriptDto>>("application/json");
+        info->addResponse<String>(Status::CODE_200, "application/json", "Successfully restarted module");
+        info->addResponse<String>(Status::CODE_404, "application/json", "Module not found");
+    }
+    ADD_CORS(uploadScript)
+    ENDPOINT("PUT", "/scheduler/script", uploadScript, BODY_DTO(Object<MyScriptDto>, body));
+
+    /**
+     * @brief Retrieves the currently uploaded script.
+     */
+    ENDPOINT_INFO(getScript) {
+        info->summary = "Get uploaded script";
+        info->addTag("Scheduler");
+        info->description = "Retrieves the currently uploaded script.";
+        info->addResponse<Object<MyScriptDto>>(Status::CODE_200, "application/json");
+        info->addResponse<String>(Status::CODE_404, "application/json", "Script not found");
+    }
+    ADD_CORS(getScript)
+    ENDPOINT("GET", "/scheduler/script", getScript);
+
+    /**
+     * @brief Starts the scheduler.
+     */
+    ENDPOINT_INFO(startScheduler) {
+        info->summary = "Start scheduler";
+        info->addTag("Scheduler");
+        info->description = "Starts the scheduler. The scheduler will run the uploaded script.";
+        info->addResponse<String>(Status::CODE_200, "application/json", "Scheduler started successfully.");
+        info->addResponse<String>(Status::CODE_500, "application/json", "Failed to start scheduler.");
+    }
+    ADD_CORS(startScheduler)
+    ENDPOINT("POST", "/scheduler/start", startScheduler);
+
+    /**
+     * @brief Stops the scheduler.
+     */
+    ENDPOINT_INFO(stopScheduler) {
+        info->summary = "Stop scheduler";
+        info->addTag("Scheduler");
+        info->description = "Stops the scheduler. The scheduler will stop running the script.";
+        info->addResponse<String>(Status::CODE_200, "application/json", "Scheduler stopped successfully.");
+        info->addResponse<String>(Status::CODE_500, "application/json", "Failed to stop scheduler.");
+    }
+    ADD_CORS(stopScheduler)
+    ENDPOINT("POST", "/scheduler/stop", stopScheduler);
+
+    /**
+     * @brief Retrieves the runtime info of the scheduler.
+     */
+    ENDPOINT_INFO(getSchedulerInfo) {
+        info->summary = "Get scheduler info";
+        info->addTag("Scheduler");
+        info->description = "Retrieves the runtime info of the scheduler.";
+        info->addResponse<Object<MyScriptRuntimeInfoDto>>(Status::CODE_200, "application/json");
+        info->addResponse<String>(Status::CODE_500, "application/json", "Failed to retrieve scheduler info");
+    }
+    ADD_CORS(getSchedulerInfo)
+    ENDPOINT("GET", "/scheduler/runtime", getSchedulerInfo);
+
+    
+
 private:
     
     std::shared_ptr<ICommonModule> getModule(const oatpp::Enum<dto::ModuleEnum>::AsString& module);
@@ -874,6 +950,7 @@ private:
 
 private:
     std::shared_ptr<ISystemModule> systemModule;
+    std::shared_ptr<Scheduler> scheduler_;
 };
 
 #include OATPP_CODEGEN_END(ApiController)

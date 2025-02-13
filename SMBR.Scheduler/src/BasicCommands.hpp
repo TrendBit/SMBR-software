@@ -13,10 +13,13 @@ class NestedBlockCommand : public ICommand {
         }
         
         void run(RunContext::Ptr rctx) override {
+            rctx->checkRunning();            
+
             if (commands.empty()) return;
 
             rctx->stack->push(firstLine);
             for (auto & cmd : commands) {
+                rctx->checkRunning();
                 cmd->run(rctx);
             }
             rctx->stack->pop();   
@@ -27,25 +30,37 @@ class NestedBlockCommand : public ICommand {
         
 };
 
-class ForCommand : public ICommand {
+class LoopCommand : public ICommand {
     public:
-        ForCommand(Block::Ptr forBlock, ParseContext::Ptr pctx){
-            line = forBlock->line.lineNumber();
-            repeat = forBlock->line.argAsInt(0, 0, 1000000);
-            nested = std::make_shared<NestedBlockCommand>(forBlock, pctx);
+        LoopCommand(Block::Ptr loopBlock, ParseContext::Ptr pctx){
+            line = loopBlock->line.lineNumber();
+            infinity = loopBlock->line.args() == 0;
+            if (!infinity){
+                repeat = loopBlock->line.argAsInt(0, 0, 1000000);
+            }    
+            nested = std::make_shared<NestedBlockCommand>(loopBlock, pctx);
         }
         void run(RunContext::Ptr rctx) override {
 
             rctx->stack->push(line);
             
-            for (int i = 0; i < repeat; i++) {
-                nested->run(rctx);
+            if (infinity){
+                while (true) {
+                    rctx->checkRunning();
+                    nested->run(rctx);
+                }
+            } else {
+                for (int i = 0; i < repeat; i++) {
+                    rctx->checkRunning();
+                    nested->run(rctx);
+                }
             }
-
+             
             rctx->stack->pop();
         }
     private:
         int line = 0;
+        bool infinity = false;
         int repeat = 0;
         NestedBlockCommand::Ptr nested;
 };

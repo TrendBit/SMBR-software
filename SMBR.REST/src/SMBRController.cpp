@@ -1,6 +1,6 @@
 #include "SMBRController.hpp"
 #include "SMBR/Exceptions.hpp"
-
+#include <Poco/DateTimeFormatter.h>
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::process(
     std::string name,
@@ -49,7 +49,7 @@ SMBRController::SMBRController(const std::shared_ptr<oatpp::web::mime::ContentMa
                            std::shared_ptr<ISystemModule> systemModule)
     : oatpp::web::server::api::ApiController(apiContentMappers)
     , systemModule(systemModule){
-
+        scheduler_ = std::make_shared<Scheduler>(systemModule);
     }
 
   // ==========================================
@@ -778,3 +778,78 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     });
 
 }
+
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::uploadScript(const oatpp::Object<MyScriptDto>& body) {
+    
+    try {
+        if (!body || !body->name || !body->content) {
+            throw ArgumentException("Invalid script. Must contain a name and content.");
+        }
+        scheduler_->setScriptFromString(*body->name, *body->content);
+        return createResponse(Status::CODE_200, "Script uploaded successfully.");
+    } catch (std::exception & e){
+        return createResponse(Status::CODE_500, "Failed to upload script: " + std::string(e.what()));
+    }
+}
+
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getScript() {
+    try {
+        std::string n;
+        std::string c;
+        scheduler_->getScript(n, c);
+        auto scriptResponseDto = MyScriptDto::createShared();
+        scriptResponseDto->name = n;
+        scriptResponseDto->content = c;
+        return createDtoResponse(Status::CODE_200, scriptResponseDto);
+    } catch (std::exception & e){
+        return createResponse(Status::CODE_500, "Failed to retrieve script: " + std::string(e.what()));
+    }
+}
+
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::startScheduler() {
+    try {
+        scheduler_->start();
+        return createResponse(Status::CODE_200, "Script started successfully.");
+    } catch (std::exception & e){
+        return createResponse(Status::CODE_500, "Failed to start script: " + std::string(e.what()));
+    }
+}
+
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::stopScheduler() {
+    try {
+        scheduler_->stop();
+        return createResponse(Status::CODE_200, "Script stopped successfully.");
+    } catch (std::exception & e){
+        return createResponse(Status::CODE_500, "Failed to stop script: " + std::string(e.what()));
+    }
+}
+
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getSchedulerInfo() {
+    try {
+        Scheduler::RuntimeInfo info = scheduler_->runtimeInfo();
+        auto infoResponseDto = MyScriptRuntimeInfoDto::createShared();
+
+        infoResponseDto->name = info.name;
+        infoResponseDto->finalMessage = info.finishMessage;
+        infoResponseDto->stack = oatpp::List<Int32>::createShared();
+        for (auto i : info.stack){
+            infoResponseDto->stack->push_back(i);
+        }
+        infoResponseDto->output = oatpp::List<String>::createShared();
+        for (auto o : info.output){
+            std::stringstream s;
+            s << Poco::DateTimeFormatter::format(o.time, "%Y-%m-%d %H:%M:%S");
+            s << " " << o.message;
+            infoResponseDto->output->push_back(s.str());
+        }
+        infoResponseDto->started = Poco::DateTimeFormatter::format(info.startTime, "%Y-%m-%d %H:%M:%S");;
+        infoResponseDto->running = info.started && !info.stopped;
+
+
+        return createDtoResponse(Status::CODE_200, infoResponseDto);
+
+    } catch (std::exception & e){
+        return createResponse(Status::CODE_500, "Failed to retrieve scheduler status: " + std::string(e.what()));
+    }
+}
+

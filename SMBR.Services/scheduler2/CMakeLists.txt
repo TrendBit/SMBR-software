@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.20)
-project(scheduler)
+project(scheduler2)
 
 set(CMAKE_CXX_STANDARD 17)
 
 
-add_executable(${PROJECT_NAME} src/scheduler.cpp)
+add_executable(${PROJECT_NAME} src/scheduler2.cpp)
 
 target_link_libraries(${PROJECT_NAME} 
   SMBR
@@ -28,10 +28,11 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 
 
 
-install(TARGETS scheduler
+install(TARGETS ${PROJECT_NAME} 
   RUNTIME DESTINATION ${SMBR_INSTALL_HOME}
 )
 
+#copy scripts folder to destination HOME DIR
 
 #  DESTINATION /etc/systemd/system
 #)

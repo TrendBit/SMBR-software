@@ -50,9 +50,19 @@ class RunContext {
         Stack::Ptr stack;
         ISystemModule::Ptr module;
 
+        std::function <bool()> stopCb;
+        std::function <void(const std::string &)> printCb;
     public:
         RunContext(Stack::Ptr stack,  ISystemModule::Ptr module) : stack(stack), module(module) {
             
+        }
+        void checkRunning() {
+            if (stopCb) {
+                bool ret = stopCb();
+                if (ret) {
+                    throw std::runtime_error("Stopped");
+                }
+            }
         }
 };
 

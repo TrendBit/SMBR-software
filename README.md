@@ -54,7 +54,7 @@ all software running on SMBR main unit (RPI)
 ## Crosscompilation
 1. Flash image to SD card 
     ```sh
-    wget https://trendbit.cz/downloads/smbr/smbr-image-smbr.rootfs.wic
+    wget https://trendbit.cz/downloads/smbr/smbr-image-smbr.rootfs.wic.img
     ```
 2. Install toolchain
     ```sh

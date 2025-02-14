@@ -12,14 +12,15 @@ This scripting language is designed for controlling a SMBR device capable of per
 
 ## Example Script
 ```plaintext
-start:
-    light on
-    loop
-
 main:
+    print "testing script"
+    
     for 3
+        print "next loop"
         my_measure
         wait 10000
+
+    print "testing script done"
 
 my_measure:
     illumination 0.1 0.1 0 0
@@ -32,33 +33,8 @@ my_measure:
 
 {{__COMMANDS__}}
 
-### `light <state>`
-Turns the light on or off.
-- **Syntax**: `light on` or `light off`
-
-### `wait <milliseconds>`
-Pauses execution for a specified time.
-- **Syntax**: `wait 1000` (waits 1000 ms)
-
-### `mix`
-Activates the mixing mechanism.
-- **Syntax**: `mix`
-
-### `measure`
-Performs a measurement operation.
-- **Syntax**: `measure`
-
-### `for <count>`
-Repeats the indented block of commands for the given number of iterations.
-- **Syntax**:
-```plaintext
-for 5
-    light on
-    wait 10
-```
-
 ### Named Blocks
-Named blocks define reusable sequences of commands. They must be defined before use in the script.
+Named blocks define reusable sequences of commands. They can be called from any other place in script (infinite recursion is not checked)
 - **Syntax**:
 ```plaintext
 block_name:
@@ -67,5 +43,8 @@ block_name:
 ```
 - **Usage**:
   - A named block can be executed by calling its name as a command.
+
+### Entry point
+There must be named block 'main' which is entry point for script  
 
 

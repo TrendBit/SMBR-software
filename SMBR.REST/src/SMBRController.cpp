@@ -785,7 +785,10 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         if (!body || !body->name || !body->content) {
             throw ArgumentException("Invalid script. Must contain a name and content.");
         }
-        scheduler_->setScriptFromString(*body->name, *body->content);
+        ScriptInfo s;
+        s.name = *body->name;
+        s.content = *body->content;
+        scheduler_->setScriptFromString(s);
         return createResponse(Status::CODE_200, "Script uploaded successfully.");
     } catch (std::exception & e){
         return createResponse(Status::CODE_500, "Failed to upload script: " + std::string(e.what()));
@@ -794,12 +797,10 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getScript() {
     try {
-        std::string n;
-        std::string c;
-        scheduler_->getScript(n, c);
+        auto s = scheduler_->getScript();
         auto scriptResponseDto = MyScriptDto::createShared();
-        scriptResponseDto->name = n;
-        scriptResponseDto->content = c;
+        scriptResponseDto->name = s.name;
+        scriptResponseDto->content = s.content;
         return createDtoResponse(Status::CODE_200, scriptResponseDto);
     } catch (std::exception & e){
         return createResponse(Status::CODE_500, "Failed to retrieve script: " + std::string(e.what()));
@@ -808,8 +809,11 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::startScheduler() {
     try {
-        scheduler_->start();
-        return createResponse(Status::CODE_200, "Script started successfully.");
+        std::cout << "start called from API" << std::endl;
+        auto processId = scheduler_->start();
+        auto scriptProcessIdDto = MyScriptProcessIdDto::createShared();
+        scriptProcessIdDto->processId = processId;
+        return createDtoResponse(Status::CODE_200, scriptProcessIdDto);
     } catch (std::exception & e){
         return createResponse(Status::CODE_500, "Failed to start script: " + std::string(e.what()));
     }
@@ -817,6 +821,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::stopScheduler() {
     try {
+        std::cout << "stop called from API" << std::endl;
         scheduler_->stop();
         return createResponse(Status::CODE_200, "Script stopped successfully.");
     } catch (std::exception & e){
@@ -826,9 +831,10 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getSchedulerInfo() {
     try {
-        Scheduler::RuntimeInfo info = scheduler_->runtimeInfo();
+        RuntimeInfo info = scheduler_->getRuntimeInfo();
         auto infoResponseDto = MyScriptRuntimeInfoDto::createShared();
 
+        infoResponseDto->processId = info.processId;
         infoResponseDto->name = info.name;
         infoResponseDto->finalMessage = info.finishMessage;
         infoResponseDto->stack = oatpp::List<Int32>::createShared();
@@ -838,14 +844,14 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         infoResponseDto->output = oatpp::List<String>::createShared();
         for (auto o : info.output){
             std::stringstream s;
-            s << Poco::DateTimeFormatter::format(o.time, "%Y-%m-%d %H:%M:%S");
-            s << " " << o.message;
+            s << o;
             infoResponseDto->output->push_back(s.str());
         }
-        infoResponseDto->started = Poco::DateTimeFormatter::format(info.startTime, "%Y-%m-%d %H:%M:%S");;
-        infoResponseDto->running = info.started && !info.stopped;
+        infoResponseDto->started = info.started;
+        infoResponseDto->stopped = info.stopped;
 
-
+        infoResponseDto->startedAt = Poco::DateTimeFormatter::format(info.startTime, "%Y-%m-%d %H:%M:%S");;
+        
         return createDtoResponse(Status::CODE_200, infoResponseDto);
 
     } catch (std::exception & e){

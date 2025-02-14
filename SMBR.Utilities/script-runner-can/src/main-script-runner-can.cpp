@@ -56,9 +56,9 @@ int main(int argc, char* argv[]) {
         scheduler.start();
 
         while (true){
-            auto info = scheduler.runtimeInfo();
+            auto info = scheduler.getRuntimeInfo();
 
-            std::cout << info.name << " started: " << info.started << " stopped: " << info.stopped << " finish: " << info.finishMessage << std::endl;
+            std::cout << info << std::endl;
 
             if (info.stopped) {
                 break;

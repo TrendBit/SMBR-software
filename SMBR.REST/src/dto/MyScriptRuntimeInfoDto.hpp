@@ -11,6 +11,10 @@
 class MyScriptRuntimeInfoDto : public oatpp::DTO {
     DTO_INIT(MyScriptRuntimeInfoDto, DTO)
     /**
+     * @brief process id of the running script.
+     */
+    DTO_FIELD(UInt64, processId); 
+    /**
      * @brief name of the script.
      */
     DTO_FIELD(String, name); 
@@ -27,14 +31,17 @@ class MyScriptRuntimeInfoDto : public oatpp::DTO {
      */
     DTO_FIELD(List<String>::ObjectWrapper, output); 
     /**
-     * @brief running status of the script.
+     * @brief whether the script has started.
      */
-    DTO_FIELD(Boolean, running);
-
+    DTO_FIELD(Boolean, started);
+    /**
+     * @brief whether the script has stopped.
+     */
+    DTO_FIELD(Boolean, stopped);
     /**
      * @brief time when the script started.
      */
-    DTO_FIELD(String, started);
+    DTO_FIELD(String, startedAt);
 };
 
 #include OATPP_CODEGEN_END(DTO)

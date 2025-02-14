@@ -33,14 +33,13 @@ Scheduler::~Scheduler(){
 
 
 
-void Scheduler::setScriptFromString(std::string name, const std::string & content){
+void Scheduler::setScriptFromString(const ScriptInfo & s){
 
     stop();
 
     ActiveScript::Ptr as = std::make_shared<ActiveScript>();
-    as->name = name;
-    as->content = content;
-    as->script = Parser::parseContent(name, content);
+    as->info = s;
+    as->script = Parser::parseContent(s.name, s.content);
     as->pctx = std::make_shared<ParseContext>(as->script);
     as->mainCommand = Interpreter::build(as->script.getNamedBlock("main"), as->pctx);
 
@@ -55,9 +54,9 @@ void Scheduler::setScriptFromFile(const std::string & filename){
     stop();    
 
     ActiveScript::Ptr as = std::make_shared<ActiveScript>();
-    as->name = filename;
-    as->content = "TODO";
+    as->info.name = filename;
     as->script = Parser::parseFile(filename);
+    as->info.content = as->script.serialize();
     as->pctx = std::make_shared<ParseContext>(as->script);
     as->mainCommand = Interpreter::build(as->script.getNamedBlock("main"), as->pctx);
 
@@ -67,38 +66,62 @@ void Scheduler::setScriptFromFile(const std::string & filename){
     }
 }
 
-void Scheduler::getScript(std::string & name, std::string & content) const {
+ScriptInfo Scheduler::getScript() const {
     std::scoped_lock lock(scriptMutex);
     if (uploadedScript) {
-        name = uploadedScript->name;
-        content = uploadedScript->content;
+        return uploadedScript->info;
     } else {
         throw std::runtime_error("No script uploaded");
     }
 }
 
-void Scheduler::start(){
+unsigned long long Scheduler::start(){
     std::scoped_lock lock(scriptMutex);
     if (bgScriptStarted){
         throw std::runtime_error("Script already running");
     }
-    if (pendingScript){
+    if (pendingScript.script){
         throw std::runtime_error("Script already in queue");
     }
     if (!uploadedScript) {
         throw std::runtime_error("No script uploaded");
     } 
 
+    std::cout << "start called" << std::endl;
     bgScriptStopped = false;
-    pendingScript = uploadedScript;
+
+    pendingScript.script = uploadedScript;
+    pendingScript.processId = ++processId;
+
+    return pendingScript.processId;
 }
 void Scheduler::stop(){
+    std::cout << "stopped called" << std::endl;
+    
     bgScriptStopped = true;
 }
 
-Scheduler::RuntimeInfo Scheduler::runtimeInfo() const {
+RuntimeInfo Scheduler::getRuntimeInfo() const {
     std::scoped_lock lock(infoMutex);
     return info;
+}
+
+
+static void stopScript(ISystemModule::Ptr systemModule){
+    //stop all modules
+    auto call = [](std::future<bool> f){
+        try {
+            f.wait();
+            f.get();
+        } catch (...){
+        }
+    };
+
+    call(systemModule->controlModule()->setIntensities(0, 0, 0, 0));
+    call(systemModule->controlModule()->turnOffHeater());
+    call(systemModule->controlModule()->stopCuvettePump());
+    call(systemModule->controlModule()->stopAerator());
+    call(systemModule->controlModule()->stopMixer());
 }
 
 void Scheduler::run(){
@@ -107,30 +130,30 @@ void Scheduler::run(){
             break;
         }
         
-        ActiveScript::Ptr as;
+        StartedScript as;
         {
             std::scoped_lock lock(scriptMutex);
-            if (pendingScript) {
+            if (pendingScript.script) {
                 as = pendingScript;
-                pendingScript = nullptr;
+                pendingScript = {};
             }
-            runningScript = as;
         }
 
-        if (as) {
+        if (as.script) {
             bgScriptStarted = true;   
 
             try {
 
                 {
                     std::scoped_lock lock(infoMutex);
-                    info.name = as->name;
+                    info.name = as.script->info.name;
+                    info.processId = as.processId;
                     info.started = true;
                     info.stopped = false;
                     info.finishMessage = "";
                     info.startTime.update();
                     info.stack.clear();
-                    //std::cout << "BG [START] " << info << std::endl;
+                    std::cout << "BG [START] " << info << std::endl;
                 }
 
                 auto stack = std::make_shared<Stack>([&](const Stack::Data & data) {
@@ -142,7 +165,11 @@ void Scheduler::run(){
                 auto rctx = std::make_shared<RunContext>(stack, systemModule);
                 
                 rctx->stopCb = [&](){
-                    return !bgScriptStarted || bgScriptStopped;
+                    if (!bgScriptStarted || bgScriptStopped){
+                        std::cout << "BG [CONDITION] " << "bgScriptStarted " << bgScriptStarted << " bgScriptStopped " << bgScriptStopped << std::endl;
+                        return true;
+                    }
+                    return false;
                 };      
 
                 rctx->printCb = [&](const std::string & msg){
@@ -158,13 +185,13 @@ void Scheduler::run(){
                     //std::cout << "BG [PRINT] " << info << std::endl;
                 };
 
-                as->mainCommand->run(rctx);
+                as.script->mainCommand->run(rctx);
 
                 {
                     std::scoped_lock lock(infoMutex);
                     info.stopped = true;
                     info.finishMessage = "Successfully finished";
-                    //std::cout << "BG [SUCCESS] " << info << std::endl;
+                    std::cout << "BG [SUCCESS] " << info << std::endl;
                 }
 
             } catch (std::exception & e) {
@@ -172,7 +199,13 @@ void Scheduler::run(){
                 info.stopped = true;
                 std::string emsg = e.what();
                 info.finishMessage = "Failed: " + emsg;
-                //std::cout << "BG [ERROR] " << info << std::endl;
+                std::cout << "BG [ERROR] " << info << std::endl;
+            }
+
+            try {
+                stopScript(systemModule);
+            } catch (...){
+
             }
 
             bgScriptStarted = false;   
@@ -182,7 +215,3 @@ void Scheduler::run(){
     }
 }
 
-std::ostream & operator << (std::ostream & os, const Scheduler::RuntimeInfo & info){
-    os << "Scheduler: " << info.name << " started: " << info.started << " stopped: " << info.stopped << " finish: " << info.finishMessage;
-    return os;
-}

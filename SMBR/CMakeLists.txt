@@ -7,6 +7,7 @@ add_library(${PROJECT_NAME}
   src/Exceptions.cpp
   src/ICoreModule.cpp
   src/ISystemModule.cpp
+  src/IScheduler.cpp
   src/SMBR.cpp
  )
 

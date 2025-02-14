@@ -25,6 +25,7 @@
 #include "dto/MyCurrentDto.hpp"
 #include "dto/MyPowerDrawDto.hpp"
 #include "dto/MyScriptDto.hpp"
+#include "dto/MyScriptProcessIdDto.hpp"
 #include "dto/MyScriptRuntimeInfoDto.hpp"
 
 #include "oatpp/data/mapping/ObjectMapper.hpp"
@@ -900,7 +901,7 @@ public:
         info->summary = "Start scheduler";
         info->addTag("Scheduler");
         info->description = "Starts the scheduler. The scheduler will run the uploaded script.";
-        info->addResponse<String>(Status::CODE_200, "application/json", "Scheduler started successfully.");
+        info->addResponse<Object<MyScriptProcessIdDto>>(Status::CODE_200, "application/json");
         info->addResponse<String>(Status::CODE_500, "application/json", "Failed to start scheduler.");
     }
     ADD_CORS(startScheduler)

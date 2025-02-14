@@ -16,6 +16,8 @@ add_library(${PROJECT_NAME}
   src/AppComponent.hpp
   src/SMBRController.cpp
   src/SMBRServer.cpp
+  src/APIClientImpl.cpp
+  src/APIScheduler.cpp
 )
 
 file(GLOB_RECURSE ${PROJECT_NAME}_HEADERS "include/*.hpp")

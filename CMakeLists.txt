@@ -23,6 +23,9 @@ add_subdirectory(SMBR.Services/smbr-api-server)
 add_subdirectory(SMBR.Services/smbr-core-module)
 add_subdirectory(SMBR.Services/avahi)
 
+#utilities
+add_subdirectory(SMBR.Utilities/script-runner-api)
+add_subdirectory(SMBR.Utilities/script-runner-can)
+
 #tests
-add_subdirectory(SMBR.Services/scheduler)
-add_subdirectory(SMBR.Services/scheduler2)
+add_subdirectory(SMBR.Utilities/scheduler)

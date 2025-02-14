@@ -55,6 +55,8 @@ class Script {
         void addLine(const std::string & line);
 
         std::set <std::string> blockNames() const;
+
+        std::string serialize() const;
     private:
         std::unordered_map<std::string, Block::Ptr > blocks;
         std::vector <std::string> lines_;

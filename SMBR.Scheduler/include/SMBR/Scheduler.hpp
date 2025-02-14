@@ -9,13 +9,14 @@
 #include <atomic>
 #include <deque>
 
+#include <SMBR/IScheduler.hpp>
 #include <SMBR/Script.hpp>
 #include <SMBR/ISystemModule.hpp>
 #include <SMBR/Interpreter.hpp>
 #include <Poco/Timestamp.h>
 #include <Poco/Thread.h>
 
-class Scheduler {
+class Scheduler : public IScheduler {
     
     public:    
         typedef std::shared_ptr <Scheduler> Ptr;
@@ -23,30 +24,15 @@ class Scheduler {
         Scheduler(ISystemModule::Ptr systemModule);
         ~Scheduler();
 
-        void setScriptFromString(std::string name, const std::string & content);
-        void setScriptFromFile(const std::string & filename);
+        void setScriptFromString(const ScriptInfo & s) override;
+        void setScriptFromFile(const std::string & filename) override;
 
-        void getScript(std::string & name, std::string & content) const;
+        unsigned long long start() override; 
+        void stop() override;
+
+        ScriptInfo getScript() const override;
+        RuntimeInfo getRuntimeInfo() const override;
         
-        void start();
-        void stop();
-
-        struct OutputLine {
-            Poco::Timestamp time; 
-            std::string message;
-        };
-
-        struct RuntimeInfo {
-            std::string name;
-            bool started = false;
-            bool stopped = false;
-            std::deque <OutputLine> output;
-            std::string finishMessage;
-            Poco::Timestamp startTime;
-            Stack::Data stack;    
-        };
-        RuntimeInfo runtimeInfo() const;
-
     private:
         void run();
         
@@ -56,20 +42,23 @@ class Scheduler {
 
         struct ActiveScript {
             typedef std::shared_ptr <ActiveScript> Ptr;
-            std::string name;
-            std::string content;
+            ScriptInfo info;
             Script script;
             ParseContext::Ptr pctx;
             ICommand::Ptr mainCommand;
+        };
+
+        struct StartedScript {
+            ActiveScript::Ptr script;
+            unsigned long long processId = 0;
         };
 
         Poco::Thread t;
         std::atomic_bool stopped;
         
         mutable std::mutex scriptMutex;
-        ActiveScript::Ptr pendingScript;
         ActiveScript::Ptr uploadedScript;
-        ActiveScript::Ptr runningScript;
+        StartedScript pendingScript;
        
 
         mutable std::mutex infoMutex;
@@ -77,7 +66,7 @@ class Scheduler {
 
         std::atomic_bool bgScriptStarted;
         std::atomic_bool bgScriptStopped;
-};
 
-std::ostream & operator << (std::ostream & os, const Scheduler::RuntimeInfo & info);
+        std::atomic_ullong processId = 1;
+};
 

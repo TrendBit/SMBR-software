@@ -93,3 +93,11 @@ std::set <std::string> Script::blockNames() const {
     return names;
 }
 
+std::string Script::serialize() const {
+    std::stringstream out;
+    for (const auto & line : lines_){
+        out << line << std::endl;
+    }
+    return out.str();
+}
+

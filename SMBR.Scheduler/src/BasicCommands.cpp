@@ -40,15 +40,36 @@ void PrintCommand::run(RunContext::Ptr rctx){
 
 
 void registerBasicBlocks(CommandFactory & f){
-    f.registerCommand("loop", [](Block::Ptr block, ParseContext::Ptr ctx) {
-        return std::make_shared<LoopCommand>(block, ctx);
-    });    
-    f.registerCommand("wait", [](Block::Ptr block, ParseContext::Ptr ctx) {
-        return std::make_shared<WaitCommand>(block, ctx);
-    });
-    f.registerCommand("print", [](Block::Ptr block, ParseContext::Ptr ctx) {
-        return std::make_shared<PrintCommand>(block, ctx);
-    });
+    {
+        CommandInfo info(
+            "loop", 
+            {{"times", "Number of times to loop - infinity if not specified", false}}, 
+            "Repeats the indented block of commands for the given number of iterations."
+        );
+        f.registerCommand(info, [](Block::Ptr block, ParseContext::Ptr ctx) {
+            return std::make_shared<LoopCommand>(block, ctx);
+        });
+    }
+    {
+        CommandInfo info(
+            "wait", 
+            {{"milliseconds", "Time to wait in milliseconds"}}, 
+            "Pauses execution for a specified time."
+        );
+        f.registerCommand(info, [](Block::Ptr block, ParseContext::Ptr ctx) {
+            return std::make_shared<WaitCommand>(block, ctx);
+        });
+    }
+    {
+        CommandInfo info(
+            "print", 
+            {{"content", "Content to print (any arguments on the line will be concatenated)"}}, 
+            "Print text to script output."
+        );
+        f.registerCommand(info, [](Block::Ptr block, ParseContext::Ptr ctx) {
+            return std::make_shared<PrintCommand>(block, ctx);
+        });    
+    }
 }
 
 

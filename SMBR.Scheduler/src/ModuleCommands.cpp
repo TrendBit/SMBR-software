@@ -8,19 +8,72 @@
 #include <fstream>
 
 void registerModuleBlocks(CommandFactory & f){
-    f.registerCommand("illumination", [](Block::Ptr block, ParseContext::Ptr ctx) {
-        return std::make_shared<Scripting::IlluminationCommand>(block, ctx);
-    });
-    f.registerCommand("heat", [](Block::Ptr block, ParseContext::Ptr ctx) {
-        return std::make_shared<Scripting::HeaterCommand>(block, ctx);
-    });
-    f.registerCommand("mix", [](Block::Ptr block, ParseContext::Ptr ctx) {
-        return std::make_shared<Scripting::MixerCommand>(block, ctx);
-    });
-    f.registerCommand("pump", [](Block::Ptr block, ParseContext::Ptr ctx) {
-        return std::make_shared<Scripting::PumpCommand>(block, ctx);
-    });
-    f.registerCommand("air", [](Block::Ptr block, ParseContext::Ptr ctx) {
-        return std::make_shared<Scripting::AeratorCommand>(block, ctx);
-    });
+
+    {
+        CommandInfo info(
+            "illumination", 
+            {
+                {"i0", "Intensity of channel 0"},
+                {"i1", "Intensity of channel 1"},
+                {"i2", "Intensity of channel 2"},
+                {"i3", "Intensity of channel 3"},
+            },
+            "Illumination command"
+        );
+        f.registerCommand(info, [](Block::Ptr block, ParseContext::Ptr ctx) {
+            return std::make_shared<Scripting::IlluminationCommand>(block, ctx);
+        });
+    }
+
+    {
+        CommandInfo info(
+            "heat", 
+            {
+                {"temperature", "Temperature to heat to"},
+            },
+            "Heating command"
+        );
+        f.registerCommand(info, [](Block::Ptr block, ParseContext::Ptr ctx) {
+            return std::make_shared<Scripting::HeaterCommand>(block, ctx);
+        });
+    }
+
+    {
+        CommandInfo info(
+            "mix", 
+            {
+                {"time", "Time to mix"},
+            },
+            "Mixing command"
+        );
+        f.registerCommand(info, [](Block::Ptr block, ParseContext::Ptr ctx) {
+            return std::make_shared<Scripting::MixerCommand>(block, ctx);
+        });
+    }
+
+    {
+        CommandInfo info(
+            "pump", 
+            {
+                {"speed", "Speed of the pump"},
+            },
+            "Pump command"
+        );
+        f.registerCommand(info, [](Block::Ptr block, ParseContext::Ptr ctx) {
+            return std::make_shared<Scripting::PumpCommand>(block, ctx);
+        });
+    }
+
+    {
+        CommandInfo info(
+            "air", 
+            {
+                {"speed", "Speed of the aerator"},
+            },
+            "Aerator command"
+        );
+        f.registerCommand(info, [](Block::Ptr block, ParseContext::Ptr ctx) {
+            return std::make_shared<Scripting::AeratorCommand>(block, ctx);
+        });
+    }
 }

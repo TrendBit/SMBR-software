@@ -66,16 +66,15 @@ CommandFactory & CommandFactory::instance(){
     return factory;
 }
 
-void CommandFactory::registerCommand(const std::string & command, std::function <ICommand::Ptr(Block::Ptr, ParseContext::Ptr)> factoryFnc){
-    factories[command] = factoryFnc;
+
+void CommandFactory::registerCommand(CommandInfo commandInfo, std::function <ICommand::Ptr(Block::Ptr, ParseContext::Ptr)> factoryFnc){
+    factories[commandInfo.name] = factoryFnc;
+    documentation[commandInfo.name] = commandInfo;
 }
 
 ICommand::Ptr CommandFactory::create(Block::Ptr block, ParseContext::Ptr ctx){
 
-    if (factories.empty()){
-        registerBasicBlocks(*this);
-        registerModuleBlocks(*this);
-    }
+    init();
 
     auto it = factories.find(block->line.command());
     if (it == factories.end()){
@@ -94,4 +93,48 @@ ICommand::Ptr CommandFactory::create(Block::Ptr block, ParseContext::Ptr ctx){
 ICommand::Ptr Interpreter::build(Block::Ptr block, ParseContext::Ptr pctx){
     return CommandFactory::instance().create(block, pctx);
     
+}
+
+void CommandFactory::init(){
+    if (factories.empty()){
+        registerBasicBlocks(*this);
+        registerModuleBlocks(*this);
+    }
+}
+
+void CommandFactory::createDocumentation(std::ostream & os){
+    init();
+
+/*
+### `wait <milliseconds>`
+Pauses execution for a specified time.
+- **Syntax**: `wait 1000` (waits 1000 ms)
+
+*/ 
+
+
+    //create markdown language docs
+    for (auto & f : documentation){
+           os << "### `" << f.first;
+            for (auto & a : f.second.arguments){
+                if (a.required){
+                    os << " <" << a.name << ">";
+                } else {
+                    os << " [" << a.name << "]";
+                }
+            }
+            os << "`" << std::endl;
+
+           os << f.second.description << std::endl;     
+
+            os << "#### Arguments" << std::endl;
+            os << "| Name | Description | Required |" << std::endl;
+            os << "|------|-------------|----------|" << std::endl;
+            for (auto & a : f.second.arguments){
+                os << "| `" << a.name << "` | " << a.description << " | " << (a.required ? "Yes" : "No") << " |" << std::endl;
+            }
+
+            os << std::endl;
+    }
+
 }

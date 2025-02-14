@@ -73,16 +73,41 @@ class ICommand {
         virtual void run(RunContext::Ptr runCtx) = 0;
 };
 
+struct CommandArgument {
+    std::string name;
+    std::string description;
+    bool required = true;
+
+    CommandArgument(const std::string & name, const std::string & description, bool required = true) 
+        : name(name), description(description), required(required) {
+        
+    }
+};
+
+struct CommandInfo {
+    std::string name;
+    std::vector <CommandArgument> arguments;
+    std::string description;
+    CommandInfo(std::string name = "", std::vector <CommandArgument> arguments = {}, std::string  description = std::string()) : name(name), arguments(arguments), description(description) {
+        
+    }
+};
+
 class CommandFactory {
     public:
         static CommandFactory & instance();
 
-        void registerCommand(const std::string & command, std::function <ICommand::Ptr(Block::Ptr, ParseContext::Ptr)> factoryFnc);
+        void registerCommand(CommandInfo commandInfo, std::function <ICommand::Ptr(Block::Ptr, ParseContext::Ptr)> factoryFnc);
 
         ICommand::Ptr create(Block::Ptr block, ParseContext::Ptr ctx);
+
+        void createDocumentation(std::ostream & os);
+    private:
+        void init();
     private:
         static CommandFactory i;
         std::unordered_map <std::string, std::function<ICommand::Ptr(Block::Ptr, ParseContext::Ptr)> > factories;
+        std::unordered_map <std::string, CommandInfo> documentation;
 };
 
 class Interpreter {

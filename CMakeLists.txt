@@ -27,6 +27,7 @@ add_subdirectory(SMBR.Services/avahi)
 add_subdirectory(SMBR.Utilities/script-runner-api)
 add_subdirectory(SMBR.Utilities/script-runner-can)
 add_subdirectory(SMBR.Utilities/script-doc-generator)
+add_subdirectory(SMBR.Utilities/can-watch)
 
 #tests
 add_subdirectory(SMBR.Utilities/scheduler)

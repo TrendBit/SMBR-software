@@ -2,3 +2,6 @@
 [submodule "SMBR.Can/Codes/include/codes"]
 	path = SMBR.Can/Codes/include/codes
 	url = https://github.com/TrendBit/SMBR-CANBUS-Codes
+[submodule "SMBR.Utilities/can-watch"]
+	path = SMBR.Utilities/can-watch
+	url = git@github.com:TrendBit/SMBR-candump.git

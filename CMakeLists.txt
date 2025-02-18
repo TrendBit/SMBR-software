@@ -22,6 +22,7 @@ add_subdirectory(SMBR.Services/can0)
 add_subdirectory(SMBR.Services/smbr-api-server)
 add_subdirectory(SMBR.Services/smbr-core-module)
 add_subdirectory(SMBR.Services/avahi)
+add_subdirectory(SMBR.Services/smbr-firmware-update)
 
 #utilities
 add_subdirectory(SMBR.Utilities/script-runner-api)

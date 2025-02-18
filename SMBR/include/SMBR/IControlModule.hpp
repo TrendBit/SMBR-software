@@ -163,6 +163,17 @@ public:
      * @brief Stops the mixer immediately.
      */
     virtual std::future <bool> stopMixer() = 0; 
+
+    /**
+     * @brief Prints custom text on the display of the module.
+     * @param text The text to be displayed.
+     */
+    virtual std::future <bool> printCustomText(std::string text) = 0;
+
+    /**
+     * @brief Clears the custom text on the display of the module.
+     */
+    virtual std::future <bool> clearCustomText() = 0;
 };
 
 

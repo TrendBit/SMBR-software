@@ -76,4 +76,17 @@ void registerModuleBlocks(CommandFactory & f){
             return std::make_shared<Scripting::AeratorCommand>(block, ctx);
         });
     }
+
+    {
+        CommandInfo info(
+            "display", 
+            {
+                {"message", "Message to display", true},
+            },
+            "Display message on OLED unit of the device"
+        );
+        f.registerCommand(info, [](Block::Ptr block, ParseContext::Ptr ctx) {
+            return std::make_shared<Scripting::DisplayCommand>(block, ctx);
+        });
+    }
 }

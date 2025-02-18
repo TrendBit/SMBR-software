@@ -44,6 +44,9 @@
 #include "codes/messages/mixer/get_rpm_response.hpp"
 #include "codes/messages/mixer/stir.hpp"
 #include "codes/messages/mixer/stop.hpp"
+#include "codes/messages/mini_oled/print_custom_text.hpp"
+#include "codes/messages/mini_oled/clear_custom_text.hpp"
+
 
 CanControlModule::CanControlModule(std::string uidHex, ICanChannel::Ptr channel) : base({Modules::Control, uidHex}, channel){
 
@@ -312,5 +315,14 @@ std::future <bool> CanControlModule::stopMixer() {
     return base.set(r);
 }
 
+std::future <bool> CanControlModule::printCustomText(std::string text) {
+    App_messages::Mini_OLED::Print_custom_text r(text);
+    return base.set(r);
+}
+
+std::future <bool> CanControlModule::clearCustomText() {
+    App_messages::Mini_OLED::Clear_custom_text r;
+    return base.set(r);
+}
 
 

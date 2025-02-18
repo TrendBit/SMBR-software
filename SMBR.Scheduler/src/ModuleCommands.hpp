@@ -1,6 +1,7 @@
 #include <SMBR/Interpreter.hpp>
 #include <SMBR/Script.hpp>
 #include <future>
+#include <Poco/String.h> 
 
 namespace Scripting {
 
@@ -119,6 +120,32 @@ namespace Scripting {
             }
     };
 
+    struct DisplayInput {
+        std::string message;
+    };
+
+    class Display {
+        public:
+            DisplayInput parse(ScriptLine l){
+                DisplayInput input;
+                if (l.noArgs()){
+                    input.message = "";
+                } else {
+                    input.message = l.arg(0);
+                    input.message = Poco::replace(input.message, "\"", "");
+                }
+                return input;
+            }
+            std::future <bool> run(DisplayInput input, ISystemModule::Ptr m){
+                if (input.message.empty()){
+                    return m->controlModule()->clearCustomText();
+                } else {
+                    return m->controlModule()->printCustomText(input.message);
+                }
+                
+            }
+    };
+
 
 
     typedef ModuleCommand <Heater, HeaterInput> HeaterCommand;
@@ -126,7 +153,7 @@ namespace Scripting {
     typedef ModuleCommand <Mixer, MixerInput> MixerCommand;
     typedef ModuleCommand <Pump, PumpInput> PumpCommand;
     typedef ModuleCommand <Aerator, AeratorInput> AeratorCommand;
-
+    typedef ModuleCommand <Display, DisplayInput> DisplayCommand;
 }
 
 

@@ -8,7 +8,7 @@ Wants=smbr-api.service
 [Service]
 Type=oneshot
 WorkingDirectory=/home/root/firmware
-ExecStart=/bin/bash -c 'systemctl stop smbr-api-server.service smbr-core-module.service && /usr/bin/python3 /home/root/firmware/update_all_modules.py -d /home/root/firmware/binaries/ && systemctl start smbr-api-server.service smbr-core-module.service'
+ExecStart=/bin/bash -c 'systemctl stop smbr-api-server.service smbr-core-module.service && /usr/bin/python3 /home/root/firmware/update_all_modules.py -y -d /home/root/firmware/binaries/ && systemctl start smbr-api-server.service smbr-core-module.service'
 RemainAfterExit=true
 
 [Install]

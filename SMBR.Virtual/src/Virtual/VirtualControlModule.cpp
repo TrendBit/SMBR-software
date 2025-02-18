@@ -213,3 +213,17 @@ std::future <bool> VirtualControlModule::stopMixer(){
     });
 }
 
+std::future <bool> VirtualControlModule::printCustomText(std::string text){
+    return std::async(std::launch::async, [text]() {
+        Random::randomDelay();
+        return true;
+    });
+}
+
+std::future <bool> VirtualControlModule::clearCustomText(){
+    return std::async(std::launch::async, []() {
+        Random::randomDelay();
+        return true;
+    });
+}
+

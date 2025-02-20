@@ -3,11 +3,11 @@ Description=SMBR Telegraf Service
 After=network.target
 
 [Service]
-ExecStartPre=/bin/bash -c 'echo "SMPBR_SID=$(smbr-core-module --sid)" > /etc/telegraf/telegraf.env'
+ExecStartPre=/bin/bash -c 'echo "SMPBR_SID=$(reactor-core-module --sid)" > /etc/telegraf/telegraf.env'
 ExecStartPre=/bin/bash -c 'SMPBR_DATABASE=$(avahi-browse _bioreactor_database._tcp -rt | grep address | sed -n "s/^ *address = \[\(.*\)\]/\1/p" ) || exit 1; [ -n "$SMPBR_DATABASE" ] && echo "SMPBR_DATABASE=$SMPBR_DATABASE" >> /etc/telegraf/telegraf.env'
 EnvironmentFile=-/etc/telegraf/telegraf.env
 Type=simple
-ExecStart=telegraf --config-directory /home/root/database-export/telegraf.d/
+ExecStart=telegraf --config-directory /home/reactor/database-export/telegraf.d/
 Restart=always
 User=root
 

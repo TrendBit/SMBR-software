@@ -100,12 +100,18 @@ script parser and interpreter
 oatpp based REST server implementation
 
 ### SMBR.Services
-#### smbr-api-server (executable)
+#### reactor-api-server (executable)
 api server - REST service - contains main.cpp
 
-#### smbr-core-module (executable)
+#### reactor-core-module (executable)
 core can module
 
-#### other services ... (to be done)
+### SMBR.Utilities
+#### reactor-can-watch (executable)
+listen and interpret can messages
+
+#### reactor-script-api (executable)
+runs script from local file on local api server
+
 
 

@@ -1,13 +1,13 @@
 [Unit]
 Description=SMBR API Server Service
 After=network.target
-After=smbr-core-module.service
-Wants=smbr-core-module.service
+After=reactor-core-module.service
+Wants=reactor-core-module.service
 
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/smbr-api-server
+ExecStart=/usr/bin/reactor-api-server
 Restart=always
 User=root
 

@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.20)
-project(smbr-firmware-update)
+project(reactor-firmware-update)
 
 
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/smbr-firmware-update.service
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/reactor-firmware-update.service
   DESTINATION ${SMBR_INSTALL_SERVICES}
 )
 

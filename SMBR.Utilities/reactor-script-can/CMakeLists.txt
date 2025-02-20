@@ -1,19 +1,23 @@
 cmake_minimum_required(VERSION 3.20)
-project(smbr-script-api)
+project(reactor-script-can)
 
 set(CMAKE_CXX_STANDARD 17)
 
 
-add_executable(${PROJECT_NAME} src/main-script-runner-api.cpp)
+add_executable(${PROJECT_NAME} src/main-script-runner-can.cpp)
 
 target_link_libraries(${PROJECT_NAME} 
   SMBR
-  SMBR.REST
+  SMBR.Scheduler
+  SMBR.Virtual
+  SMBR.Can.Modules
 )
 
 add_dependencies(${PROJECT_NAME} 
   SMBR
-  SMBR.REST
+  SMBR.Scheduler
+  SMBR.Virtual
+  SMBR.Can.Modules
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES

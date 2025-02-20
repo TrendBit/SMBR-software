@@ -14,6 +14,6 @@ fi
 echo "IP_ADDRESS: $IP_ADDRESS"
 
 #enable services over ssh
-ssh root@${IP_ADDRESS} systemctl enable avahi-daemon.service can0.service smbr-core-module.service smbr-api-server.service
+ssh root@${IP_ADDRESS} systemctl enable avahi-daemon.service can0.service reactor-core-module.service reactor-api-server.service
 
 

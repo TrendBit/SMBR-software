@@ -1,25 +1,33 @@
 cmake_minimum_required(VERSION 3.20)
-project(smbr-api-server)
+project(reactor-core-module)
 
 set(CMAKE_CXX_STANDARD 17)
 
+# Source files
+file(GLOB_RECURSE SOURCES
+    "src/*.cpp"
+)
 
-add_executable(${PROJECT_NAME} src/main-api-server.cpp)
+file(GLOB_RECURSE HEADERS
+    "src/*.hpp"
+)
+
+# Create executable
+add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
+
+target_include_directories(${PROJECT_NAME}
+  PRIVATE src
+)
 
 target_link_libraries(${PROJECT_NAME} 
-  SMBR
-  SMBR.REST
-  SMBR.Scheduler
-  SMBR.Virtual
-  SMBR.Can.Modules
+  SMBR.Can.Codes
+  PocoFoundation
+  PocoCrypto
+  systemd
 )
 
 add_dependencies(${PROJECT_NAME} 
-  SMBR
-  SMBR.REST
-  SMBR.Scheduler
-  SMBR.Virtual
-  SMBR.Can.Modules
+  SMBR.Can.Codes
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
@@ -34,7 +42,7 @@ install(TARGETS ${PROJECT_NAME}
   RUNTIME DESTINATION ${SMBR_INSTALL_BIN}
 )
 
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/smbr-api-server.service
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/reactor-core-module.service
   DESTINATION ${SMBR_INSTALL_SERVICES}
 )
 

@@ -7,7 +7,7 @@ Wants=can0.service
 
 [Service]
 Type=notify
-ExecStart=/usr/bin/smbr-core-module
+ExecStart=/usr/bin/reactor-core-module
 Restart=always
 User=root
 

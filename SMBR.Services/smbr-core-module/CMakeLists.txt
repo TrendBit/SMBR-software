@@ -23,6 +23,7 @@ target_link_libraries(${PROJECT_NAME}
   SMBR.Can.Codes
   PocoFoundation
   PocoCrypto
+  systemd
 )
 
 add_dependencies(${PROJECT_NAME} 

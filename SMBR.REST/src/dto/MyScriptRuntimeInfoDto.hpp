@@ -25,11 +25,11 @@ class MyScriptRuntimeInfoDto : public oatpp::DTO {
     /**
      * @brief current stack line info of the script.
      */
-    DTO_FIELD(List<Int32>::ObjectWrapper, stack); 
+    DTO_FIELD(Vector<Int32>::ObjectWrapper, stack); 
     /**
      * @brief last output lines of the script.
      */
-    DTO_FIELD(List<String>::ObjectWrapper, output); 
+    DTO_FIELD(Vector<String>::ObjectWrapper, output); 
     /**
      * @brief whether the script has started.
      */

@@ -9,11 +9,11 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     try {
         return body();
     } catch (TimeoutException & e){
-        return createResponse(Status::CODE_504, name + " timed out");
+        return createResponse(Status::CODE_504, name + " timed out: "  + std::string(e.what()));
     } catch (NotFoundException & e){
-        return createResponse(Status::CODE_404, name + " not found");
+        return createResponse(Status::CODE_404, name + " not found: " + std::string(e.what()));
     } catch (std::exception & e){
-        return createResponse(Status::CODE_500, "Failed to retrieve " + name);
+        return createResponse(Status::CODE_500, "Failed to retrieve " + name + ": " + std::string(e.what()));
     }
 }
 
@@ -30,11 +30,11 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         }
         
     } catch (TimeoutException & e){
-        return createResponse(Status::CODE_504, name + " timed out");
+        return createResponse(Status::CODE_504, name + " timed out: "  + std::string(e.what()));
     } catch (NotFoundException & e){
-        return createResponse(Status::CODE_404, name + " not found");
+        return createResponse(Status::CODE_404, name + " not found: "  + std::string(e.what()));
     } catch (std::exception & e){
-        return createResponse(Status::CODE_500, "Failed to retrieve " + name);
+        return createResponse(Status::CODE_500, "Failed to retrieve " + name+ ": " + std::string(e.what()));
     }
 }
 
@@ -837,11 +837,11 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         infoResponseDto->processId = info.processId;
         infoResponseDto->name = info.name;
         infoResponseDto->finalMessage = info.finishMessage;
-        infoResponseDto->stack = oatpp::List<Int32>::createShared();
+        infoResponseDto->stack = oatpp::Vector<Int32>::createShared();
         for (auto i : info.stack){
             infoResponseDto->stack->push_back(i);
         }
-        infoResponseDto->output = oatpp::List<String>::createShared();
+        infoResponseDto->output = oatpp::Vector<String>::createShared();
         for (auto o : info.output){
             std::stringstream s;
             s << o;

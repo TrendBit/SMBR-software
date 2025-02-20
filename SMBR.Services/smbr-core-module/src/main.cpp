@@ -1,6 +1,6 @@
 #include "main.hpp"
 #include "core_module.hpp"
-
+#include <systemd/sd-daemon.h>
 
 int main(int argc, char* argv[]) {
     try {
@@ -53,9 +53,17 @@ int main(int argc, char* argv[]) {
         // Default behavior
         I2C_bus i2c("/dev/i2c-1");
         Core_module core(&i2c);
+
+        sd_notify(0, "READY=1");
+
         core.Run();
 
+        sd_notify(0, "STOPPING=1");
+
     } catch (const std::exception &e) {
+
+        sd_notifyf(0, "STATUS=Error: %s", e.what());
+        
         std::cerr << e.what() << std::endl;
         return -1;
     }

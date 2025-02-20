@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(script-runner-can)
+project(smbr-script-can)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -26,6 +26,6 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
   CXX_STANDARD_REQUIRED ON
 )
 
-install(TARGETS ${PROJECT_NAME} 
-  RUNTIME DESTINATION ${SMBR_INSTALL_HOME}
+install(TARGETS ${PROJECT_NAME}
+  RUNTIME DESTINATION ${SMBR_INSTALL_BIN}
 )

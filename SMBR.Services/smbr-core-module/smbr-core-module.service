@@ -6,8 +6,8 @@ Wants=can0.service
 
 
 [Service]
-Type=simple
-ExecStart=/usr/local/bin/smbr-core-module
+Type=notify
+ExecStart=/usr/bin/smbr-core-module
 Restart=always
 User=root
 

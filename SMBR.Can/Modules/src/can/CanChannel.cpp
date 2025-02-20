@@ -186,7 +186,7 @@ void CanChannel::run() {
         } catch (std::exception &e) {
             std::cerr << "Failed to receive CAN message (" << e.what() << ")" << std::endl;
         } catch (...) {
-            std::cerr << "Failed to receive CAN message (TODO error)" << std::endl;
+            std::cerr << "Failed to receive CAN message (unknown error)" << std::endl;
         }
     }
 }

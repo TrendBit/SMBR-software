@@ -13,20 +13,27 @@ APIScheduler::APIScheduler(APIClientParams params)
 
 APIScheduler::~APIScheduler() {}
 
+static void checkResponse(int code, std::string description, const std::string & message) {
+    throw std::runtime_error("Error: " + std::to_string(code) + " " + description + " - " + message);
+}
+static void checkResponse(std::shared_ptr<oatpp::web::protocol::http::incoming::Response> response){
+    if (response->getStatusCode() != 200) {
+        checkResponse(response->getStatusCode(), response->getStatusDescription(), response->readBodyToString()->c_str());
+    }
+    
+}
+
 unsigned long long APIScheduler::start() {
     auto response = impl->client()->startScheduler();
-    if (response->getStatusCode() != 200) {
-        throw std::runtime_error("start scheduler error TODO");
-    }
+    checkResponse(response);
+
     auto processIdDto = response->readBodyToDto<oatpp::Object<MyScriptProcessIdDto>>(impl->objectMapper());
     return processIdDto->processId;
 }
 
 void APIScheduler::stop() {
     auto response = impl->client()->stopScheduler();
-    if (response->getStatusCode() != 200) {
-        throw std::runtime_error("stop scheduler error TODO");
-    }
+    checkResponse(response);
 }
 
 void APIScheduler::setScriptFromString(const ScriptInfo & info) {
@@ -34,10 +41,7 @@ void APIScheduler::setScriptFromString(const ScriptInfo & info) {
     scriptDto->name = info.name;
     scriptDto->content = info.content;
     auto response = impl->client()->uploadScript(scriptDto);
-    if (response->getStatusCode() != 200) {
-        throw std::runtime_error("set script error TODO");
-    }
-
+    checkResponse(response);
 }
 
 void APIScheduler::setScriptFromFile(const std::string & filename) {
@@ -56,37 +60,48 @@ ScriptInfo APIScheduler::getScript() const {
 
     auto response = impl->client()->getScript();
 
-    if (response->getStatusCode() == 200) {
-        auto scriptDto = response->readBodyToDto<oatpp::Object<MyScriptDto>>(impl->objectMapper());
-        ScriptInfo si;
-        si.name = scriptDto->name; 
-        si.content = scriptDto->content;
-        return si;
-    } else {
-        throw std::runtime_error("get scrfipt error TODO");
-    }
+    checkResponse(response);
+
+    auto scriptDto = response->readBodyToDto<oatpp::Object<MyScriptDto>>(impl->objectMapper());
+    ScriptInfo si;
+    si.name = scriptDto->name; 
+    si.content = scriptDto->content;
+    return si;
+
 }
 
 RuntimeInfo APIScheduler::getRuntimeInfo() const {
     
     auto response = impl->client()->getSchedulerInfo();
-    
-    if (response->getStatusCode() == 200) {
-        //auto runtimeInfoDto = response->readBodyToDto<MyScriptRuntimeInfoDto>(impl->objectMapper());
-        auto runtimeInfoDto = response->readBodyToDto<oatpp::Object<MyScriptRuntimeInfoDto>>(impl->objectMapper());
 
-        RuntimeInfo ri;
-        ri.started = runtimeInfoDto->started;
-        ri.stopped = runtimeInfoDto->stopped;
-        ri.name = runtimeInfoDto->name;
-        ri.finishMessage = runtimeInfoDto->finalMessage;
-        ri.processId = runtimeInfoDto->processId;
-        //TODO stack + output
-        
-        return ri;
-    } else {
-        throw std::runtime_error("get runtime info error TODO");
+    checkResponse(response);
+
+    //auto runtimeInfoDto = response->readBodyToDto<MyScriptRuntimeInfoDto>(impl->objectMapper());
+    auto runtimeInfoDto = response->readBodyToDto<oatpp::Object<MyScriptRuntimeInfoDto>>(impl->objectMapper());
+
+    RuntimeInfo ri;
+    ri.started = runtimeInfoDto->started;
+    ri.stopped = runtimeInfoDto->stopped;
+    ri.name = runtimeInfoDto->name;
+    ri.finishMessage = runtimeInfoDto->finalMessage;
+    ri.processId = runtimeInfoDto->processId;
+
+    for (auto it = runtimeInfoDto->stack->begin(); it != runtimeInfoDto->stack->end(); it++) {
+        ri.stack.push_back(*it);
     }
+
+    for (auto it = runtimeInfoDto->output->begin(); it != runtimeInfoDto->output->end(); it++) {
+        OutputLine o;
+        o.message = *it;
+        ri.output.push_back(o);
+        //ri.output.push_back(*it);
+    }
+
+    /*runtimeInfoDto->output->forEach([&ri](const MyScriptOutputLineDto & data){
+        ri.output.push_back(data.message);
+    });*/
+    return ri;
+
     
 }
 

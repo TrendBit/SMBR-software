@@ -38,22 +38,18 @@ std::string CanID::toReadableString() const {
 
 ResponseInfo::ResponseInfo(CanID responseId){
         acceptFunction = [responseId](const ResponseData & response) {
-            std::cout << "a try accept " <<  responseId << " vs " << response.id << std::endl;
             return response.id == responseId;
         };
         isDoneFunction = [](const std::vector <ResponseData> & responses) {
-            std::cout << "a is done" << std::endl;
             return responses.size() > 0;
         };
     }
     
     ResponseInfo::ResponseInfo(CanID responseId, int timeoutMs) : timeoutMs(timeoutMs) {
         acceptFunction = [responseId](const ResponseData & response) {
-            std::cout << "b try accept " <<  responseId << " vs " << response.id << std::endl;
             return response.id == responseId;
         };
         isDoneFunction = [](const std::vector <ResponseData> & responses) {
-            std::cout << "b is done" << std::endl;
             return responses.size() > 0;
         };
     }

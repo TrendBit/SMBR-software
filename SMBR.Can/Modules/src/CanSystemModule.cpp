@@ -38,6 +38,12 @@ CanSystemModule::CanSystemModule(ICanChannel::Ptr channel) : channel(channel) {
         }
         common[mm] = std::make_shared<CanCommonModule>(mm, channel);
     }
+
+    std::cout << "DETECTED MODULES: " << common.size() << std::endl;
+    for (const auto& mm : common) {
+        std::cout << "MODULE: " << mm.first << std::endl;
+    }
+    
 }
 
 std::future <ISystemModule::AvailableModules> CanSystemModule::getAvailableModules() {

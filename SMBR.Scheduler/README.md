@@ -31,6 +31,13 @@ my_measure:
 
 ## Commands
 
+### `display <message>`
+Display message on OLED unit of the device
+#### Arguments
+| Name | Description | Required |
+|------|-------------|----------|
+| `message` | Message to display | Yes |
+
 ### `air <speed>`
 Aerator command
 #### Arguments

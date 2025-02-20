@@ -1,3 +1,3 @@
-version: v0.6
-branch: HEAD
-commit: c49690e
+version: v0.6-25
+branch: sensor_module
+commit: 0ef6c37

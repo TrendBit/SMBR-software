@@ -7,7 +7,7 @@ Wants=smbr-core-module.service
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/smbr-api-server
+ExecStart=/usr/bin/smbr-api-server
 Restart=always
 User=root
 

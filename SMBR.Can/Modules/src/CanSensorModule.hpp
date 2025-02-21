@@ -15,6 +15,7 @@ public:
     std::future <float> getBottomMeasuredTemperature() override;
     std::future <float> getTopSensorTemperature() override;
     std::future <float> getBottomSensorTemperature() override;
+    std::future <bool> clearCustomTextOnOled() override;
 
 private:
     BaseModule base;

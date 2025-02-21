@@ -845,6 +845,18 @@ public:
     ADD_CORS(getBottomSensorTemperature)
     ENDPOINT("GET", "/sensor/bottle/bottom/sensor_temperature", getBottomSensorTemperature);
 
+    /**
+     * @brief Clears custom text on Mini OLED display and displays the serial number.
+     */
+    ENDPOINT_INFO(clearCustomTextOnOled) {
+        info->summary = "Clear custom text on Mini OLED display";
+        info->description = "Clear custom text on Mini OLED display and display serial number of the device.";
+        info->addTag("Sensor module");
+        info->addResponse<String>(Status::CODE_200, "application/json", "Successfully cleared custom text on Mini OLED display");
+        info->addResponse<String>(Status::CODE_500, "application/json", "Failed to clear custom text");
+    }
+    ADD_CORS(clearCustomTextOnOled)
+    ENDPOINT("GET", "/sensor/oled/clear_custom_text", clearCustomTextOnOled);
 
 
 

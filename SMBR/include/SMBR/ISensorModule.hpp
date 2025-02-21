@@ -34,5 +34,9 @@ public:
      * @brief Retrieves the temperature of the bottom sensor case of the bottle.
      */
     virtual std::future <float> getBottomSensorTemperature() = 0;
+    /**
+     * @brief Clears custom text on Mini OLED display and displays the serial number.
+     */
+    virtual std::future <bool> clearCustomTextOnOled() = 0;
 };
     

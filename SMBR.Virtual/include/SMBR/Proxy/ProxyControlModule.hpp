@@ -103,12 +103,6 @@ public:
     std::future <bool> stopMixer() override {
         return t.template transform<bool>(mName, "stopMixer", m->stopMixer());
     }
-    std::future <bool> printCustomText(std::string text) override {
-        return t.template transform<bool>(mName, "printCustomText (text=" + text + ")", m->printCustomText(text));
-    }
-    std::future <bool> clearCustomText() override {
-        return t.template transform<bool>(mName, "clearCustomText", m->clearCustomText());
-    }
 
 
     private:

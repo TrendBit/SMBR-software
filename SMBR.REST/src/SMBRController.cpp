@@ -779,9 +779,15 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
 }
 
-std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::clearCustomTextOnOled() {
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::clearCustomText() {
     return processBool(__FUNCTION__, [&](){
-        return wait(systemModule->sensorModule()->clearCustomTextOnOled());
+        return wait(systemModule->sensorModule()->clearCustomText());
+    });
+}
+
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::printCustomText(const oatpp::Object<MyTextDto>& body) {
+    return processBool(__FUNCTION__, [&](){
+        return wait(systemModule->sensorModule()->printCustomText(body->text));
     });
 }
 

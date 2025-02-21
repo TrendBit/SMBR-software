@@ -10,6 +10,7 @@
 #include "codes/messages/bottle_temperature/bottom_sensor_temperature_request.hpp"
 #include "codes/messages/bottle_temperature/bottom_sensor_temperature_response.hpp"
 #include "codes/messages/mini_oled/clear_custom_text.hpp"
+#include "codes/messages/mini_oled/print_custom_text.hpp"
 #include "codes/codes.hpp"
 #include <iostream>       // std::cout
 #include <future>         // std::async, std::future
@@ -77,7 +78,12 @@ std::future <float> CanSensorModule::getBottomSensorTemperature() {
     }, 2000);
 }
 
-std::future<bool> CanSensorModule::clearCustomTextOnOled() {
+std::future <bool> CanSensorModule::clearCustomText() {
     App_messages::Mini_OLED::Clear_custom_text r;
+    return base.set(r);
+}
+
+std::future <bool> CanSensorModule::printCustomText(std::string text) {
+    App_messages::Mini_OLED::Print_custom_text r(text);
     return base.set(r);
 }

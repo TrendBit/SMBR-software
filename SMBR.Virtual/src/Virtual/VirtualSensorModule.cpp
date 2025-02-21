@@ -39,8 +39,15 @@ std::future <float> VirtualSensorModule::getBottomSensorTemperature() {
     });
 }
 
-std::future <bool> VirtualSensorModule::clearCustomTextOnOled(){
+std::future <bool> VirtualSensorModule::clearCustomText(){
     return std::async(std::launch::async, []() {
+        Random::randomDelay();
+        return true;
+    });
+}
+
+std::future <bool> VirtualSensorModule::printCustomText(std::string text){
+    return std::async(std::launch::async, [text]() {
         Random::randomDelay();
         return true;
     });

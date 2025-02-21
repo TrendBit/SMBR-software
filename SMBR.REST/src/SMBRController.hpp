@@ -27,6 +27,7 @@
 #include "dto/MyScriptDto.hpp"
 #include "dto/MyScriptProcessIdDto.hpp"
 #include "dto/MyScriptRuntimeInfoDto.hpp"
+#include "dto/MyTextDto.hpp"
 
 #include "oatpp/data/mapping/ObjectMapper.hpp"
 
@@ -848,16 +849,29 @@ public:
     /**
      * @brief Clears custom text on Mini OLED display and displays the serial number.
      */
-    ENDPOINT_INFO(clearCustomTextOnOled) {
+    ENDPOINT_INFO(clearCustomText) {
         info->summary = "Clear custom text on Mini OLED display";
         info->description = "Clear custom text on Mini OLED display and display serial number of the device.";
         info->addTag("Sensor module");
         info->addResponse<String>(Status::CODE_200, "application/json", "Successfully cleared custom text on Mini OLED display");
         info->addResponse<String>(Status::CODE_500, "application/json", "Failed to clear custom text");
     }
-    ADD_CORS(clearCustomTextOnOled)
-    ENDPOINT("GET", "/sensor/oled/clear_custom_text", clearCustomTextOnOled);
+    ADD_CORS(clearCustomText)
+    ENDPOINT("GET", "/sensor/oled/clear_custom_text", clearCustomText);
 
+    /**
+     * @brief Prints custom text on Mini OLED display.
+     */
+    ENDPOINT_INFO(printCustomText) {
+        info->summary = "Print custom text on Mini OLED display";
+        info->description = "Use last line of Mini OLED display to print custom text. Text will be appended to existing text.";
+        info->addTag("Sensor module");
+        info->addConsumes<Object<MyTextDto>>("application/json");
+        info->addResponse<String>(Status::CODE_200, "application/json", "Successfully printed custom text on Mini OLED display");
+        info->addResponse<String>(Status::CODE_500, "application/json", "Failed to print custom text");
+    }
+    ADD_CORS(printCustomText)
+    ENDPOINT("POST", "/sensor/oled/print_custom_text", printCustomText, BODY_DTO(Object<MyTextDto>, dto));
 
 
 

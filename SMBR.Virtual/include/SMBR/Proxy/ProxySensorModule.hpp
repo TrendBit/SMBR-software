@@ -29,6 +29,12 @@ public:
     std::future <float> getBottomSensorTemperature() override {
         return t.template transform<float>(mName, "getBottomSensorTemperature", m->getBottomSensorTemperature());
     }
+    std::future <bool> clearCustomText() override {
+        return t.template transform<bool>(mName, "clearCustomText", m->clearCustomText());
+    }
+    std::future <bool> printCustomText(std::string text) override {
+        return t.template transform<bool>(mName, "printCustomText (text=" + text + ")", m->printCustomText(text));
+    }
     
     private:
         ModuleID mName;

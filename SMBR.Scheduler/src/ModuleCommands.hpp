@@ -138,9 +138,9 @@ namespace Scripting {
             }
             std::future <bool> run(DisplayInput input, ISystemModule::Ptr m){
                 if (input.message.empty()){
-                    return m->controlModule()->clearCustomText();
+                    return m->sensorModule()->clearCustomText();
                 } else {
-                    return m->controlModule()->printCustomText(input.message);
+                    return m->sensorModule()->printCustomText(input.message);
                 }
                 
             }

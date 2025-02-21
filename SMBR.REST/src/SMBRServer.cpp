@@ -39,7 +39,7 @@ void SMBRServer::run()
 
     oatpp::network::Server server(connectionProvider, connectionHandler);
 
-    OATPP_LOGi("MyApp", "Server running on port {}", connectionProvider->getProperty("port").toString()->c_str());
+    OATPP_LOGi("App", "Server running on port {}", connectionProvider->getProperty("port").toString()->c_str());
 
     server.run();
 

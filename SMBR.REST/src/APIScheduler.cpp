@@ -1,6 +1,6 @@
 #include "SMBR/APIScheduler.hpp"
-#include "dto/MyScriptDto.hpp"
-#include "dto/MyScriptRuntimeInfoDto.hpp"
+#include "dto/ScriptDto.hpp"
+#include "dto/ScriptRuntimeInfoDto.hpp"
 
 #include "APIClientImpl.hpp"
 #include <fstream>
@@ -27,7 +27,7 @@ unsigned long long APIScheduler::start() {
     auto response = impl->client()->startScheduler();
     checkResponse(response);
 
-    auto processIdDto = response->readBodyToDto<oatpp::Object<MyScriptProcessIdDto>>(impl->objectMapper());
+    auto processIdDto = response->readBodyToDto<oatpp::Object<ScriptProcessIdDto>>(impl->objectMapper());
     return processIdDto->processId;
 }
 
@@ -37,7 +37,7 @@ void APIScheduler::stop() {
 }
 
 void APIScheduler::setScriptFromString(const ScriptInfo & info) {
-    auto scriptDto = MyScriptDto::createShared();
+    auto scriptDto = ScriptDto::createShared();
     scriptDto->name = info.name;
     scriptDto->content = info.content;
     auto response = impl->client()->uploadScript(scriptDto);
@@ -62,7 +62,7 @@ ScriptInfo APIScheduler::getScript() const {
 
     checkResponse(response);
 
-    auto scriptDto = response->readBodyToDto<oatpp::Object<MyScriptDto>>(impl->objectMapper());
+    auto scriptDto = response->readBodyToDto<oatpp::Object<ScriptDto>>(impl->objectMapper());
     ScriptInfo si;
     si.name = scriptDto->name; 
     si.content = scriptDto->content;
@@ -76,8 +76,8 @@ RuntimeInfo APIScheduler::getRuntimeInfo() const {
 
     checkResponse(response);
 
-    //auto runtimeInfoDto = response->readBodyToDto<MyScriptRuntimeInfoDto>(impl->objectMapper());
-    auto runtimeInfoDto = response->readBodyToDto<oatpp::Object<MyScriptRuntimeInfoDto>>(impl->objectMapper());
+    //auto runtimeInfoDto = response->readBodyToDto<ScriptRuntimeInfoDto>(impl->objectMapper());
+    auto runtimeInfoDto = response->readBodyToDto<oatpp::Object<ScriptRuntimeInfoDto>>(impl->objectMapper());
 
     RuntimeInfo ri;
     ri.started = runtimeInfoDto->started;
@@ -97,7 +97,7 @@ RuntimeInfo APIScheduler::getRuntimeInfo() const {
         //ri.output.push_back(*it);
     }
 
-    /*runtimeInfoDto->output->forEach([&ri](const MyScriptOutputLineDto & data){
+    /*runtimeInfoDto->output->forEach([&ri](const ScriptOutputLineDto & data){
         ri.output.push_back(data.message);
     });*/
     return ri;

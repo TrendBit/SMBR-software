@@ -7,7 +7,7 @@
 #include "oatpp/macro/component.hpp"
 #include "oatpp-swagger/Model.hpp"
 #include "oatpp-swagger/Resources.hpp"
-#include "interceptors/MyResponseInterceptor.hpp"
+#include "interceptors/ResponseInterceptor.hpp"
 
 /**
  * @class AppComponent

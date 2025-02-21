@@ -8,8 +8,8 @@
 /**
  * @brief Data Transfer Object representing runtime information of a running script.
  */
-class MyScriptProcessIdDto : public oatpp::DTO {
-    DTO_INIT(MyScriptProcessIdDto, DTO)
+class ScriptProcessIdDto : public oatpp::DTO {
+    DTO_INIT(ScriptProcessIdDto, DTO)
     /**
      * @brief name of the script.
      */

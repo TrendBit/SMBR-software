@@ -8,8 +8,8 @@
 /**
  * @brief Data Transfer Object representing custom text for Mini OLED display.
  */
-class MyTextDto : public oatpp::DTO {
-    DTO_INIT(MyTextDto, DTO)
+class TextDto : public oatpp::DTO {
+    DTO_INIT(TextDto, DTO)
     /**
      * @brief The custom text to be displayed on Mini OLED.
      */

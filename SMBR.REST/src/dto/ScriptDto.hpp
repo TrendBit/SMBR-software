@@ -8,8 +8,8 @@
 /**
  * @brief Data Transfer Object representing the content of a script to be uploaded.
  */
-class MyScriptDto : public oatpp::DTO {
-    DTO_INIT(MyScriptDto, DTO)
+class ScriptDto : public oatpp::DTO {
+    DTO_INIT(ScriptDto, DTO)
     /**
      * @brief The name of the script to be uploaded.
      */

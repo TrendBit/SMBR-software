@@ -24,6 +24,7 @@ add_subdirectory(SMBR.Services/reactor-core-module)
 add_subdirectory(SMBR.Services/avahi)
 add_subdirectory(SMBR.Services/reactor-firmware-update)
 add_subdirectory(SMBR.Services/reactor-database-export)
+add_subdirectory(SMBR.Services/reactor-web-control)
 
 #utilities
 add_subdirectory(SMBR.Utilities/reactor-script-api)

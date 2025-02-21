@@ -1,0 +1,13 @@
+[Unit]
+Description=SMBR Web Control Service
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/reactor/server
+ExecStart=node .
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target

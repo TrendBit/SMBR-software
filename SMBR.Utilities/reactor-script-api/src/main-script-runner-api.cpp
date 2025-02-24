@@ -16,31 +16,92 @@ void sigintHandler(int sig) {
 
 int main(int argc, char* argv[]) {
     try {
-        if (argc < 2) {
-            std::cerr << "Usage: " << argv[0] << " <script_file> [<host>]\n";
+
+        std::string scriptFile = "";
+        bool stopAsync = false;
+        bool startAsync = false;
+        bool isHelp = false;
+
+        std::string host = "127.0.0.1";
+
+
+        for (int i = 1; i < argc; i++) {
+            std::string val = argv[i];
+
+            if (val == "--help" || val == "-h") {
+                isHelp = true;
+            } else if (val == "--async-start" || val == "-s") {
+                startAsync = true;
+            } else if (val == "--async-stop" || val == "-x") {
+                stopAsync = true;
+            } else if (val == "--ip" || val == "-i") {
+                if (i + 1 < argc) {
+                    host = argv[i + 1];
+                    i++;
+                } else {
+                    std::cerr << "Missing value for --ip argument" << std::endl;
+                    return 1;
+                }
+            } else {
+                if (scriptFile.empty()) {
+                    scriptFile = val;
+                } else {
+                    std::cout << "script file: " << scriptFile << std::endl;
+                    std::cerr << "Unknown argument: " << val << std::endl;
+                    return 1;
+                }
+            } 
+        }
+
+        if (isHelp) {
+            std::cout << "Usage: " << argv[0] << " <script_file>\n";
+            std::cout << "Options:\n";
+            std::cout << "  --help, -h - prints this help\n";
+            std::cout << "  --ip, -i - set the host ip (by default it is 127.0.0.1)\n";
+            std::cout << "  --async-start, -s - start the script on background\n";
+            std::cout << "  --async-stop, -x - stop the script on background\n";
+            return 0;
+        }
+
+        if (!stopAsync && scriptFile.empty()) {
+            std::cerr << "Missing script file argument" << std::endl;
             return 1;
         }
 
-        std::string host = "127.0.0.1";
-        if (argc > 2) {
-            host = argv[2];
-        }
 
-        //register signal handler
-        signal(SIGINT, sigintHandler);
         
-        std::string scriptFile = argv[1];
-
-        std::cout << "Starting script runner with script file: " << scriptFile << " and host: " << host << std::endl;
-
         APIClientParams params;
         params.host = host;
         APIScheduler scheduler(params);
 
-        scheduler.setScriptFromFile(argv[1]);
+
+        if (stopAsync){
+            std::cout << "Stopping script" << std::endl;
+            scheduler.stop();
+            return 0;
+        }
+
+        if (startAsync){
+            std::cout << "Starting script " << scriptFile << " (" << host << ")" << std::endl;
+            scheduler.setScriptFromFile(scriptFile);
+
+            auto pid = scheduler.start();
+            std::cout << "Started as PID: " << pid << " on background" << std::endl;
+            return 0;
+        }
+
+
+        //register signal handler
+        signal(SIGINT, sigintHandler);
+
+
+        std::cout << "Starting script " << scriptFile << " (" << host << ")" << std::endl;
+
+        std::cout << "Starting script " << scriptFile << " (" << host << ")" << std::endl;
+        scheduler.setScriptFromFile(scriptFile);
 
         auto pid = scheduler.start();
-        std::cout << "started as PID: " << pid << std::endl;
+        std::cout << "Started as PID: " << pid << " on foreground" << std::endl;
 
         std::string lastInfo;
         
@@ -48,8 +109,6 @@ int main(int argc, char* argv[]) {
 
         while (running){
             auto info = scheduler.getRuntimeInfo();
-
-            
 
             std::stringstream ss;
             ss << info;

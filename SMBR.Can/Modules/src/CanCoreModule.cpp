@@ -94,61 +94,53 @@ std::future <ICoreModule::PowerSupplyType> CanCoreModule::getPowerSupplyType() {
 }
 
 std::future <float> CanCoreModule::getVoltage5V() {
-    App_messages::Core::Supply_5V_rail_request request;
-    App_messages::Core::Supply_5V_rail_response response(0); 
     return base.get<
         App_messages::Core::Supply_5V_rail_request, 
         App_messages::Core::Supply_5V_rail_response, 
-        float>(request, response, [](App_messages::Core::Supply_5V_rail_response response){
+        float>([](App_messages::Core::Supply_5V_rail_response response){
             float res = response.rail_5v;
             return res;
         }, 1000);
 }
 
 std::future <float> CanCoreModule::getVoltageVIN() {
-    App_messages::Core::Supply_VIN_rail_request request;
-    App_messages::Core::Supply_VIN_rail_response response(0); 
-
+    
     return base.get<
         App_messages::Core::Supply_VIN_rail_request, 
         App_messages::Core::Supply_VIN_rail_response, 
-        float>(request, response, [](App_messages::Core::Supply_VIN_rail_response response){
+        float>([](App_messages::Core::Supply_VIN_rail_response response){
             float res = response.rail_vin;
             return res;
         }, 1000);
 }
 
 std::future <float> CanCoreModule::getVoltagePoE() {
-    App_messages::Core::Supply_POE_rail_request request;
-    App_messages::Core::Supply_POE_rail_response response(0); 
+   
     return base.get<
         App_messages::Core::Supply_POE_rail_request,
         App_messages::Core::Supply_POE_rail_response, 
-        float>(request, response, [](App_messages::Core::Supply_POE_rail_response response){
+        float>([](App_messages::Core::Supply_POE_rail_response response){
             float res = response.rail_poe;
             return res;
         }, 1000);
 }
 
 std::future <float> CanCoreModule::getCurrentConsumption() {
-    App_messages::Core::Supply_current_request request;
-    App_messages::Core::Supply_current_response response(0); 
     return base.get<
         App_messages::Core::Supply_current_request, 
         App_messages::Core::Supply_current_response, 
-        float>(request, response, [](App_messages::Core::Supply_current_response response){
+        float>([](App_messages::Core::Supply_current_response response){
             float res = response.current;
             return res;
         }, 1000);
 }
 
 std::future <float> CanCoreModule::getPowerDraw() {
-    App_messages::Core::Supply_power_draw_request request;
-    App_messages::Core::Supply_power_draw_response response(0); 
+    
     return base.get<
         App_messages::Core::Supply_power_draw_request, 
         App_messages::Core::Supply_power_draw_response, 
-        float>(request, response, [](App_messages::Core::Supply_power_draw_response response){
+        float>([](App_messages::Core::Supply_power_draw_response response){
             float res = response.power_draw;
             return res;
         }, 1000);

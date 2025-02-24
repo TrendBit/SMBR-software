@@ -4,6 +4,7 @@
 #include <vector>
 #include <optional>
 #include <future>
+#include <ostream>
 #include "CanRequest.hpp"
 
 class ICanChannel {
@@ -24,3 +25,5 @@ public:
 
     virtual void send(const CanRequest & canRequest, std::function <void(Response)>) = 0;
 };
+
+std::ostream & operator<<(std::ostream & os, const ICanChannel::Response & r);

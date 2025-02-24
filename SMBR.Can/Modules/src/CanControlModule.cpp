@@ -112,13 +112,12 @@ std::future <float> CanControlModule::getIntensity(int channel) {
 
 std::future <float> CanControlModule::getLedTemperature() {
     App_messages::LED_panel::Temperature_request req;
-    App_messages::LED_panel::Temperature_response resp{0};
 
     return base.get<
         App_messages::LED_panel::Temperature_request, 
         App_messages::LED_panel::Temperature_response, 
         float
-    >(req, resp, [](App_messages::LED_panel::Temperature_response response){
+    >(req, [](App_messages::LED_panel::Temperature_response response){
         return response.temperature;
     }, 2000);
 }

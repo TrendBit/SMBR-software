@@ -3,7 +3,7 @@
 #include "codes/codes.hpp"
 #include "SMBR/SMBR.hpp"
 #include "can/CanChannel.hpp"
-
+#include <iostream>
 
 typedef uint32_t MessageID;
 
@@ -26,38 +26,30 @@ class BaseModule {
 
         template <class Request, class Response, class Result>
         std::future <Result> get(std::function <Result(Response)> interpret, int timeoutMs){     
-
             Request rawRequest;
-            Response rawResponse;
-            return get<Request, Response, Result>(rawRequest, rawResponse, interpret, timeoutMs);    
+            return get<Request, Response, Result>(rawRequest, interpret, timeoutMs);    
         }
 
         template <class Request, class Response, class Result>
         std::future <Result> get(Request rawRequest, std::function <Result(Response)> interpret, int timeoutMs){     
-            Response rawResponse;
-            return get<Request, Response, Result>(rawRequest, rawResponse, interpret, timeoutMs);
-
-        }
-
-        template <class Request, class Response, class Result>
-        std::future <Result> get(Request rawRequest, Response rawResponse, std::function <Result(Response)> interpret, int timeoutMs){     
-            
+            Response rt;
             auto requestId = createRequestId(rawRequest.Type(), Codes::Instance::Exclusive, false);
-            auto responseId = createRequestId(rawResponse.Type(), Codes::Instance::Exclusive, false);
+            auto responseId = createRequestId(rt.Type(), Codes::Instance::Exclusive, false);
             
             RequestData requestData(requestId, rawRequest.Export_data());
             ResponseInfo responseInfo(responseId, timeoutMs);
             CanRequest canRequest(requestData, responseInfo);
         
             std::shared_ptr <std::promise <Result>> promise = std::make_shared<std::promise <Result>>();
-            channel->send(canRequest, [&, promise, interpret, rawResponse](ICanChannel::Response response){
+            channel->send(canRequest, [&, promise, interpret](ICanChannel::Response response){
                 
                 if (response.status == CanRequestStatus::Success) {
-                    auto rawCpy = rawResponse;
+                    Response resp;
                     auto dataCopy = response.responseData.at(0).data;
-                    if (rawCpy.Interpret_data(dataCopy)) {
+                    if (resp.Interpret_data(dataCopy)) {
                         if (interpret){
-                            promise->set_value(interpret(rawCpy));
+                            auto val = interpret(resp);
+                            promise->set_value(val);
                         } else {
                             promise->set_exception(std::make_exception_ptr(std::runtime_error("No interpret call")));
                         }    

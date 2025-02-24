@@ -9,32 +9,46 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     try {
         return body();
     } catch (TimeoutException & e){
-        return createResponse(Status::CODE_504, name + " timed out: "  + std::string(e.what()));
+        auto dto = MessageDto::createShared();
+        dto->message = name + " timed out: " + std::string(e.what());
+        return createDtoResponse(Status::CODE_504, dto);
     } catch (NotFoundException & e){
-        return createResponse(Status::CODE_404, name + " not found: " + std::string(e.what()));
+        auto dto = MessageDto::createShared();
+        dto->message = name + " not found: " + std::string(e.what());
+        return createDtoResponse(Status::CODE_404, dto);
     } catch (std::exception & e){
-        return createResponse(Status::CODE_500, "Failed to retrieve " + name + ": " + std::string(e.what()));
+        auto dto = MessageDto::createShared();
+        dto->message = "Failed to retrieve " + name + ": " + std::string(e.what());
+        return createDtoResponse(Status::CODE_500, dto);
     }
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::processBool(
     std::string name,
-    std::function <bool ()> body
+    std::function<bool()> body
 ){
     try {
         bool success = body();
+        auto dto = MessageDto::createShared();
         if (success) {
-            return createResponse(Status::CODE_200, name + " successful");
+            dto->message = name + " successful";
+            return createDtoResponse(Status::CODE_200, dto);
         } else {
-            return createResponse(Status::CODE_500, name + " failed");
+            dto->message = name + " failed";
+            return createDtoResponse(Status::CODE_500, dto);
         }
-        
     } catch (TimeoutException & e){
-        return createResponse(Status::CODE_504, name + " timed out: "  + std::string(e.what()));
+        auto dto = MessageDto::createShared();
+        dto->message = name + " timed out: " + std::string(e.what());
+        return createDtoResponse(Status::CODE_504, dto);
     } catch (NotFoundException & e){
-        return createResponse(Status::CODE_404, name + " not found: "  + std::string(e.what()));
+        auto dto = MessageDto::createShared();
+        dto->message = name + " not found: " + std::string(e.what());
+        return createDtoResponse(Status::CODE_404, dto);
     } catch (std::exception & e){
-        return createResponse(Status::CODE_500, "Failed to retrieve " + name+ ": " + std::string(e.what()));
+        auto dto = MessageDto::createShared();
+        dto->message = "Failed to retrieve " + name + ": " + std::string(e.what());
+        return createDtoResponse(Status::CODE_500, dto);
     }
 }
 
@@ -537,20 +551,14 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::moveCuvettePump(const oatpp::Object<MoveDto>& body) {
 
-    return process(__FUNCTION__, [&](){
+    return processBool(__FUNCTION__, [&](){
         if (!body || body->volume < 0.0f || body->volume > 1000.0f) {
             throw ArgumentException("Invalid volume value. Must be between 0.0 and 1000.0.");
         }
         if (!body || body->flowrate < -1000.0f || body->flowrate > 1000.0f) {
             throw ArgumentException("Invalid flowrate value. Must be between -1000.0 and 1000.0.");
         }
-
-        bool success = wait(systemModule->controlModule()->moveCuvettePump(body->volume, body->flowrate));
-        if (success) {
-            return createResponse(Status::CODE_200, "Successfully started moving liquid.");
-        } else {
-            return createResponse(Status::CODE_500, "Failed to start moving liquid.");
-        }
+        return wait(systemModule->controlModule()->moveCuvettePump(body->volume, body->flowrate));
     });
 }
 
@@ -625,8 +633,8 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::moveAerator(const oatpp::Object<MoveDto>& body) {
-
-    return process(__FUNCTION__, [&](){
+    
+    return processBool(__FUNCTION__, [&](){
         if (!body || body->volume < 0.0f || body->volume > 1000.0f) {
             throw ArgumentException("Invalid volume value. Must be between 0.0 and 1000.0.");
         }
@@ -634,16 +642,9 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
             throw ArgumentException("Invalid flowrate value. Must be between 10.0 and 5000.0 ml/min.");
         }
 
-        bool success = wait(systemModule->controlModule()->moveAerator(body->volume, body->flowrate));
-        if (success) {
-            auto moveResponseDto = MoveDto::createShared();
-            moveResponseDto->volume = body->volume;
-            moveResponseDto->flowrate = body->flowrate;
-            return createDtoResponse(Status::CODE_200, moveResponseDto);
-        } else {
-            return createResponse(Status::CODE_500, "Failed to start moving air.");
-        }
+        return wait(systemModule->controlModule()->moveAerator(body->volume, body->flowrate));
     });
+
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::stopAerator() {

@@ -28,6 +28,7 @@
 #include "dto/ScriptProcessIdDto.hpp"
 #include "dto/ScriptRuntimeInfoDto.hpp"
 #include "dto/TextDto.hpp"
+#include "dto/MessageDto.hpp"
 
 #include "oatpp/data/mapping/ObjectMapper.hpp"
 

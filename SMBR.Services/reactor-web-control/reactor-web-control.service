@@ -1,6 +1,8 @@
 [Unit]
 Description=SMBR Web Control Service
 After=network.target
+After=reactor-api-server.service
+Wants=reactor-api-server.service
 
 [Service]
 Type=simple

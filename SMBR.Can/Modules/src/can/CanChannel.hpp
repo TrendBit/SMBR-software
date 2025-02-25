@@ -9,7 +9,8 @@
 #include "CanMessage.hpp"
 #include <Poco/Clock.h>
 #include <Poco/Thread.h>
-
+#include <Poco/Event.h>
+#include "CanBus.hpp"
 
 class CanChannel : public ICanChannel {
 public:
@@ -20,7 +21,8 @@ public:
     void send(const CanRequest & canRequest, std::function <void(Response)>) override;
 private:
     
-    void run();
+    void runRead();
+    void runWrite();
 
 public:
 
@@ -40,7 +42,11 @@ private:
     std::list <std::shared_ptr<ActiveRequest> > activeRequests;
     std::mutex toBeSendMutex;
     std::mutex activeRequestsMutex;
-    Poco::Thread bgThread;
+    Poco::Thread bgThreadRead;
+    Poco::Thread bgThreadWrite;
+    Poco::Event somethingToWrite;
     bool bgFinished = false;
+
+    CanBus bus;
 
 };

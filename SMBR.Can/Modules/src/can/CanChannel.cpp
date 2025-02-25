@@ -20,15 +20,20 @@ int nextUID() {
 CanChannel::ActiveRequest::ActiveRequest(const CanRequest &request) : uid(nextUID()), request(request), response(request) {
 }
 
-CanChannel::CanChannel() :bgThread("can.bg") {
-    bgThread.startFunc([this]() {
-        run();
+CanChannel::CanChannel() : bgThreadRead("can.readbg"), bgThreadWrite("can.writebg") {
+    bgThreadRead.startFunc([this]() {
+        runRead();
+    }); 
+    bgThreadWrite.startFunc([this]() {
+        runWrite();
     }); 
 }
 
 CanChannel::~CanChannel() {
     bgFinished = true;
-    bgThread.join();
+    somethingToWrite.set();
+    bgThreadRead.join();
+    bgThreadWrite.join();
 }
 
 void CanChannel::send(const CanRequest &canRequest, std::function<void(Response)> callback) {
@@ -40,10 +45,10 @@ void CanChannel::send(const CanRequest &canRequest, std::function<void(Response)
         std::scoped_lock lock(toBeSendMutex);
         toBeSend.push_back(newRequest);
     }
-    // newRequest->dueAt = std::chrono::system_clock::now() + std::chrono::milliseconds(canRequest.responseInfo().timeoutMs);
+    somethingToWrite.set();
 }
 
-static void dump(std::string message, std::shared_ptr<CanChannel::ActiveRequest> r, Poco::Message::Priority priority = Poco::Message::PRIO_INFORMATION) {
+static void dump(bool isWrite, std::string message, std::shared_ptr<CanChannel::ActiveRequest> r, Poco::Message::Priority priority = Poco::Message::PRIO_INFORMATION) {
     std::string color = "";
     if (priority == Poco::Message::PRIO_TRACE) {
         //light gray
@@ -76,31 +81,39 @@ static void dump(std::string message, std::shared_ptr<CanChannel::ActiveRequest>
     std::string colorEnd = "\033[39m";
 
     Poco::LocalDateTime dt;
-    std::cout << color << Poco::DateTimeFormatter::format(dt, Poco::DateTimeFormat::SORTABLE_FORMAT)
+    std::cout << Poco::DateTimeFormatter::format(dt, Poco::DateTimeFormat::SORTABLE_FORMAT) << " ";
+    if (isWrite){
+        std::cout << color 
+              << " >> "
+              << " " << Poco::NumberFormatter::format0(r->uid, 5)
+              << " " << r->request.request().id
+              << " " << message
+              << " (after " << r->startedAt.elapsed() / 1000 << "ms)" << colorEnd << std::endl;
+    } else {
+        std::cout << color 
+              << " << "
               << " " << Poco::NumberFormatter::format0(r->uid, 5)
               << " " << r->request.request().id
               << " " << r->response.status
               << " " << message
               << " (after " << r->startedAt.elapsed() / 1000 << "ms)" << colorEnd << std::endl;
+    }
 }
 
-void CanChannel::run() {
-
-    CanBus bus;
-
+void CanChannel::runWrite(){
     auto sendRequest = [&](std::shared_ptr<ActiveRequest> request)
     {
         try {
             CanMessage msg(request->request.request().id.id, request->request.request().data);
             bus.send(msg);
-            dump("SENT", request, Poco::Message::PRIO_DEBUG);
+            dump(true, "SENT", request, Poco::Message::PRIO_DEBUG);
 
             {
                 std::scoped_lock lock(activeRequestsMutex);
                 activeRequests.push_back(request);
             }
         } catch (...) {
-            dump("FAILED", request, Poco::Message::PRIO_ERROR);
+            dump(true, "FAILED", request, Poco::Message::PRIO_ERROR);
             request->response.status = CanRequestStatus::Fail;
             request->callback(request->response);
         }
@@ -108,6 +121,11 @@ void CanChannel::run() {
 
     while (!bgFinished) {
         try {
+            somethingToWrite.wait();
+            if (bgFinished){
+                break;
+            }
+
             std::vector<std::shared_ptr<ActiveRequest>> toSend;
             {
                 std::scoped_lock lock(toBeSendMutex);
@@ -118,14 +136,22 @@ void CanChannel::run() {
             for (auto s : toSend) {
                 sendRequest(s);
             }
+        } catch (std::exception &e) {
+            std::cerr << "Failed to send CAN message (" << e.what() << ")" << std::endl;
+        } catch (...) {
+            std::cerr << "Failed to send CAN message (unknown error)" << std::endl;
+        }
+    }
+}
 
+void CanChannel::runRead() {
+
+    while (!bgFinished) {
+        try {
+            
             try {
                 auto rawResponse = bus.receive(100);
                 ResponseData response(rawResponse.getId(), rawResponse.getData());
-
-                // std::cout << "   RECV: " << response.id << std::endl;
-
-                
 
                 bool accepted = false;
                 std::scoped_lock lock(activeRequestsMutex);
@@ -136,7 +162,7 @@ void CanChannel::run() {
                     if (responseInfo.acceptFunction && responseInfo.acceptFunction(response)) {
                         std::stringstream ss;
                         ss << "accepts " << response.id;
-                        dump(ss.str(), a, Poco::Message::PRIO_TRACE);
+                        dump(false, ss.str(), a, Poco::Message::PRIO_TRACE);
                         a->response.responseData.push_back(response);
                         accepted = true;
                     }
@@ -163,18 +189,18 @@ void CanChannel::run() {
                 if (responseInfo.isDoneFunction && responseInfo.isDoneFunction(a->response.responseData)) {
                     // std::cout << formatMessageId(a->request.request().requestId) << " SUCCCESS" << std::endl;
                     a->response.status = CanRequestStatus::Success;
-                    dump("DONE", a, Poco::Message::PRIO_INFORMATION);
+                    dump(false, "DONE", a, Poco::Message::PRIO_INFORMATION);
                     a->callback(a->response);
                     it = activeRequests.erase(it);
                 } else if (now > a->dueAt) {
                     if (responseInfo.successOnTimeout) {
                         // std::cout << formatMessageId(a->request.request().requestId) << " SUCCCESS (to)" << std::endl;
                         a->response.status = CanRequestStatus::Success;
-                        dump("DONE after timeout", a, Poco::Message::PRIO_INFORMATION);
+                        dump(false, "DONE after timeout", a, Poco::Message::PRIO_INFORMATION);
                         a->callback(a->response);
                     } else {
                         // std::cout << formatMessageId(a->request.request().requestId) << " Timeout" << std::endl;
-                        dump("TIMEOUT", a, Poco::Message::PRIO_WARNING);
+                        dump(false, "TIMEOUT", a, Poco::Message::PRIO_WARNING);
                         a->response.status = CanRequestStatus::Timeout;
                         a->callback(a->response);
                     }

@@ -19,19 +19,33 @@
 CanSystemModule::CanSystemModule(ICanChannel::Ptr channel) : channel(channel) {
     this->channel = channel;
 
+    std::lock_guard<std::mutex> lock(m);    
+    refresh();
+
+
+    
+}
+
+void CanSystemModule::refresh(){
     auto detected = getAvailableModules();
     detected.wait();
     auto m = detected.get();
     for (const auto& mm : m) {
         switch (mm.type) {
             case Modules::Core:
-                core = std::make_shared<CanCoreModule>(mm.uidHex, channel);
+                if (!core){
+                    core = std::make_shared<CanCoreModule>(mm.uidHex, channel);
+                }
                 break;
             case Modules::Control:
-                control = std::make_shared<CanControlModule>(mm.uidHex, channel);
+                if (!control){
+                    control = std::make_shared<CanControlModule>(mm.uidHex, channel);
+                }
                 break;
             case Modules::Sensor:
-                sensor = std::make_shared<CanSensorModule>(mm.uidHex, channel);
+                if (!sensor){
+                    sensor = std::make_shared<CanSensorModule>(mm.uidHex, channel);
+                }
                 break;
             default:
                 break;
@@ -43,7 +57,6 @@ CanSystemModule::CanSystemModule(ICanChannel::Ptr channel) : channel(channel) {
     for (const auto& mm : common) {
         std::cout << "MODULE: " << mm.first << std::endl;
     }
-    
 }
 
 std::future <ISystemModule::AvailableModules> CanSystemModule::getAvailableModules() {
@@ -120,28 +133,47 @@ std::future <ISystemModule::AvailableModules> CanSystemModule::getAvailableModul
 }
 
 std::shared_ptr <ISensorModule> CanSystemModule::sensorModule() {
+    std::lock_guard<std::mutex> lock(m);    
     if (sensor == nullptr) {
-        throw NotFoundException("Sensor module not available");
+        refresh();
+        if (sensor == nullptr) {
+            throw NotFoundException("Sensor module not available");
+        }
     }
     return sensor;
 }
 
 std::shared_ptr <IControlModule> CanSystemModule::controlModule() {
+    std::lock_guard<std::mutex> lock(m);    
     if (control == nullptr) {
-        throw NotFoundException("Control module not available");
+        refresh();
+        if (control == nullptr) {
+            throw NotFoundException("Control module not available");
+        }
     }
     return control;
 }
 
 std::shared_ptr <ICoreModule> CanSystemModule::coreModule() {
+    std::lock_guard<std::mutex> lock(m);    
     if (core == nullptr) {
-        throw NotFoundException("Core module not available");
+        refresh();
+        if (core == nullptr) {
+            throw NotFoundException("Core module not available");
+        }
     }
     return core;
 }
 
 std::shared_ptr <ICommonModule> CanSystemModule::commonModule(ModuleID module) {
+    std::lock_guard<std::mutex> lock(m);    
     try {
+        if (common.find(module) == common.end()) {
+            refresh();
+            if (common.find(module) == common.end()) {
+            throw NotFoundException("Common module not available");
+            }
+        }
         return common.at(module);
     } catch (const std::out_of_range& e) {
         std::stringstream ss;
@@ -151,9 +183,10 @@ std::shared_ptr <ICommonModule> CanSystemModule::commonModule(ModuleID module) {
 }
 
 std::set <ModuleID> CanSystemModule::existing() {
-        std::set <ModuleID>  ret;
-        for (auto m : common){
-            ret.insert(m.first);
-        }
-        return ret;
+    std::lock_guard<std::mutex> lock(m);    
+    std::set <ModuleID>  ret;
+    for (auto m : common){
+        ret.insert(m.first);
     }
+    return ret;
+}

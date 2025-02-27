@@ -25,6 +25,8 @@ private:
     std::shared_ptr <ICoreModule> core;
     std::map <ModuleID, std::shared_ptr <ICommonModule> > common;
 
+    void refresh();
+
 private:
     ICanChannel::Ptr channel;
     

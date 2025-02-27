@@ -12,6 +12,11 @@ mkdir -p build/rpi
 # Move into the build directory
 cd build/rpi || exit 1  # Exit if cd fails
 
+#if argument is clean, remove build directory
+rm -rf install/filesystem
+
+
+
 # Run build commands
 #set toolchain
 #source /usr/local/smbr-kas/environment-setup-cortexa72-poky-linux

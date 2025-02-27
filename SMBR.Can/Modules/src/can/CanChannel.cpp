@@ -11,6 +11,8 @@
 #include <Poco/DateTimeFormat.h>
 #include <Poco/NumberFormatter.h>
 #include <Poco/Message.h>   
+#include <Poco/Logger.h>   
+#include "SMBR/Log.hpp"
 
 int nextUID() {
     static int uid = 0;
@@ -49,54 +51,25 @@ void CanChannel::send(const CanRequest &canRequest, std::function<void(Response)
 }
 
 static void dump(bool isWrite, std::string message, std::shared_ptr<CanChannel::ActiveRequest> r, Poco::Message::Priority priority = Poco::Message::PRIO_INFORMATION) {
-    std::string color = "";
-    if (priority == Poco::Message::PRIO_TRACE) {
-        //light gray
-        color = "\033[38;5;247m";
-    }
-    if (priority == Poco::Message::PRIO_DEBUG) {
-        //light blue
-        color = "\033[38;5;147m";
-    }
-    if (priority == Poco::Message::PRIO_INFORMATION) {
-        //light green
-        color = "\033[38;5;34m";
-    }
-    if (priority == Poco::Message::PRIO_NOTICE) {
-        //light blue
-        color = "\033[38;5;74m";
-    }
-    if (priority == Poco::Message::PRIO_WARNING) {
-        //light yellow
-        color = "\033[38;5;148m";
-    }
-    if (priority == Poco::Message::PRIO_ERROR) {
-        //light red
-        color = "\033[38;5;196m";
-    }
-    if (priority <= Poco::Message::PRIO_CRITICAL) {
-        //light red
-        color = "\033[38;5;200m";
-    }
-    std::string colorEnd = "\033[39m";
+    
+
 
     Poco::LocalDateTime dt;
-    std::cout << Poco::DateTimeFormatter::format(dt, Poco::DateTimeFormat::SORTABLE_FORMAT) << " ";
     if (isWrite){
-        std::cout << color 
+       LLEVEL("Can.Send", priority) 
               << " >> "
               << " " << Poco::NumberFormatter::format0(r->uid, 5)
               << " " << r->request.request().id
               << " " << message
-              << " (after " << r->startedAt.elapsed() / 1000 << "ms)" << colorEnd << std::endl;
+              << " (after " << r->startedAt.elapsed() / 1000 << "ms)" << LE;
     } else {
-        std::cout << color 
+         LLEVEL("Can.Recv", priority) 
               << " << "
               << " " << Poco::NumberFormatter::format0(r->uid, 5)
               << " " << r->request.request().id
               << " " << r->response.status
               << " " << message
-              << " (after " << r->startedAt.elapsed() / 1000 << "ms)" << colorEnd << std::endl;
+              << " (after " << r->startedAt.elapsed() / 1000 << "ms)" << LE;
     }
 }
 

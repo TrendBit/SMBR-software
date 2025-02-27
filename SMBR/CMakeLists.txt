@@ -9,6 +9,7 @@ add_library(${PROJECT_NAME}
   src/ISystemModule.cpp
   src/IScheduler.cpp
   src/SMBR.cpp
+  src/Log.cpp
  )
 
 file(GLOB_RECURSE SMBR_HEADERS "include/*.hpp")

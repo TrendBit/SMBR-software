@@ -170,9 +170,6 @@ std::shared_ptr <ICommonModule> CanSystemModule::commonModule(ModuleID module) {
     try {
         if (common.find(module) == common.end()) {
             refresh();
-            if (common.find(module) == common.end()) {
-            throw NotFoundException("Common module not available");
-            }
         }
         return common.at(module);
     } catch (const std::out_of_range& e) {

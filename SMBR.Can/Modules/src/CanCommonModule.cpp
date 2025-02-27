@@ -44,7 +44,7 @@ std::future <float> CanCommonModule::ping() {
 
 std::future <float> CanCommonModule::getCoreLoad() {
     return base.get<
-        App_messages::Common::Core_load_response, 
+        App_messages::Common::Core_load_request, 
         App_messages::Common::Core_load_response, 
         float
     >([](App_messages::Common::Core_load_response response){

@@ -165,18 +165,25 @@ std::shared_ptr <ICoreModule> CanSystemModule::coreModule() {
     return core;
 }
 
-std::shared_ptr <ICommonModule> CanSystemModule::commonModule(ModuleID module) {
+std::shared_ptr<ICommonModule> CanSystemModule::commonModule(ModuleID module) {
     std::lock_guard<std::mutex> lock(m);    
-    try {
-        if (common.find(module) == common.end()) {
-            refresh();
+
+    for (const auto& entry : common) {
+        if (entry.first.type == module.type && entry.first.uidHex == module.uidHex) {
+            return entry.second;  
         }
-        return common.at(module);
-    } catch (const std::out_of_range& e) {
-        std::stringstream ss;
-        ss << "Common module " << module << " not available";
-        throw NotFoundException(ss.str());
     }
+
+    refresh();
+    for (const auto& entry : common) {
+        if (entry.first.type == module.type && entry.first.uidHex == module.uidHex) {
+            return entry.second;
+        }
+    }
+
+    std::stringstream ss;
+    ss << "Common module " << module << " not available";
+    throw NotFoundException(ss.str());
 }
 
 std::set <ModuleID> CanSystemModule::existing() {

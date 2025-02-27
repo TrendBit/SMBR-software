@@ -22,15 +22,15 @@ add_subdirectory(SMBR.Services/can0)
 add_subdirectory(SMBR.Services/reactor-api-server)
 add_subdirectory(SMBR.Services/reactor-core-module)
 add_subdirectory(SMBR.Services/avahi)
-add_subdirectory(SMBR.Services/reactor-firmware-update)
 add_subdirectory(SMBR.Services/reactor-database-export)
 add_subdirectory(SMBR.Services/reactor-web-control)
 
 #utilities
+add_subdirectory(SMBR.Utilities/reactor-can-watch)
+add_subdirectory(SMBR.Utilities/reactor-firmware-update)
 add_subdirectory(SMBR.Utilities/reactor-script-api)
 add_subdirectory(SMBR.Utilities/reactor-script-can)
 add_subdirectory(SMBR.Utilities/script-doc-generator)
-add_subdirectory(SMBR.Utilities/reactor-can-watch)
 
 #tests
 add_subdirectory(SMBR.Utilities/scheduler)

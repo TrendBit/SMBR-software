@@ -2,8 +2,9 @@ cmake_minimum_required(VERSION 3.20)
 project(reactor-firmware-update)
 
 
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/reactor-firmware-update.service
-  DESTINATION ${SMBR_INSTALL_SERVICES}
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/update_firmware.sh
+  DESTINATION ${SMBR_INSTALL_HOME}
+  PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ WORLD_READ
 )
 
 #copy all files from firmware subfolder to the install directory

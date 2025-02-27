@@ -28,16 +28,13 @@ ModuleID CanCommonModule::id() const {
 }
 
 std::future <float> CanCommonModule::ping() {
-    std::cout << "ping called" << std::endl;
     Poco::Clock now;
     return base.get<
         App_messages::Common::Ping_request, 
         App_messages::Common::Ping_response, 
         float
     >([now](App_messages::Common::Ping_response response){
-        std::cout << "ping lambda" << std::endl;
         float elapsed = now.elapsed() / 1000.0;
-        std::cout << "ping elapsed " << elapsed << std::endl;
         return elapsed;
     }, 1000);
 }

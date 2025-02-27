@@ -74,6 +74,7 @@ public:
         auto module = ModuleInfoDto::createShared();
         module->module_type = "sensor";
         module->uid = "0x0123456789ab";
+        module->instance = "Exclusive"; 
         example->push_back(module);
         info->addResponse<List<Object<ModuleInfoDto>>>(Status::CODE_200, "application/json")
             .addExample("application/json", example);
@@ -1268,6 +1269,8 @@ private:
         std::string name,
         std::function<bool()> body
     );
+
+    std::string instanceToString(Instance instance);
 
 private:
     std::shared_ptr<ISystemModule> systemModule;

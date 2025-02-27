@@ -92,10 +92,33 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         }
         
         moduleInfoDto->uid = m.uidHex;
+        moduleInfoDto->instance = instanceToString(m.instance); 
         dtoList->push_back(moduleInfoDto);
     }
 
     return createDtoResponse(Status::CODE_200, dtoList);
+}
+
+std::string SMBRController::instanceToString(Instance instance) {
+    switch (instance) {
+        case Instance::Undefined: return "Undefined";
+        case Instance::Exclusive: return "Exclusive";
+        case Instance::All: return "All";
+        case Instance::Reserved: return "Reserved";
+        case Instance::Instance_1: return "Instance_1";
+        case Instance::Instance_2: return "Instance_2";
+        case Instance::Instance_3: return "Instance_3";
+        case Instance::Instance_4: return "Instance_4";
+        case Instance::Instance_5: return "Instance_5";
+        case Instance::Instance_6: return "Instance_6";
+        case Instance::Instance_7: return "Instance_7";
+        case Instance::Instance_8: return "Instance_8";
+        case Instance::Instance_9: return "Instance_9";
+        case Instance::Instance_10: return "Instance_10";
+        case Instance::Instance_11: return "Instance_11";
+        case Instance::Instance_12: return "Instance_12";
+        default: return "Unknown";
+    }
 }
 
   // ==========================================

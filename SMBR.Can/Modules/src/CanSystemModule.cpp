@@ -73,7 +73,6 @@ std::future <ISystemModule::AvailableModules> CanSystemModule::getAvailableModul
     responseInfo.acceptFunction = [](const ResponseData & response) {
         App_messages::Common::Probe_modules_response rawResponse;
         auto t = static_cast<uint16_t>(rawResponse.Type());
-        //std::cout << "expected " << t << " recv type " << response.id.messageType() << std::endl;
         return response.id.messageType() == t;
     };
     responseInfo.isDoneFunction = [](const std::vector <ResponseData> & responses) {
@@ -117,7 +116,8 @@ std::future <ISystemModule::AvailableModules> CanSystemModule::getAvailableModul
                                 break;
                         }
 
-                        ModuleID moduleID(module, uid);
+                        Instance instance = static_cast<Instance>(rr.id.instance());
+                        ModuleID moduleID(module, uid, instance);
                         result.push_back(moduleID);
                     }
                 }

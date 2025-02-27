@@ -122,11 +122,11 @@ namespace SMBR {
 
 			Poco::Thread * thread = Poco::Thread::current();
 			if (!thread){
-				LERROR("THRDBG") << "Thread " << "MAIN" << " has Thread ID " << Poco::Thread::currentTid() << " and PID " << tid << LE;
-				std::cout <<         "Thread " << "MAIN" << " has Thread ID " << Poco::Thread::currentTid() << " and PID " << tid << std::endl;
+				LNOTICE("THRDBG") << "Thread " << "MAIN" << " has Thread ID " << Poco::Thread::currentTid() << " and PID " << tid << LE;
+				//std::cout <<         "Thread " << "MAIN" << " has Thread ID " << Poco::Thread::currentTid() << " and PID " << tid << std::endl;
 			} else {
-				LERROR("THRDBG") << "Thread " << thread->name() << " has Thread ID " << thread->tid() << " and PID " << tid << LE
-				std::cout <<         "Thread " << thread->name() << " has Thread ID " << thread->tid() << " and PID " << tid << std::endl;
+				LNOTICE("THRDBG") << "Thread " << thread->name() << " has Thread ID " << thread->tid() << " and PID " << tid << LE
+				//std::cout <<         "Thread " << thread->name() << " has Thread ID " << thread->tid() << " and PID " << tid << std::endl;
 			}
 		}
 

@@ -1,5 +1,6 @@
 #include "SMBR/Scheduler.hpp"
 #include "SMBR/Parser.hpp"
+#include "SMBR/Log.hpp"
 
 #include <fstream>
 #include <sstream>
@@ -14,13 +15,14 @@
 
 static const int OutputBufferSize = 100;
 
-Scheduler::Scheduler(ISystemModule::Ptr systemModule) : systemModule(systemModule), t("Bg.Scheduler"), stopped(false) {
+Scheduler::Scheduler(ISystemModule::Ptr systemModule) : systemModule(systemModule), t("scheduler.bg"), stopped(false) {
     
     bgScriptStarted = false;
     bgScriptStopped = true;
 
     //run method in bg thread
     t.startFunc([this](){
+        SMBR::threadDebug();
         run();
     });
 }

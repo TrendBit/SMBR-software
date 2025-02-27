@@ -22,11 +22,13 @@ int nextUID() {
 CanChannel::ActiveRequest::ActiveRequest(const CanRequest &request) : uid(nextUID()), request(request), response(request) {
 }
 
-CanChannel::CanChannel() : bgThreadRead("can.readbg"), bgThreadWrite("can.writebg") {
+CanChannel::CanChannel() : bgThreadRead("can.bg.read"), bgThreadWrite("can.bg.write") {
     bgThreadRead.startFunc([this]() {
+        SMBR::threadDebug();
         runRead();
     }); 
     bgThreadWrite.startFunc([this]() {
+        SMBR::threadDebug();
         runWrite();
     }); 
 }

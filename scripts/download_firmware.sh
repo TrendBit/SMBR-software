@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define the firmware directory
-firmware_dir="./SMBR.Services/smbr-firmware-update/firmware"
+firmware_dir="./SMBR.Utilities/reactor-firmware-update/firmware"
 
 # Parse command line arguments
 fetch_firmware=true

@@ -2,10 +2,10 @@ cmake_minimum_required(VERSION 3.20)
 
 #set installation directory
 set(SMBR_INSTALL_BASE filesystem)
-set(SMBR_INSTALL_HOME ${SMBR_INSTALL_BASE}/home/reactor/)
-set(SMBR_INSTALL_BIN ${SMBR_INSTALL_BASE}/usr/bin/)
-set(SMBR_INSTALL_SERVICES ${SMBR_INSTALL_BASE}/usr/lib/systemd/system/)
-set(SMBR_INSTALL_ETC ${SMBR_INSTALL_BASE}/etc/)
+set(SMBR_INSTALL_HOME ${SMBR_INSTALL_BASE}/home/reactor)
+set(SMBR_INSTALL_BIN ${SMBR_INSTALL_BASE}/usr/bin)
+set(SMBR_INSTALL_SERVICES ${SMBR_INSTALL_BASE}/usr/lib/systemd/system)
+set(SMBR_INSTALL_ETC ${SMBR_INSTALL_BASE}/etc)
 
 project(SMBR.SW)
 

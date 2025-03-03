@@ -1,0 +1,17 @@
+main:
+    print "start"
+    display "start"
+
+    temperature 28.5
+    illumination 0.05 0.05 0.05 0.05
+    wait 10
+
+    loop
+        display "on"
+        illumination 0.05 0.05 0.05 0.05
+        wait 0.25
+        display "off"
+        illumination 0 0 0 0
+        wait 0.25
+
+    print "done"

@@ -1,5 +1,0 @@
-main:
-    print "start"
-    illumination 0.05 0.05 0.05 0.05
-    wait 5000
-    print "done"

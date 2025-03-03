@@ -1,0 +1,21 @@
+main:
+    print "start"
+    display "start"
+
+    temperature 30.0
+    illumination 0.2 0.5 0.0 0.5
+    wait 10
+
+    loop
+        loop 5
+            mix 10 3000
+            wait 10
+            pump 5 50
+            wait 10
+            air 200 2000
+            wait 10
+            display "cycle end"
+        display "loop end"
+
+    print "done"
+    display "done"

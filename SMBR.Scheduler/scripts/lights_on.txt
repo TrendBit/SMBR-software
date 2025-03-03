@@ -1,0 +1,5 @@
+main:
+    print "start"
+    illumination 0.5 0.5 0.5 0.5
+    display "lights on"
+    print "done"

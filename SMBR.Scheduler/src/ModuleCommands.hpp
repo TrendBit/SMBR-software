@@ -69,16 +69,16 @@ namespace Scripting {
 
 
     struct MixerInput {
-        double rpm = 0.0;
         double length = 0.0;
+        double rpm = 0.0;
     };
 
     class Mixer {
         public:
             MixerInput parse(ScriptLine l){
                 MixerInput input;
-                input.rpm = l.argAsFloat(0, 0.0, 1000.0);
-                input.length = l.argAsFloat(1, 0.0, 100.0);
+                input.length = l.argAsFloat(0, 0.0, 24*3600.0);
+                input.rpm = l.argAsFloat(1, 0.0, 10000.0);
                 return input;
             }
             std::future <bool> run(MixerInput input, ISystemModule::Ptr m){
@@ -88,33 +88,37 @@ namespace Scripting {
 
     struct PumpInput {
         double volume = 0.0;
+        double flowrate = 0.0;
     };
 
     class Pump {
         public:
             PumpInput parse(ScriptLine l){
                 PumpInput input;
-                input.volume = l.argAsFloat(0, 0.0, 100.0);
+                input.volume = l.argAsFloat(0, -1000.0, 1000.0);
+                input.flowrate = l.argAsFloat(1, 0.0, 1000.0);
                 return input;
             }
             std::future <bool> run(PumpInput input, ISystemModule::Ptr m){
-                return m->controlModule()->moveCuvettePump(input.volume, 0.0);
+                return m->controlModule()->moveCuvettePump(input.volume, input.flowrate);
             }
     };
 
     struct AeratorInput {
         double volume = 0.0;
+        double flowrate = 0.0;
     };
 
     class Aerator {
         public:
             AeratorInput parse(ScriptLine l){
                 AeratorInput input;
-                input.volume = l.argAsFloat(0, 0.0, 100.0);
+                input.volume = l.argAsFloat(0, 0.0, 5000.0);
+                input.flowrate = l.argAsFloat(1, 0.0, 5000.0);
                 return input;
             }
             std::future <bool> run(AeratorInput input, ISystemModule::Ptr m){
-                return m->controlModule()->moveAerator(input.volume, 0.0);
+                return m->controlModule()->moveAerator(input.volume, input.flowrate);
             }
     };
 

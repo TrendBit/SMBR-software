@@ -40,9 +40,10 @@ void registerModuleBlocks(CommandFactory & f){
 
     {
         CommandInfo info(
-            "mix", 
+            "mix",
             {
                 {"time", "Time to mix"},
+                {"rpm" , "Rotation per minute of mixer"},
             },
             "Mixing command"
         );
@@ -55,7 +56,8 @@ void registerModuleBlocks(CommandFactory & f){
         CommandInfo info(
             "pump",
             {
-                {"speed", "Speed of the pump"},
+                {"volume", "Volume of pumped liquid in ml"},
+                {"flowrate", "Flowrate of pumping in ml/min"},
             },
             "Pump command"
         );
@@ -68,7 +70,8 @@ void registerModuleBlocks(CommandFactory & f){
         CommandInfo info(
             "air",
             {
-                {"speed", "Speed of the aerator"},
+                {"volume", "Volume of air in ml"},
+                {"flowrate", "Flowrate of pumping in ml/min"},
             },
             "Aerator command"
         );

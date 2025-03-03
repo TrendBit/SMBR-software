@@ -6,7 +6,7 @@
 
 WaitCommand::WaitCommand(Block::Ptr block, ParseContext::Ptr pctx){
     line = block->line.lineNumber();
-    timeMs = block->line.argAsInt(0, 0, 24*3600 * 1000);
+    timeMs = block->line.argAsFloat(0, 0, 24*3600) * 1000;
 }
 
 void WaitCommand::run(RunContext::Ptr rctx){
@@ -35,15 +35,13 @@ void PrintCommand::run(RunContext::Ptr rctx){
     if (rctx->printCb) {
         rctx->printCb(content);
     }
-    
 }
-
 
 void registerBasicBlocks(CommandFactory & f){
     {
         CommandInfo info(
-            "loop", 
-            {{"times", "Number of times to loop - infinity if not specified", false}}, 
+            "loop",
+            {{"times", "Number of times to loop - infinity if not specified", false}},
             "Repeats the indented block of commands for the given number of iterations."
         );
         f.registerCommand(info, [](Block::Ptr block, ParseContext::Ptr ctx) {
@@ -52,8 +50,8 @@ void registerBasicBlocks(CommandFactory & f){
     }
     {
         CommandInfo info(
-            "wait", 
-            {{"milliseconds", "Time to wait in milliseconds"}}, 
+            "wait",
+            {{"seconds", "Time to wait in seconds"}},
             "Pauses execution for a specified time."
         );
         f.registerCommand(info, [](Block::Ptr block, ParseContext::Ptr ctx) {
@@ -62,13 +60,13 @@ void registerBasicBlocks(CommandFactory & f){
     }
     {
         CommandInfo info(
-            "print", 
-            {{"content", "Content to print (any arguments on the line will be concatenated)"}}, 
+            "print",
+            {{"content", "Content to print, previous text will be overridden"}},
             "Print text to script output."
         );
         f.registerCommand(info, [](Block::Ptr block, ParseContext::Ptr ctx) {
             return std::make_shared<PrintCommand>(block, ctx);
-        });    
+        });
     }
 }
 

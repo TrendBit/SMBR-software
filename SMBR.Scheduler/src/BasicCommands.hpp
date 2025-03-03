@@ -3,7 +3,7 @@
 class NestedBlockCommand : public ICommand {
     public:
         NestedBlockCommand(Block::Ptr block, ParseContext::Ptr pctx){
-            
+
             for (auto & nestedBlock : block->nestedBlocks) {
                 commands.push_back(Interpreter::build(nestedBlock, pctx));
             }
@@ -11,9 +11,9 @@ class NestedBlockCommand : public ICommand {
                 firstLine = block->nestedBlocks.front()->line.lineNumber();
             }
         }
-        
+
         void run(RunContext::Ptr rctx) override {
-            rctx->checkRunning();            
+            rctx->checkRunning();
 
             if (commands.empty()) return;
 
@@ -22,12 +22,12 @@ class NestedBlockCommand : public ICommand {
                 rctx->checkRunning();
                 cmd->run(rctx);
             }
-            rctx->stack->pop();   
+            rctx->stack->pop();
         }
     private:
-        int firstLine;    
+        int firstLine;
         std::vector <ICommand::Ptr> commands;
-        
+
 };
 
 class LoopCommand : public ICommand {
@@ -37,13 +37,13 @@ class LoopCommand : public ICommand {
             infinity = loopBlock->line.args() == 0;
             if (!infinity){
                 repeat = loopBlock->line.argAsInt(0, 0, 1000000);
-            }    
+            }
             nested = std::make_shared<NestedBlockCommand>(loopBlock, pctx);
         }
         void run(RunContext::Ptr rctx) override {
 
             rctx->stack->push(line);
-            
+
             if (infinity){
                 while (true) {
                     rctx->checkRunning();
@@ -55,7 +55,7 @@ class LoopCommand : public ICommand {
                     nested->run(rctx);
                 }
             }
-             
+
             rctx->stack->pop();
         }
     private:

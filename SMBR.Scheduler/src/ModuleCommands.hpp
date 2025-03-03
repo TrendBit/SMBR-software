@@ -1,7 +1,7 @@
 #include <SMBR/Interpreter.hpp>
 #include <SMBR/Script.hpp>
 #include <future>
-#include <Poco/String.h> 
+#include <Poco/String.h>
 
 namespace Scripting {
 
@@ -59,16 +59,14 @@ namespace Scripting {
         public:
             HeaterInput parse(ScriptLine l){
                 HeaterInput input;
-                input.intensity = l.argAsFloat(0, -1.0, 1.0);
+                input.intensity = l.argAsFloat(0, -10.0, 60.0);
                 return input;
             }
             std::future <bool> run(HeaterInput input, ISystemModule::Ptr m){
-                return m->controlModule()->setHeaterIntensity(input.intensity);
+                return m->controlModule()->setHeaterTargetTemperature(input.intensity);
             }
     };
 
-    
-    
 
     struct MixerInput {
         double rpm = 0.0;

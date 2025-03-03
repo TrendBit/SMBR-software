@@ -11,7 +11,7 @@ void registerModuleBlocks(CommandFactory & f){
 
     {
         CommandInfo info(
-            "illumination", 
+            "illumination",
             {
                 {"i0", "Intensity of channel 0"},
                 {"i1", "Intensity of channel 1"},
@@ -27,11 +27,11 @@ void registerModuleBlocks(CommandFactory & f){
 
     {
         CommandInfo info(
-            "heat", 
+            "temperature",
             {
-                {"temperature", "Temperature to heat to"},
+                {"temperature", "Target temperature"},
             },
-            "Heating command"
+            "Heating/Cooling command"
         );
         f.registerCommand(info, [](Block::Ptr block, ParseContext::Ptr ctx) {
             return std::make_shared<Scripting::HeaterCommand>(block, ctx);
@@ -53,7 +53,7 @@ void registerModuleBlocks(CommandFactory & f){
 
     {
         CommandInfo info(
-            "pump", 
+            "pump",
             {
                 {"speed", "Speed of the pump"},
             },
@@ -66,7 +66,7 @@ void registerModuleBlocks(CommandFactory & f){
 
     {
         CommandInfo info(
-            "air", 
+            "air",
             {
                 {"speed", "Speed of the aerator"},
             },
@@ -79,7 +79,7 @@ void registerModuleBlocks(CommandFactory & f){
 
     {
         CommandInfo info(
-            "display", 
+            "display",
             {
                 {"message", "Message to display", true},
             },

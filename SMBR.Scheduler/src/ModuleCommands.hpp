@@ -138,13 +138,14 @@ namespace Scripting {
                 if (input.message.empty()){
                     return m->sensorModule()->clearCustomText();
                 } else {
-                    return m->sensorModule()->printCustomText(input.message);
+                    // Clear display before printing otherwise is text appended
+                    return std::async(std::launch::async, [m, input] {
+                        m->sensorModule()->clearCustomText();
+                        return m->sensorModule()->printCustomText(input.message).get();
+                    });
                 }
-                
             }
     };
-
-
 
     typedef ModuleCommand <Heater, HeaterInput> HeaterCommand;
     typedef ModuleCommand <Illumination, IlluminationInput> IlluminationCommand;

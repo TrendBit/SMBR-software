@@ -34,11 +34,13 @@ echo "IP_ADDRESS: $IP_ADDRESS"
 ./scripts/build_rpi.sh
 
 #stop services over ssh
-ssh root@${IP_ADDRESS} systemctl stop avahi-daemon.service can0.service reactor-core-module.service reactor-api-server.service reactor-web-control.service
+ssh root@${IP_ADDRESS} systemctl stop avahi-daemon.socket avahi-daemon.service can0.service reactor-database-export.service reactor-core-module.service reactor-api-server.service reactor-web-control.service
 
 #rsync to rpi
-rsync -av \build/rpi/install/filesystem/ root@$IP_ADDRESS:/
+rsync -av --chown=root:root --chmod 700 \build/rpi/install/filesystem/ root@${IP_ADDRESS}:/
+
+#update systemd services
+ssh root@${IP_ADDRESS} systemctl daemon-reload
 
 #start services over ssh
-ssh root@$IP_ADDRESS systemctl start avahi-daemon.service can0.service reactor-core-module.service reactor-api-server.service reactor-web-control.service
-
+ssh root@${IP_ADDRESS} systemctl start avahi-daemon.socket avahi-daemon.service can0.service reactor-database-export.service reactor-core-module.service reactor-api-server.service reactor-web-control.service

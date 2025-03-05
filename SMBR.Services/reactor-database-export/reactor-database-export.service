@@ -9,6 +9,8 @@ EnvironmentFile=-/etc/telegraf/telegraf.env
 Type=simple
 ExecStart=telegraf --config-directory /home/reactor/database-export/telegraf.d/
 Restart=always
+RestartSec=30s
+StartLimitIntervalSec=0
 User=root
 
 [Install]

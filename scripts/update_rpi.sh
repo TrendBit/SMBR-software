@@ -30,6 +30,13 @@ fi
 
 echo "IP_ADDRESS: $IP_ADDRESS"
 
+# Set general reactor key if accessed via mDNS
+SSH_OPTS=""
+if [ "$USING_RESOLVED_IP" = true ]; then
+    SSH_OPTS="-i ~/.ssh/reactor"
+    echo "Using reactor SSH key for authentication"
+fi
+
 #run build_rpi.sh
 ./scripts/build_rpi.sh
 
@@ -37,7 +44,7 @@ echo "IP_ADDRESS: $IP_ADDRESS"
 ssh root@${IP_ADDRESS} systemctl stop avahi-daemon.socket avahi-daemon.service can0.service reactor-database-export.service reactor-core-module.service reactor-api-server.service reactor-web-control.service
 
 #rsync to rpi
-rsync -av --chown=root:root --chmod 700 \build/rpi/install/filesystem/ root@${IP_ADDRESS}:/
+rsync -rtv --no-perms $SSH_OPTS \build/rpi/install/filesystem/ root@${IP_ADDRESS}:/
 
 #update systemd services
 ssh root@${IP_ADDRESS} systemctl daemon-reload

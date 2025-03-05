@@ -1,9 +1,26 @@
 #!/bin/bash
 
 #parameter is ip address of rpi
+if [[ $1 =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    # Input is already an IP address
+    IP_ADDRESS=$1
+else
+    # Input is a hostname, try to resolve it
+    RESOLVED_IP=$(getent hosts "$1" | awk '{ print $1 }')
 
-IP_ADDRESS=$1
+    if [ -z "$RESOLVED_IP" ]; then
+        # Try specific mDNS resolution if getent doesn't work
+        RESOLVED_IP=$(avahi-resolve -n -4 "$1" 2>/dev/null | awk '{ print $2 }')
+    fi
 
+    if [ -z "$RESOLVED_IP" ]; then
+        echo "Error: Could not resolve hostname $1"
+        exit 1
+    fi
+
+    echo "Resolved $1 to $RESOLVED_IP"
+    IP_ADDRESS=$RESOLVED_IP
+fi
 
 #if ip address is empty print help
 if [ -z "$IP_ADDRESS" ]; then

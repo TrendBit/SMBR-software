@@ -27,16 +27,22 @@ ModuleID CanCommonModule::id() const {
     return base.id();
 }
 
-std::future <float> CanCommonModule::ping() {
+std::future<float> CanCommonModule::ping() {
+    static std::atomic<uint8_t> sequenceNumber{0}; 
+
     Poco::Clock now;
-    return base.get<
+    uint8_t currentSequenceNumber = sequenceNumber++; 
+
+    App_messages::Common::Ping_request pingRequest(currentSequenceNumber);
+
+    return base.getWithSeq<
         App_messages::Common::Ping_request, 
         App_messages::Common::Ping_response, 
         float
-    >([now](App_messages::Common::Ping_response response){
+    >(pingRequest, [now](App_messages::Common::Ping_response response) {
         float elapsed = now.elapsed() / 1000.0;
         return elapsed;
-    }, 1000);
+    }, 1000, currentSequenceNumber);
 }
 
 std::future <float> CanCommonModule::getCoreLoad() {

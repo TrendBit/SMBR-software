@@ -52,7 +52,6 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     }
 }
 
-
 template <class T>
 T wait(std::future<T> future){
     future.wait();
@@ -124,14 +123,6 @@ std::string SMBRController::instanceToString(Instance instance) {
   // ==========================================
   // Common Endpoints
   // ==========================================
-/*
-uint8_t SMBRController::getNextSeqNumber() {
-    uint8_t currentSeq = m_seqNum.fetch_add(1);
-    if (currentSeq == 255) {
-        m_seqNum = 0;  
-    }
-    return currentSeq;
-}*/
 
 std::shared_ptr<ICommonModule> SMBRController::getModule(const oatpp::Enum<dto::ModuleEnum>::AsString& module){
     if (module == dto::ModuleEnum::control) {
@@ -200,7 +191,6 @@ static ICommonModule::Ptr byUID(ISystemModule::Ptr s, const oatpp::data::type::E
     return s->commonModule(moduleID);
 }
 
-
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::postRestart(
     const oatpp::data::type::EnumObjectWrapper<dto::ModuleEnum, oatpp::data::type::EnumInterpreterAsString<dto::ModuleEnum, false>>& module,
     const oatpp::Object<ModuleActionRequestDto>& body) {
@@ -253,7 +243,6 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         ipResponseDto->ipAddress = ipAddress;
         return createDtoResponse(Status::CODE_200, ipResponseDto);
     });
-
 }
 
 
@@ -265,7 +254,6 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         hostnameResponseDto->hostname = hostname;
         return createDtoResponse(Status::CODE_200, hostnameResponseDto);
     });
-
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getSerialNumber() {
@@ -310,7 +298,6 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         voltageResponseDto->voltage = voltage;
         return createDtoResponse(Status::CODE_200, voltageResponseDto);
     });
-
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getPoEVoltage() {
@@ -321,7 +308,6 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         voltageResponseDto->voltage = voltage;
         return createDtoResponse(Status::CODE_200, voltageResponseDto);
     });
-
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getCurrentConsumption() {
@@ -332,7 +318,6 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         currentResponseDto->current = current;
         return createDtoResponse(Status::CODE_200, currentResponseDto);
     });
-
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getPowerDraw() {
@@ -343,7 +328,6 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         powerDrawResponseDto->power_draw = powerDraw;
         return createDtoResponse(Status::CODE_200, powerDrawResponseDto);
     });
-
 }
 
 // ==========================================
@@ -446,7 +430,6 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         intensityResponseDto->intensity = intensity;
         return createDtoResponse(Status::CODE_200, intensityResponseDto);
     });
-
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getLedTemperature() {
@@ -457,7 +440,6 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         tempResponseDto->temperature = temperature;
         return createDtoResponse(Status::CODE_200, tempResponseDto);
     });
-
 }
 
 
@@ -480,7 +462,6 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         intensityResponseDto->intensity = intensity;
         return createDtoResponse(Status::CODE_200, intensityResponseDto);
     });
-
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::setHeaterTargetTemperature(const oatpp::Object<TempDto>& body) {
@@ -491,19 +472,24 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         }
 
         return wait(systemModule->controlModule()->setHeaterTargetTemperature(body->temperature));
-    });
-    
+    }); 
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getHeaterTargetTemperature() {
-
     return process(__FUNCTION__, [&](){
         auto temperature = wait(systemModule->controlModule()->getHeaterTargetTemperature());
+        
+        if (std::isnan(temperature)) {
+            auto dto = MessageDto::createShared();
+            dto->message = "Target temperature is not set";
+            return createDtoResponse(Status::CODE_404, dto); 
+        }
+        
         auto tempResponseDto = TempDto::createShared();
-        tempResponseDto->temperature = temperature;
+        tempResponseDto->temperature = oatpp::Float32(temperature);
+        
         return createDtoResponse(Status::CODE_200, tempResponseDto);
     });
-
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getHeaterPlateTemperature() {
@@ -514,7 +500,6 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         plateTempResponseDto->temperature = plateTemperature;
         return createDtoResponse(Status::CODE_200, plateTempResponseDto);
     });
-
 }
 
 
@@ -523,7 +508,6 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     return processBool(__FUNCTION__, [&](){
         return wait(systemModule->controlModule()->turnOffHeater());
     });
-
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::setCuvettePumpSpeed(const oatpp::Object<SpeedDto>& body) {
@@ -535,7 +519,6 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
         return wait(systemModule->controlModule()->setCuvettePumpSpeed(body->speed));
     });
-
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getCuvettePumpSpeed() {
@@ -546,7 +529,6 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         speedResponseDto->speed = speed;
         return createDtoResponse(Status::CODE_200, speedResponseDto);
     });
-
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::setCuvettePumpFlowrate(const oatpp::Object<FlowrateDto>& body) {
@@ -558,7 +540,6 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
         return wait(systemModule->controlModule()->setCuvettePumpFlowrate(body->flowrate));
     });
-
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getCuvettePumpFlowrate() {
@@ -569,7 +550,6 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         flowrateResponseDto->flowrate = flowrate;
         return createDtoResponse(Status::CODE_200, flowrateResponseDto);
     });
-
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::moveCuvettePump(const oatpp::Object<MoveDto>& body) {
@@ -590,7 +570,6 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     return processBool(__FUNCTION__, [&](){
         return wait(systemModule->controlModule()->primeCuvettePump());
     });
-
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::purgeCuvettePump() {
@@ -598,7 +577,6 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     return processBool(__FUNCTION__, [&](){
         return wait(systemModule->controlModule()->purgeCuvettePump());
     });
-
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::stopCuvettePump() {
@@ -606,7 +584,6 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     return processBool(__FUNCTION__, [&](){
         return wait(systemModule->controlModule()->stopCuvettePump());
     });
-
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::setAeratorSpeed(const oatpp::Object<SpeedDto>& body) {
@@ -618,7 +595,6 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
         return wait(systemModule->controlModule()->setAeratorSpeed(body->speed));
     });
-
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getAeratorSpeed() {
@@ -629,7 +605,6 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         speedResponseDto->speed = speed;
         return createDtoResponse(Status::CODE_200, speedResponseDto);
     });
-
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::setAeratorFlowrate(const oatpp::Object<FlowrateDto>& body) {
@@ -641,7 +616,6 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
         return wait(systemModule->controlModule()->setAeratorFlowrate(body->flowrate));
     });
-
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getAeratorFlowrate() {
@@ -652,7 +626,6 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         flowrateResponseDto->flowrate = flowrate;
         return createDtoResponse(Status::CODE_200, flowrateResponseDto);
     });
-
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::moveAerator(const oatpp::Object<MoveDto>& body) {
@@ -667,7 +640,6 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
         return wait(systemModule->controlModule()->moveAerator(body->volume, body->flowrate));
     });
-
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::stopAerator() {
@@ -675,7 +647,6 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     return processBool(__FUNCTION__, [&](){
         return wait(systemModule->controlModule()->stopAerator());
     });
-
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::setMixerSpeed(const oatpp::Object<SpeedDto>& body) {
@@ -687,7 +658,6 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
         return wait(systemModule->controlModule()->setMixerSpeed(body->speed));
     });
-
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getMixerSpeed() {
@@ -698,7 +668,6 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         speedResponseDto->speed = speed;
         return createDtoResponse(Status::CODE_200, speedResponseDto);
     });
-
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::setMixerRpm(const oatpp::Object<RpmDto>& body) {
@@ -710,7 +679,6 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
         return wait(systemModule->controlModule()->setMixerRpm(body->rpm));
     });
-
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getMixerRpm() {
@@ -721,7 +689,6 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         rpmResponseDto->rpm = rpm;
         return createDtoResponse(Status::CODE_200, rpmResponseDto);
     });
-
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::stirMixer(const oatpp::Object<StirDto>& body) {
@@ -733,7 +700,6 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
         return wait(systemModule->controlModule()->stirMixer(body->rpm, body->time));
     });
-
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::stopMixer() {
@@ -741,7 +707,6 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     return processBool(__FUNCTION__, [&](){
         return wait(systemModule->controlModule()->stopMixer());
     });
-
 }
 
 // ==========================================
@@ -756,7 +721,6 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         tempResponseDto->temperature = temperature;
         return createDtoResponse(Status::CODE_200, tempResponseDto);
     });
-
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getTopMeasuredTemperature() {
@@ -767,7 +731,6 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         tempResponseDto->temperature = temperature;
         return createDtoResponse(Status::CODE_200, tempResponseDto);
     });
-
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getBottomMeasuredTemperature() {
@@ -778,7 +741,6 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         tempResponseDto->temperature = temperature;
         return createDtoResponse(Status::CODE_200, tempResponseDto);
     });
-
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getTopSensorTemperature() {
@@ -789,7 +751,6 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         tempResponseDto->temperature = temperature;
         return createDtoResponse(Status::CODE_200, tempResponseDto);
     });
-
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getBottomSensorTemperature() {
@@ -800,7 +761,6 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         tempResponseDto->temperature = temperature;
         return createDtoResponse(Status::CODE_200, tempResponseDto);
     });
-
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::clearCustomText() {

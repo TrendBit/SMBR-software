@@ -41,7 +41,7 @@
 
 #include <thread> 
 #include <chrono> 
-
+#include <cmath>
 #include <iostream>
 
 #include "SMBR/ISystemModule.hpp"
@@ -601,6 +601,8 @@ public:
         example->temperature = 30.5; 
         info->addResponse<Object<TempDto>>(Status::CODE_200, "application/json")
             .addExample("application/json", example);
+        info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Target temperature is not set")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Target temperature is not set"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve heater target temperature")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve heater target temperature"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_504, "application/json", "Request timed out")

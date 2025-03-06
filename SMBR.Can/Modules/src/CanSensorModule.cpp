@@ -84,6 +84,18 @@ std::future <bool> CanSensorModule::clearCustomText() {
 }
 
 std::future <bool> CanSensorModule::printCustomText(std::string text) {
-    App_messages::Mini_OLED::Print_custom_text r(text);
-    return base.set(r);
+    std::vector<std::future<bool>> results;
+
+    for (size_t i = 0; i < text.length(); i += App_messages::Mini_OLED::Print_custom_text::max_length) {
+        std::string chunk = text.substr(i, App_messages::Mini_OLED::Print_custom_text::max_length);
+        App_messages::Mini_OLED::Print_custom_text r(chunk);
+        results.push_back(base.set(r));
+    }
+
+    return std::async(std::launch::async, [results = std::move(results)]() mutable {
+        for (auto& res : results) {
+            if (!res.get()) return false;
+        }
+        return true;
+    });
 }

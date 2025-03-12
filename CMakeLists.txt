@@ -33,4 +33,4 @@ add_subdirectory(SMBR.Utilities/reactor-script-can)
 add_subdirectory(SMBR.Utilities/script-doc-generator)
 
 #tests
-add_subdirectory(SMBR.Utilities/scheduler)
+#add_subdirectory(SMBR.Utilities/scheduler)

@@ -2,6 +2,9 @@
 #include "SMBR/Exceptions.hpp"
 #include <Poco/DateTimeFormatter.h>
 
+#include "SMBR/Recipes.hpp"
+#include "SMBR/Scheduler.hpp"
+
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::process(
     std::string name,
     std::function<std::shared_ptr<oatpp::web::protocol::http::outgoing::Response>()> body
@@ -63,6 +66,7 @@ SMBRController::SMBRController(const std::shared_ptr<oatpp::web::mime::ContentMa
     : oatpp::web::server::api::ApiController(apiContentMappers)
     , systemModule(systemModule){
         scheduler_ = std::make_shared<Scheduler>(systemModule);
+        recipes_ = std::make_shared<Recipes>("/data/recipes/");
     }
 
   // ==========================================
@@ -776,9 +780,72 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 }
 
 // ==========================================
-// Scheduler
+// Recipes
 // ==========================================
 
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getRecipeList() {
+    try {
+        auto sc = recipes_->getRecipeNames();
+        auto dtoList = oatpp::List<oatpp::String>::createShared();
+        for (auto s : sc){
+            dtoList->push_back(s);
+        }
+        return createDtoResponse(Status::CODE_200, dtoList);
+    } catch (std::exception & e){
+        return createResponse(Status::CODE_500, "Failed to retrieve recipe list: " + std::string(e.what()));
+    }
+}
+
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::reloadRecipeList() {
+    try {
+        recipes_->reload();
+        return getRecipeList();
+    } catch (std::exception & e){
+        return createResponse(Status::CODE_500, "Failed to reload recipe: " + std::string(e.what()));
+    }
+}
+
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getRecipeContent(const oatpp::String& name) {
+    try {
+        auto s = recipes_->getRecipeContent(name);
+        auto scriptResponseDto = ScriptDto::createShared();
+        scriptResponseDto->name = s.name;
+        scriptResponseDto->content = s.content;
+        return createDtoResponse(Status::CODE_200, scriptResponseDto);
+    } catch (std::exception & e){
+        return createResponse(Status::CODE_500, "Failed to retrieve recipe: " + std::string(e.what()));
+    }
+}
+
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::updateRecipe(const oatpp::String& name, const oatpp::Object<ScriptDto>& body) {
+    try {
+        if (!body || !body->name || !body->content) {
+            throw ArgumentException("Invalid script. Must contain a name and content.");
+        }
+        ScriptInfo s;
+        s.name = *body->name;
+        s.content = *body->content;
+        recipes_->replaceRecipe(s);
+        return createResponse(Status::CODE_200, "Recipe updated successfully.");
+    } catch (std::exception & e){
+        return createResponse(Status::CODE_500, "Failed to update recipe: " + std::string(e.what()));
+    }
+}    
+
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::deleteRecipe(const oatpp::String& name) {
+    try {
+        recipes_->deleteRecipe(name);
+        return createResponse(Status::CODE_200, "Recipe deleted successfully.");
+    } catch (std::exception & e){
+        return createResponse(Status::CODE_500, "Failed to delete recipe: " + std::string(e.what()));
+    }
+}
+    
+
+// ==========================================
+// Scheduler
+// ==========================================
+/*
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::uploadScript(const oatpp::Object<ScriptDto>& body) {
     
     try {
@@ -793,9 +860,20 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     } catch (std::exception & e){
         return createResponse(Status::CODE_500, "Failed to upload script: " + std::string(e.what()));
     }
+}*/
+
+
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::selectRecipe(const oatpp::String& name) {
+    try {
+        auto sc = recipes_->getRecipeContent(name);
+        scheduler_->setScriptFromString(sc);
+        return createResponse(Status::CODE_200, "Recipe " + name + " selected.");
+    } catch (std::exception & e){
+        return createResponse(Status::CODE_500, "Failed to select script: " + std::string(e.what()));
+    }
 }
 
-std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getScript() {
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getRecipe() {
     try {
         auto s = scheduler_->getScript();
         auto scriptResponseDto = ScriptDto::createShared();
@@ -803,7 +881,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         scriptResponseDto->content = s.content;
         return createDtoResponse(Status::CODE_200, scriptResponseDto);
     } catch (std::exception & e){
-        return createResponse(Status::CODE_500, "Failed to retrieve script: " + std::string(e.what()));
+        return createResponse(Status::CODE_500, "Failed to retrieve recipe: " + std::string(e.what()));
     }
 }
 

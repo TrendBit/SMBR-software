@@ -45,7 +45,8 @@
 #include <iostream>
 
 #include "SMBR/ISystemModule.hpp"
-#include "SMBR/Scheduler.hpp"
+#include "SMBR/IScheduler.hpp"
+#include "SMBR/IRecipes.hpp"
 
 #include OATPP_CODEGEN_BEGIN(ApiController)
 
@@ -1187,35 +1188,106 @@ public:
     */
 
 // ==========================================
+// Recipes
+// ========================================== 
+
+    /**
+    * @brief Get list of recipes.
+    */
+    ENDPOINT_INFO(getRecipeList) {
+        info->summary = "Get list of recipes";
+        info->addTag("Recipes");
+        info->description = "Return list of names of existing recipes.";
+        info->addResponse<List<String>>(Status::CODE_200, "application/json", "List of recipe names");
+    }
+    ADD_CORS(getRecipeList)
+    ENDPOINT("GET", "/recipes", getRecipeList);
+
+    /**
+    * @brief Get list of recipes.
+    */
+    ENDPOINT_INFO(reloadRecipeList) {
+        info->summary = "Reload recipes from filesystem";
+        info->addTag("Recipes");
+        info->description = "Reloads recipes from the filesystem.";
+        info->addResponse<List<String>>(Status::CODE_200, "application/json", "List of recipe names");
+    }
+    ADD_CORS(reloadRecipeList)
+    ENDPOINT("PATCH", "/recipes", reloadRecipeList);
+
+    /**
+     * @brief Get recipe content
+     */
+    ENDPOINT_INFO(getRecipeContent) {
+        info->summary = "Get recipe content";
+        info->addTag("Recipes");
+        info->description = "Return content of the recipe.";
+        info->addResponse<String>(Status::CODE_200, "application/json", "Recipe content");
+        info->addResponse<String>(Status::CODE_404, "application/json", "Recipe not found");
+    }
+    ADD_CORS(getRecipeContent)
+    ENDPOINT("GET", "/recipes/{recipeName}", getRecipeContent, PATH(String, recipeName));
+
+    /** 
+     * @brief Updates Recipe content
+     */
+    ENDPOINT_INFO(updateRecipe) {
+        info->summary = "Update recipe content";
+        info->addTag("Recipes");
+        info->description = "Update content of the recipe.";
+        info->addConsumes<Object<ScriptDto>>("application/json");
+        info->addResponse<String>(Status::CODE_200, "application/json", "Recipe updated successfully");
+        info->addResponse<String>(Status::CODE_404, "application/json", "Recipe not found");
+    }
+    ADD_CORS(updateRecipe)
+    ENDPOINT("PUT", "/recipes/{recipeName}", updateRecipe, PATH(String, recipeName), BODY_DTO(Object<ScriptDto>, body));
+    
+    /**
+     * @brief Deletes recipe
+     */
+    ENDPOINT_INFO(deleteRecipe) {
+        info->summary = "Delete recipe";
+        info->addTag("Recipes");
+        info->description = "Delete the recipe.";
+        info->addResponse<String>(Status::CODE_200, "application/json", "Recipe deleted successfully");
+        info->addResponse<String>(Status::CODE_404, "application/json", "Recipe not found");
+    }
+    ADD_CORS(deleteRecipe)
+    ENDPOINT("DELETE", "/recipes/{recipeName}", deleteRecipe, PATH(String, recipeName));
+
+// ==========================================
 // Scheduler
 // ==========================================   
 
-    /**
-    * @brief Uploads and checks the syntax of a script to be run by the scheduler.
-    */
-    ENDPOINT_INFO(uploadScript) {
-        info->summary = "Upload script to scheduler";
-        info->addTag("Scheduler");
-        info->description = "Upload script to scheduler. It will just upload and check syntax. It will not run the script.";
-        info->addConsumes<Object<ScriptDto>>("application/json");
-        info->addResponse<String>(Status::CODE_200, "application/json", "Successfully restarted module");
-        info->addResponse<String>(Status::CODE_404, "application/json", "Module not found");
-    }
-    ADD_CORS(uploadScript)
-    ENDPOINT("PUT", "/scheduler/script", uploadScript, BODY_DTO(Object<ScriptDto>, body));
 
     /**
-     * @brief Retrieves the currently uploaded script.
+     * @brief Retrieves the currently assigned recipe.
      */
-    ENDPOINT_INFO(getScript) {
-        info->summary = "Get uploaded script";
+    ENDPOINT_INFO(getRecipe) {
+        info->summary = "Get scheduled recipe";
         info->addTag("Scheduler");
-        info->description = "Retrieves the currently uploaded script.";
+        info->description = "Retrieves the active (selected) recipe.";
         info->addResponse<Object<ScriptDto>>(Status::CODE_200, "application/json");
-        info->addResponse<String>(Status::CODE_404, "application/json", "Script not found");
+        info->addResponse<String>(Status::CODE_404, "application/json", "Recipe not found");
     }
-    ADD_CORS(getScript)
-    ENDPOINT("GET", "/scheduler/script", getScript);
+    ADD_CORS(getRecipe)
+    ENDPOINT("GET", "/scheduler/recipe", getRecipe);
+
+
+    /**
+     * @brief Select recipe to be run by the scheduler.
+     */
+    ENDPOINT_INFO(selectRecipe) {
+        info->summary = "Assign recipe to scheduler";
+        info->addTag("Scheduler");
+        info->description = "Select the recipe to be run by the scheduler.";
+        info->addResponse<String>(Status::CODE_200, "application/json", "Recipe selected successfully");
+        info->addResponse<String>(Status::CODE_404, "application/json", "Recipe not found");
+    }
+    ADD_CORS(selectRecipe)
+    ENDPOINT("POST", "/scheduler/recipe", selectRecipe, BODY_DTO(String, recipeName));
+
+
 
     /**
      * @brief Starts the scheduler.
@@ -1276,7 +1348,8 @@ private:
 
 private:
     std::shared_ptr<ISystemModule> systemModule;
-    std::shared_ptr<Scheduler> scheduler_;
+    std::shared_ptr<IScheduler> scheduler_;
+    std::shared_ptr<IRecipes> recipes_;
 };
 
 #include OATPP_CODEGEN_END(ApiController)

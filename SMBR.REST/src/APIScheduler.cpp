@@ -5,6 +5,8 @@
 #include "APIClientImpl.hpp"
 #include <fstream>
 
+#include <Poco/Path.h>
+
 
 
 APIScheduler::APIScheduler(APIClientParams params)
@@ -40,8 +42,10 @@ void APIScheduler::setScriptFromString(const ScriptInfo & info) {
     auto scriptDto = ScriptDto::createShared();
     scriptDto->name = info.name;
     scriptDto->content = info.content;
-    auto response = impl->client()->uploadScript(scriptDto);
-    checkResponse(response);
+    auto response1 = impl->client()->replaceRecipe(info.name, scriptDto);
+    checkResponse(response1);
+    auto response2 = impl->client()->selectRecipe(info.name);
+    checkResponse(response2);
 }
 
 void APIScheduler::setScriptFromFile(const std::string & filename) {
@@ -53,12 +57,14 @@ void APIScheduler::setScriptFromFile(const std::string & filename) {
     std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
     file.close();
 
-    setScriptFromString({filename, content});
+    std::string baseName = Poco::Path(filename).getBaseName();
+
+    setScriptFromString({baseName, content});
 }
 
 ScriptInfo APIScheduler::getScript() const {
 
-    auto response = impl->client()->getScript();
+    auto response = impl->client()->getRecipe();
 
     checkResponse(response);
 

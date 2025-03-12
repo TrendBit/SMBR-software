@@ -15,8 +15,10 @@ class SMBRControllerClient : public oatpp::web::client::ApiClient {
 
   API_CLIENT_INIT(SMBRControllerClient)
 
-  API_CALL("PUT", "/scheduler/script", uploadScript, BODY_DTO(Object<ScriptDto>, body))
-  API_CALL("GET", "/scheduler/script", getScript)
+  API_CALL("PUT", "/recipes/{recipeName}", replaceRecipe, PATH(String, recipeName), BODY_DTO(Object<ScriptDto>, body))
+  API_CALL("POST", "/scheduler/recipe", selectRecipe, BODY_DTO(String, recipeName))
+  //API_CALL("PUT", "/scheduler/script", uploadScript, BODY_DTO(Object<ScriptDto>, body))
+  API_CALL("GET", "/scheduler/recipe", getRecipe)
   API_CALL("POST", "/scheduler/start", startScheduler)
   API_CALL("POST", "/scheduler/stop", stopScheduler)
   API_CALL("GET", "/scheduler/runtime", getSchedulerInfo)

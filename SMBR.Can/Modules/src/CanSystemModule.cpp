@@ -118,7 +118,10 @@ std::future <ISystemModule::AvailableModules> CanSystemModule::getAvailableModul
 
                         Instance instance = static_cast<Instance>(rr.id.instance());
                         ModuleID moduleID(module, uid, instance);
-                        result.push_back(moduleID);
+                        //push back if module does not exists already
+                        if (std::find(result.begin(), result.end(), moduleID) == result.end()) {
+                            result.push_back(moduleID);
+                        }
                     }
                 }
 

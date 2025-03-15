@@ -29,6 +29,7 @@
 #include "dto/ScriptRuntimeInfoDto.hpp"
 #include "dto/TextDto.hpp"
 #include "dto/MessageDto.hpp"
+#include "dto/FluorometerCaptureStatusDto.hpp"
 
 #include "oatpp/data/mapping/ObjectMapper.hpp"
 
@@ -1178,6 +1179,24 @@ public:
     }
     ADD_CORS(printCustomText)
     ENDPOINT("POST", "/sensor/oled/print_custom_text", printCustomText, BODY_DTO(Object<TextDto>, dto));
+
+    /**
+     * @brief Checks if fluorometer OJIP capture is complete.
+     */
+    ENDPOINT_INFO(checkFluorometerOjipCaptureComplete) {
+        info->summary = "Check if fluorometer OJIP capture is complete";
+        info->description = "Check if fluorometer capture is complete and data is ready to be retrieved.";
+        info->addTag("Sensor module");
+        auto example = FluorometerCaptureStatusDto::createShared();
+        example->capture_complete = false; 
+        info->addResponse<Object<FluorometerCaptureStatusDto>>(Status::CODE_200, "application/json")
+            .addExample("application/json", example);
+        info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Fluorometer capture status not available")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Fluorometer capture status not available"}}));
+    }
+
+ADD_CORS(checkFluorometerOjipCaptureComplete)
+ENDPOINT("GET", "/sensor/fluorometer/ojip/completed", checkFluorometerOjipCaptureComplete);
 
     /**
     * @brief Measures API response time without communication with RPI/CAN bus.

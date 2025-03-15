@@ -779,6 +779,15 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     });
 }
 
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::checkFluorometerOjipCaptureComplete() {
+    return process(__FUNCTION__, [&](){
+        auto captureComplete = wait(systemModule->sensorModule()->isFluorometerOjipCaptureComplete());
+        auto captureStatusDto = FluorometerCaptureStatusDto::createShared();
+        captureStatusDto->capture_complete = captureComplete;
+        return createDtoResponse(Status::CODE_200, captureStatusDto);
+    });
+}
+
 // ==========================================
 // Recipes
 // ==========================================

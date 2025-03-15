@@ -15,6 +15,7 @@ public:
     std::future <float> getBottomSensorTemperature() override;
     std::future <bool> clearCustomText() override;
     std::future <bool> printCustomText(std::string text) override;
+    std::future <bool> isFluorometerOjipCaptureComplete() override;
     
 };
 

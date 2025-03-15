@@ -45,5 +45,10 @@ public:
      * @param text The text to be displayed.
      */
     virtual std::future <bool> printCustomText(std::string text) = 0;
+
+    /**
+     * @brief Checks if fluorometer OJIP capture is complete.
+     */
+    virtual std::future <bool> isFluorometerOjipCaptureComplete() = 0;
 };
     

@@ -11,6 +11,8 @@
 #include "codes/messages/bottle_temperature/bottom_sensor_temperature_response.hpp"
 #include "codes/messages/mini_oled/clear_custom_text.hpp"
 #include "codes/messages/mini_oled/print_custom_text.hpp"
+#include "codes/messages/fluorometer/ojip_completed_request.hpp"
+#include "codes/messages/fluorometer/ojip_completed_response.hpp"
 #include "codes/codes.hpp"
 #include <iostream>       // std::cout
 #include <future>         // std::async, std::future
@@ -98,4 +100,14 @@ std::future <bool> CanSensorModule::printCustomText(std::string text) {
         }
         return true;
     });
+}
+
+std::future<bool> CanSensorModule::isFluorometerOjipCaptureComplete() {
+    return base.get<
+        App_messages::Fluorometer::OJIP_completed_request, 
+        App_messages::Fluorometer::OJIP_completed_response, 
+        bool
+    >([](App_messages::Fluorometer::OJIP_completed_response response){
+        return response.completed;
+    }, 2000);
 }

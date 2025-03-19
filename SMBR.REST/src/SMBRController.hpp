@@ -48,7 +48,13 @@
 #include "SMBR/IScheduler.hpp"
 #include "SMBR/IRecipes.hpp"
 
+
 #include OATPP_CODEGEN_BEGIN(ApiController)
+
+//hack to have other methods in allowed list
+#undef OATPP_MACRO_API_CONTROLLER_ADD_CORS_BODY_DEFAULT_METHODS
+#define OATPP_MACRO_API_CONTROLLER_ADD_CORS_BODY_DEFAULT_METHODS "GET, POST, OPTIONS, PUT, PATCH, DELETE"
+
 
 /**
  * @class SMBRController

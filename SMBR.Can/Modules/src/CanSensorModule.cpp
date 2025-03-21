@@ -11,11 +11,15 @@
 #include "codes/messages/bottle_temperature/bottom_sensor_temperature_response.hpp"
 #include "codes/messages/mini_oled/clear_custom_text.hpp"
 #include "codes/messages/mini_oled/print_custom_text.hpp"
+#include "codes/messages/fluorometer/ojip_capture_request.hpp"
 #include "codes/messages/fluorometer/ojip_completed_request.hpp"
 #include "codes/messages/fluorometer/ojip_completed_response.hpp"
+#include "codes/messages/fluorometer/fluorometer_config.hpp"
 #include "codes/codes.hpp"
 #include <iostream>       // std::cout
 #include <future>         // std::async, std::future
+#include <fstream>
+#include <iostream>
 
 CanSensorModule::CanSensorModule(std::string uidHex, ICanChannel::Ptr channel) : base({Modules::Sensor, uidHex}, channel){
 
@@ -100,6 +104,75 @@ std::future <bool> CanSensorModule::printCustomText(std::string text) {
         }
         return true;
     });
+}
+
+uint8_t CanSensorModule::CalculateMeasurementID(uint32_t api_id) {
+    return (api_id % 15) + 1;
+}
+
+std::future<bool> CanSensorModule::startFluorometerOjipCapture(
+    Fluorometer_config::Gain detector_gain,
+    Fluorometer_config::Timing sample_timing,
+    float emitor_intensity,
+    uint16_t length_ms,
+    uint16_t samples) {
+
+    uint32_t api_id;
+    uint8_t measurement_id;
+
+    std::fstream file("/home/reactor/measurement_params.txt", std::ios::in | std::ios::out); //for testing and for better readability this file is used
+    if (file.is_open()) {
+        uint32_t existing_api_id;
+        if (file >> existing_api_id) {
+            last_api_id = existing_api_id; 
+            api_id = ++last_api_id; 
+            measurement_id = CalculateMeasurementID(api_id); 
+        } else {
+            api_id = 1;
+            measurement_id = CalculateMeasurementID(api_id);
+            last_api_id = api_id;
+        }
+
+        last_measurement_data = ISensorModule::FluorometerOjipData{}; 
+        isRead = false; 
+        last_timebase = sample_timing; 
+
+        file.seekp(0); 
+        file << api_id << " " << samples << " " << length_ms << " "
+             << static_cast<int>(sample_timing) << " " << isRead << "\n";
+        file.close();
+    } else {
+        std::ofstream outfile("/home/reactor/measurement_params.txt");
+        if (outfile.is_open()) {
+            api_id = 1;
+            measurement_id = CalculateMeasurementID(api_id);
+            last_api_id = api_id;
+
+            last_measurement_data = ISensorModule::FluorometerOjipData{};
+            isRead = false; 
+            last_timebase = sample_timing;
+
+            outfile << api_id << " " << samples << " " << length_ms << " "
+                    << static_cast<int>(sample_timing) << " " << isRead << "\n";
+            outfile.close();
+        } else {
+            throw std::runtime_error("Failed to create measurement parameters file");
+        }
+    }
+
+    last_required_samples = samples;
+    last_length_ms = length_ms;
+
+    App_messages::Fluorometer::OJIP_capture_request r{
+        measurement_id,
+        detector_gain,
+        sample_timing,
+        static_cast<uint8_t>(emitor_intensity * 255),
+        length_ms,
+        samples
+    };
+
+    return base.set(r);
 }
 
 std::future<bool> CanSensorModule::isFluorometerOjipCaptureComplete() {

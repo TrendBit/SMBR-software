@@ -30,7 +30,8 @@
 #include "dto/TextDto.hpp"
 #include "dto/MessageDto.hpp"
 #include "dto/FluorometerCaptureStatusDto.hpp"
-
+#include "dto/FluorometerOjipCaptureRequestDto.hpp"
+#include "dto/CaptureEnumDto.hpp"
 #include "oatpp/data/mapping/ObjectMapper.hpp"
 
 #include <future>
@@ -1181,6 +1182,35 @@ public:
     ENDPOINT("POST", "/sensor/oled/print_custom_text", printCustomText, BODY_DTO(Object<TextDto>, dto));
 
     /**
+     * @brief Starts OJIP capture on fluorometer.
+     */
+    ENDPOINT_INFO(startFluorometerOjipCapture) {
+        info->summary = "Start OJIP capture on fluorometer";
+        info->description = "This endpoint starts the OJIP capture process on the fluorometer.";
+        info->addTag("Sensor module");
+
+        auto example = FluorometerOjipCaptureRequestDto::createShared();
+        example->emitor_intensity = 1.0;
+        example->length_ms = 1000;
+        example->sample_count = 1000;
+
+        info->addConsumes<Object<FluorometerOjipCaptureRequestDto>>("application/json")
+            .addExample("application/json", example);
+        info->addResponse<Object<MessageDto>>(Status::CODE_200, "application/json", "Measurement started")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Measurement started"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_400, "application/json", "Invalid parameters")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Invalid parameters"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to start measurement")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to start measurement"}}));
+    }
+
+    ADD_CORS(startFluorometerOjipCapture)
+    ENDPOINT("POST", "/sensor/fluorometer/ojip/capture", startFluorometerOjipCapture,
+        QUERY(oatpp::Enum<dto::GainEnum>::AsString, gain), 
+        QUERY(oatpp::Enum<dto::TimingEnum>::AsString, timing),
+        BODY_DTO(Object<FluorometerOjipCaptureRequestDto>, body));
+
+    /**
      * @brief Checks if fluorometer OJIP capture is complete.
      */
     ENDPOINT_INFO(checkFluorometerOjipCaptureComplete) {
@@ -1359,6 +1389,8 @@ private:
     
     std::shared_ptr<ICommonModule> getModule(const oatpp::Enum<dto::ModuleEnum>::AsString& module);
     int getChannel(const dto::ChannelEnum& channel);
+    Fluorometer_config::Gain getGain(const dto::GainEnum& gain);
+    Fluorometer_config::Timing getTiming(const dto::TimingEnum& timing);
 
     std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> process(
         std::string name,

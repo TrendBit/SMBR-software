@@ -779,6 +779,61 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     });
 }
 
+Fluorometer_config::Gain SMBRController::getGain(const dto::GainEnum& gain) {
+    switch (gain) {
+        case dto::GainEnum::x1:
+            return Fluorometer_config::Gain::x1;
+        case dto::GainEnum::x10:
+            return Fluorometer_config::Gain::x10;
+        case dto::GainEnum::x50:
+            return Fluorometer_config::Gain::x50;
+        case dto::GainEnum::Auto:
+            return Fluorometer_config::Gain::Auto; 
+        default:
+            throw NotFoundException("Gain not found");
+    }
+}
+
+Fluorometer_config::Timing SMBRController::getTiming(const dto::TimingEnum& timing) {
+    switch (timing) {
+        case dto::TimingEnum::Linear:
+            return Fluorometer_config::Timing::Linear; 
+        case dto::TimingEnum::Logarithmic:
+            return Fluorometer_config::Timing::Logarithmic; 
+        default:
+            throw NotFoundException("Timing not found");
+    }
+}
+
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::startFluorometerOjipCapture( 
+    const oatpp::Enum<dto::GainEnum>::AsString& gain, 
+    const oatpp::Enum<dto::TimingEnum>::AsString& timing,
+    const oatpp::Object<FluorometerOjipCaptureRequestDto>& body
+) {
+    return processBool(__FUNCTION__, [&](){
+        if (body->emitor_intensity < 0.2 || body->emitor_intensity > 1.0) {
+            throw ArgumentException("Invalid emitor intensity. Must be between 0.2 and 1.");
+        }
+        if (body->length_ms < 100.0 || body->length_ms > 4000.0) {
+            throw ArgumentException("Invalid length. Must be between 100 and 4000.");
+        }
+        if (body->sample_count < 100.0 || body->sample_count > 4000.0) {
+            throw ArgumentException("Invalid sample count. Must be between 100 and 4000.");
+        }
+
+        Fluorometer_config::Gain detector_gain = getGain(gain);
+        Fluorometer_config::Timing sample_timing = getTiming(timing);
+
+        return wait(systemModule->sensorModule()->startFluorometerOjipCapture(
+            detector_gain,       
+            sample_timing,
+            body->emitor_intensity,
+            body->length_ms,
+            body->sample_count
+        ));
+    });
+}
+
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::checkFluorometerOjipCaptureComplete() {
     return process(__FUNCTION__, [&](){
         auto captureComplete = wait(systemModule->sensorModule()->isFluorometerOjipCaptureComplete());

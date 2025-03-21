@@ -6,12 +6,40 @@
 #include <functional>
 #include <future>
 #include "SMBR/SMBR.hpp"
+#include "../../SMBR.Can/Codes/include/codes/messages/fluorometer/fluorometer_config.hpp"
 
 class ISensorModule {
 public:
     typedef std::shared_ptr <ISensorModule> Ptr;
 
     virtual ~ISensorModule() = default;
+
+    /**
+     * @brief Structure representing a single fluorometer sample.
+     */
+    struct FluorometerSample {
+        float time_ms;
+        int16_t raw_value;
+        float relative_value;
+        float absolute_value;
+    };
+
+    /**
+     * @brief Structure representing OJIP data from the fluorometer.
+     */
+    struct FluorometerOjipData {
+        int32_t measurement_id;
+        Fluorometer_config::Gain detector_gain;
+        Fluorometer_config::Timing timebase;
+        float emitor_intensity;
+        std::vector<FluorometerSample> samples;
+
+        bool read;
+        int16_t length_ms;
+        int16_t required_samples;
+        int16_t captured_samples;
+        int32_t missing_samples;
+    };
 
     virtual ModuleID id() const = 0;
     /** 
@@ -45,6 +73,16 @@ public:
      * @param text The text to be displayed.
      */
     virtual std::future <bool> printCustomText(std::string text) = 0;
+
+    /**
+     * @brief Starts OJIP capture on fluorometer
+     */
+    virtual std::future <bool> startFluorometerOjipCapture(
+        Fluorometer_config::Gain detector_gain, 
+        Fluorometer_config::Timing sample_timing, 
+        float emitor_intensity, 
+        uint16_t length_ms, 
+        uint16_t samples) = 0;
 
     /**
      * @brief Checks if fluorometer OJIP capture is complete.

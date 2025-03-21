@@ -53,6 +53,13 @@ std::future <bool> VirtualSensorModule::printCustomText(std::string text){
     });
 }
 
+std::future <bool> VirtualSensorModule::startFluorometerOjipCapture(Fluorometer_config::Gain detector_gain, Fluorometer_config::Timing sample_timing, float emitor_intensity, uint16_t length_ms, uint16_t samples) {
+    return std::async(std::launch::async, []() {
+        Random::randomDelay();
+        return true;
+    });
+}
+
 std::future <bool> VirtualSensorModule::isFluorometerOjipCaptureComplete(){
     return std::async(std::launch::async, []() {
         Random::randomDelay();

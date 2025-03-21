@@ -24,6 +24,8 @@
 #include <iostream>
 #include <thread>         // std::this_thread::sleep_for
 
+static const std::string PARAMS_FILE_PATH = "/home/reactor/measurement_params.txt";
+
 CanSensorModule::CanSensorModule(std::string uidHex, ICanChannel::Ptr channel) 
     : base({Modules::Sensor, uidHex}, channel), channel(channel) {
 }
@@ -113,7 +115,17 @@ uint8_t CanSensorModule::CalculateMeasurementID(uint32_t api_id) {
     return (api_id % 15) + 1;
 }
 
-std::future<bool> CanSensorModule::startFluorometerOjipCapture(
+std::future<bool> CanSensorModule::isFluorometerOjipCaptureComplete() {
+    return base.get<
+        App_messages::Fluorometer::OJIP_completed_request, 
+        App_messages::Fluorometer::OJIP_completed_response, 
+        bool
+    >([](App_messages::Fluorometer::OJIP_completed_response response){
+        return response.completed;
+    }, 2000);
+}
+
+std::future<ISensorModule::FluorometerOjipData> CanSensorModule::startFluorometerOjipCapture(
     Fluorometer_config::Gain detector_gain,
     Fluorometer_config::Timing sample_timing,
     float emitor_intensity,
@@ -123,7 +135,7 @@ std::future<bool> CanSensorModule::startFluorometerOjipCapture(
     uint32_t api_id;
     uint8_t measurement_id;
 
-    std::fstream file("/home/reactor/measurement_params.txt", std::ios::in | std::ios::out); //for testing and for better readability this file is used
+    std::fstream file(PARAMS_FILE_PATH, std::ios::in | std::ios::out); //for testing and for better readability this file is used
     if (file.is_open()) {
         uint32_t existing_api_id;
         if (file >> existing_api_id) {
@@ -145,7 +157,7 @@ std::future<bool> CanSensorModule::startFluorometerOjipCapture(
              << static_cast<int>(sample_timing) << " " << isRead << "\n";
         file.close();
     } else {
-        std::ofstream outfile("/home/reactor/measurement_params.txt");
+        std::ofstream outfile(PARAMS_FILE_PATH);
         if (outfile.is_open()) {
             api_id = 1;
             measurement_id = CalculateMeasurementID(api_id);
@@ -163,6 +175,7 @@ std::future<bool> CanSensorModule::startFluorometerOjipCapture(
         }
     }
 
+    auto timeoutMs = length_ms;
     last_required_samples = samples;
     last_length_ms = length_ms;
 
@@ -175,24 +188,106 @@ std::future<bool> CanSensorModule::startFluorometerOjipCapture(
         samples
     };
 
-    return base.set(r);
-}
+    auto succes = base.set(r);
+    if (succes.get()) {
+        auto promise = std::make_shared<std::promise<ISensorModule::FluorometerOjipData>>();
 
-std::future<bool> CanSensorModule::isFluorometerOjipCaptureComplete() {
-    return base.get<
-        App_messages::Fluorometer::OJIP_completed_request, 
-        App_messages::Fluorometer::OJIP_completed_response, 
-        bool
-    >([](App_messages::Fluorometer::OJIP_completed_response response){
-        return response.completed;
-    }, 2000);
+        auto checkCompletion = [this, promise, timeoutMs]() {
+            int attempts = 0;
+            const int maxAttempts = 20;
+            const std::chrono::milliseconds delay(100);
+            std::this_thread::sleep_for(std::chrono::milliseconds(timeoutMs));
+
+            while (attempts < maxAttempts) {
+                auto future = isFluorometerOjipCaptureComplete();
+                if (future.get()) {
+                    App_messages::Fluorometer::OJIP_retrieve_request rawRequest;
+                    CanID requestId = BaseModule::createId(rawRequest.Type(), Codes::Module::Sensor_module, Codes::Instance::Exclusive, false);
+
+                    RequestData requestData(requestId, rawRequest.Export_data());
+                    ResponseInfo responseInfo;
+                    responseInfo.timeoutMs = timeoutMs;
+                    responseInfo.acceptFunction = [](const ResponseData& response) {
+                        App_messages::Fluorometer::Data_sample rawResponse;
+                        return response.id.messageType() == static_cast<uint16_t>(rawResponse.Type());
+                    };
+                    responseInfo.isDoneFunction = [](const std::vector<ResponseData>& responses) {
+                        return false;
+                    };
+                    responseInfo.successOnTimeout = true;
+
+                    CanRequest canRequest(requestData, responseInfo);
+
+                    channel->send(canRequest, [&, promise](ICanChannel::Response response) {
+                        if (response.status == CanRequestStatus::Success || response.status == CanRequestStatus::Timeout) {
+                            ISensorModule::FluorometerOjipData result;
+                            bool metadataLoaded = false;
+
+                            for (const auto& rr : response.responseData) {
+                                auto dataCopy = rr.data;
+                                App_messages::Fluorometer::Data_sample sampleResponse;
+                                if (sampleResponse.Interpret_data(dataCopy) &&
+                                    sampleResponse.Measurement_id() == CalculateMeasurementID(last_api_id)) {
+                                    
+                                    if (!metadataLoaded) {
+                                        result.detector_gain = sampleResponse.gain;
+                                        result.emitor_intensity = sampleResponse.Emitor_intensity();
+                                        metadataLoaded = true;
+                                    }
+
+                                    ISensorModule::FluorometerSample sample;
+                                    sample.time_ms = sampleResponse.Time_ms();
+                                    sample.raw_value = sampleResponse.sample_value;
+                                    sample.relative_value = sampleResponse.Relative_value();
+                                    sample.absolute_value = sampleResponse.Absolute_value();
+                                    result.samples.push_back(sample);
+                                    result.measurement_id = last_api_id;
+                                }
+                            }
+
+                            std::sort(result.samples.begin(), result.samples.end(), [](const FluorometerSample& a, const FluorometerSample& b) {
+                                return a.time_ms < b.time_ms;
+                            });
+
+                            result.timebase = last_timebase;
+                            result.length_ms = last_length_ms;
+                            result.required_samples = last_required_samples;
+                            result.captured_samples = static_cast<int16_t>(result.samples.size());
+                            result.missing_samples = result.required_samples - result.captured_samples;
+                            result.read = isRead;
+
+                            last_measurement_data = result;
+
+                            promise->set_value(result);
+                        } else {
+                            promise->set_exception(std::make_exception_ptr(std::runtime_error("Failed to send request")));
+                        }
+                    });
+
+                    return;
+                }
+
+                std::this_thread::sleep_for(delay);
+                attempts++;
+            }
+
+            promise->set_exception(std::make_exception_ptr(std::runtime_error("Measurement did not complete within the expected time")));
+        };
+
+        std::thread(checkCompletion).detach();
+        return promise->get_future();
+    } else {
+        auto promise = std::make_shared<std::promise<ISensorModule::FluorometerOjipData>>();
+        promise->set_exception(std::make_exception_ptr(std::runtime_error("Failed to start OJIP capture")));
+        return promise->get_future();
+    }
 }
 
 std::future<ISensorModule::FluorometerOjipData> CanSensorModule::retrieveFluorometerOjipData() {
     auto promise = std::make_shared<std::promise<ISensorModule::FluorometerOjipData>>();
 
     if (last_api_id == 0) {
-        std::ifstream file("/home/reactor/measurement_params.txt");
+        std::ifstream file(PARAMS_FILE_PATH);
         if (file.is_open()) {
             uint32_t saved_api_id;
             uint16_t saved_samples;
@@ -215,12 +310,26 @@ std::future<ISensorModule::FluorometerOjipData> CanSensorModule::retrieveFluorom
     }
 
     if (!last_measurement_data.samples.empty()) {
-        last_measurement_data.read = isRead;
+        if (!isRead) {
+            last_measurement_data.read = false;
+            isRead = true;
+        } else {
+            last_measurement_data.read = true;
+        }
+
+        std::ofstream outfile(PARAMS_FILE_PATH, std::ios::trunc);
+        if (outfile.is_open()) {
+            outfile << last_api_id << " " << last_required_samples << " " << last_length_ms << " "
+                    << static_cast<int>(last_timebase) << " " << isRead << "\n";
+            outfile.close();
+        }
+
         promise->set_value(last_measurement_data);
         return promise->get_future();
     }
+    auto timeoutMs = last_length_ms;
 
-    auto checkCompletion = [this, promise]() {
+    auto checkCompletion = [this, promise, timeoutMs]() {
         int attempts = 0;
         const int maxAttempts = 20;
         const std::chrono::milliseconds delay(100);
@@ -233,7 +342,7 @@ std::future<ISensorModule::FluorometerOjipData> CanSensorModule::retrieveFluorom
 
                 RequestData requestData(requestId, rawRequest.Export_data());
                 ResponseInfo responseInfo;
-                responseInfo.timeoutMs = 1000;
+                responseInfo.timeoutMs = timeoutMs;
                 responseInfo.acceptFunction = [](const ResponseData& response) {
                     App_messages::Fluorometer::Data_sample rawResponse;
                     return response.id.messageType() == static_cast<uint16_t>(rawResponse.Type());
@@ -288,7 +397,7 @@ std::future<ISensorModule::FluorometerOjipData> CanSensorModule::retrieveFluorom
                         if (!isRead) { 
                             isRead = true;
 
-                            std::ifstream infile("/home/reactor/measurement_params.txt");
+                            std::ifstream infile(PARAMS_FILE_PATH);
                             if (infile.is_open()) {
                                 uint32_t saved_api_id;
                                 uint16_t saved_samples;
@@ -300,7 +409,7 @@ std::future<ISensorModule::FluorometerOjipData> CanSensorModule::retrieveFluorom
                                 infile.close();
 
                                 if (!saved_read) {
-                                    std::ofstream outfile("/home/reactor/measurement_params.txt", std::ios::trunc);
+                                    std::ofstream outfile(PARAMS_FILE_PATH, std::ios::trunc);
                                     if (outfile.is_open()) {
                                         outfile << saved_api_id << " " << saved_samples << " " << saved_length_ms << " "
                                                 << saved_timebase << " " << isRead << "\n";
@@ -329,3 +438,4 @@ std::future<ISensorModule::FluorometerOjipData> CanSensorModule::retrieveFluorom
     std::thread(checkCompletion).detach();
     return promise->get_future();
 }
+

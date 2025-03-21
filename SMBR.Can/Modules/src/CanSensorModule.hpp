@@ -4,6 +4,13 @@
 #include "can/CanChannel.hpp"
 #include "BaseModule.hpp"
 
+#include "codes/messages/fluorometer/ojip_capture_request.hpp"
+#include "codes/messages/fluorometer/ojip_completed_request.hpp"
+#include "codes/messages/fluorometer/ojip_completed_response.hpp"
+#include "codes/messages/fluorometer/ojip_retrieve_request.hpp"
+#include "codes/messages/fluorometer/data_sample.hpp"
+#include "codes/messages/fluorometer/fluorometer_config.hpp"
+
 class CanSensorModule : public ISensorModule {
 public:
     CanSensorModule(std::string uidHex, ICanChannel::Ptr channel);
@@ -17,14 +24,14 @@ public:
     std::future <float> getBottomSensorTemperature() override;   
     std::future <bool> clearCustomText() override;
     std::future <bool> printCustomText(std::string text) override;
-    std::future <bool> startFluorometerOjipCapture(
+    std::future <FluorometerOjipData> startFluorometerOjipCapture(
         Fluorometer_config::Gain detector_gain, 
         Fluorometer_config::Timing sample_timing, 
         float emitor_intensity, 
         uint16_t length_ms, 
         uint16_t samples) override;
     std::future <bool> isFluorometerOjipCaptureComplete() override;
-    std::future<FluorometerOjipData> retrieveFluorometerOjipData() override;
+    std::future <FluorometerOjipData> retrieveFluorometerOjipData() override;
     
 
 private:

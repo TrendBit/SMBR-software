@@ -810,7 +810,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     const oatpp::Enum<dto::TimingEnum>::AsString& timing,
     const oatpp::Object<FluorometerOjipCaptureRequestDto>& body
 ) {
-    return processBool(__FUNCTION__, [&](){
+    return process(__FUNCTION__, [&]() {
         if (body->emitor_intensity < 0.2 || body->emitor_intensity > 1.0) {
             throw ArgumentException("Invalid emitor intensity. Must be between 0.2 and 1.");
         }
@@ -823,14 +823,38 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
         Fluorometer_config::Gain detector_gain = getGain(gain);
         Fluorometer_config::Timing sample_timing = getTiming(timing);
-
-        return wait(systemModule->sensorModule()->startFluorometerOjipCapture(
+        auto fluorometerData = wait(systemModule->sensorModule()->startFluorometerOjipCapture(
             detector_gain,       
             sample_timing,
             body->emitor_intensity,
             body->length_ms,
             body->sample_count
         ));
+
+        auto ojipDataDto = FluorometerMeasurementDto::createShared();
+
+        ojipDataDto->measurement_id = fluorometerData.measurement_id;
+        ojipDataDto->detector_gain = static_cast<dto::GainEnum>(fluorometerData.detector_gain);
+        ojipDataDto->timebase = static_cast<dto::TimingEnum>(fluorometerData.timebase);
+        ojipDataDto->emitor_intensity = fluorometerData.emitor_intensity;
+        ojipDataDto->length_ms = fluorometerData.length_ms;
+        ojipDataDto->required_samples = fluorometerData.required_samples;
+        ojipDataDto->captured_samples = fluorometerData.captured_samples;
+        ojipDataDto->missing_samples = fluorometerData.missing_samples;
+        ojipDataDto->read = fluorometerData.read;
+
+        oatpp::Vector<oatpp::Object<FluorometerSampleDto>> samples = oatpp::Vector<oatpp::Object<FluorometerSampleDto>>::createShared();
+        for (const auto& sample : fluorometerData.samples) {
+            auto sampleDto = FluorometerSampleDto::createShared();
+            sampleDto->time_ms = sample.time_ms;
+            sampleDto->raw_value = sample.raw_value;
+            sampleDto->relative_value = sample.relative_value;
+            sampleDto->absolute_value = sample.absolute_value;
+            samples->push_back(sampleDto);
+        }
+        ojipDataDto->samples = samples;
+
+        return createDtoResponse(Status::CODE_200, ojipDataDto);
     });
 }
 

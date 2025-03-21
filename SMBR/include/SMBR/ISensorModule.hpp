@@ -77,7 +77,7 @@ public:
     /**
      * @brief Starts OJIP capture on fluorometer
      */
-    virtual std::future <bool> startFluorometerOjipCapture(
+    virtual std::future <FluorometerOjipData> startFluorometerOjipCapture(
         Fluorometer_config::Gain detector_gain, 
         Fluorometer_config::Timing sample_timing, 
         float emitor_intensity, 

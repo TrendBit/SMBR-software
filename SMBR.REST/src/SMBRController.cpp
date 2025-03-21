@@ -843,6 +843,37 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     });
 }
 
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::retrieveFluorometerOjipData() {
+    return process(__FUNCTION__, [&]() {
+        auto fluorometerData = wait(systemModule->sensorModule()->retrieveFluorometerOjipData());
+
+        auto ojipDataDto = FluorometerMeasurementDto::createShared();
+
+        ojipDataDto->measurement_id = fluorometerData.measurement_id;
+        ojipDataDto->detector_gain = static_cast<dto::GainEnum>(fluorometerData.detector_gain);
+        ojipDataDto->timebase = static_cast<dto::TimingEnum>(fluorometerData.timebase);
+        ojipDataDto->emitor_intensity = fluorometerData.emitor_intensity;
+        ojipDataDto->length_ms = fluorometerData.length_ms;
+        ojipDataDto->required_samples = fluorometerData.required_samples;
+        ojipDataDto->captured_samples = fluorometerData.captured_samples;
+        ojipDataDto->missing_samples = fluorometerData.missing_samples;
+        ojipDataDto->read = fluorometerData.read;
+
+        oatpp::Vector<oatpp::Object<FluorometerSampleDto>> samples = oatpp::Vector<oatpp::Object<FluorometerSampleDto>>::createShared();
+        for (const auto& sample : fluorometerData.samples) {
+            auto sampleDto = FluorometerSampleDto::createShared();
+            sampleDto->time_ms = sample.time_ms;
+            sampleDto->raw_value = sample.raw_value;
+            sampleDto->relative_value = sample.relative_value;
+            sampleDto->absolute_value = sample.absolute_value;
+            samples->push_back(sampleDto);
+        }
+        ojipDataDto->samples = samples;
+
+        return createDtoResponse(Status::CODE_200, ojipDataDto);
+    });
+}
+
 // ==========================================
 // Recipes
 // ==========================================

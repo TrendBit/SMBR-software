@@ -32,6 +32,8 @@
 #include "dto/FluorometerCaptureStatusDto.hpp"
 #include "dto/FluorometerOjipCaptureRequestDto.hpp"
 #include "dto/CaptureEnumDto.hpp"
+#include "dto/FluorometerMeasurementDto.hpp"
+#include "dto/FluorometerSampleDto.hpp"
 #include "oatpp/data/mapping/ObjectMapper.hpp"
 
 #include <future>
@@ -1227,6 +1229,64 @@ public:
 
 ADD_CORS(checkFluorometerOjipCaptureComplete)
 ENDPOINT("GET", "/sensor/fluorometer/ojip/completed", checkFluorometerOjipCaptureComplete);
+
+/**
+     * @brief Retrieve OJIP data from fluorometer.
+     */
+    ENDPOINT_INFO(retrieveFluorometerOjipData) {
+        info->summary = "Retrieve OJIP data from last fluorometer capture";
+        info->description = 
+            "Retrieve OJIP data from last fluorometer capture.\n"
+            "Measurement ID is generally increasing in value and different for every new measurement started.\n"
+            "If measurement is retrieved twice, ID will be the same.\n"
+            "Measurement ID is used to determine if this measurement is already exported to the database.\n"
+            "Boolean Read contains information if data was already read from the sensor.\n"
+            "It starts as true and resets with every new measurement started.\n"
+            "Serves as an easier way to determine if data was already read instead of Measurement ID.\n"
+            "The second retrieve without starting a new measurement will return false.\n"
+            "Samples are always ordered by the time of capture.\n"
+            "Time between capture_start and retrieve should be at least double the length of the measurement.\n"
+            "Based on selected parameters when the measurement was started, data can be saturated.\n"
+            "Depending on the gain of the detector or intensity of the emitter, adjustments can be made for the next measurement.\n"
+            "Intensity of the emitter is not strictly linear, so it is better to use the gain of the detector to change absolute values.\n"
+            "Samples have 3 types of values:\n"
+            " - raw_value: raw ADC value from the detector (generally 12-bit, see detector info)\n"
+            " - relative_value: value normalized to a 0-1 range\n"
+            " - absolute_value: value normalized to a 0-1 range and corrected for the gain of the detector and emitter intensity";
+        info->addTag("Sensor module");
+        auto example = FluorometerMeasurementDto::createShared();
+        example->measurement_id = 1235;
+        example->read = false;
+        example->detector_gain = dto::GainEnum::x1;
+        example->emitor_intensity = 0.5;
+        example->timebase = dto::TimingEnum::Logarithmic;
+        example->length_ms = 1000;
+        example->required_samples = 1000;
+        example->captured_samples = 998;
+        example->missing_samples = 2;
+
+        
+        auto sample1 = FluorometerSampleDto::createShared();
+        sample1->time_ms = 1.2f; 
+        sample1->raw_value = 1023; 
+        sample1->relative_value = 0.5f; 
+        sample1->absolute_value = 0.125f; 
+
+        auto sample2 = FluorometerSampleDto::createShared();
+        sample2->time_ms = 10.0f;
+        sample2->raw_value = 4095;
+        sample2->relative_value = 1.0f;
+        sample2->absolute_value = 0.95f;
+
+        example->samples = {sample1, sample2};
+        info->addResponse<Object<FluorometerMeasurementDto>>(Status::CODE_200, "application/json")
+            .addExample("application/json", example);
+        info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "OJIP data not available")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "OJIP data not available"}}));
+    }
+
+    ADD_CORS(retrieveFluorometerOjipData)
+    ENDPOINT("GET", "/sensor/fluorometer/ojip/read_last", retrieveFluorometerOjipData);
 
     /**
     * @brief Measures API response time without communication with RPI/CAN bus.

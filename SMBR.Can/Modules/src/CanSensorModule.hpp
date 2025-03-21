@@ -24,11 +24,12 @@ public:
         uint16_t length_ms, 
         uint16_t samples) override;
     std::future <bool> isFluorometerOjipCaptureComplete() override;
+    std::future<FluorometerOjipData> retrieveFluorometerOjipData() override;
     
 
 private:
     BaseModule base;
-
+    ICanChannel::Ptr channel;
     uint8_t CalculateMeasurementID(uint32_t api_id);
     std::atomic<uint32_t> last_api_id{0}; 
     bool isRead = false;

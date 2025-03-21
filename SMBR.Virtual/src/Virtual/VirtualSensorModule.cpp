@@ -67,6 +67,24 @@ std::future <bool> VirtualSensorModule::isFluorometerOjipCaptureComplete(){
     });
 }
 
+std::future <ISensorModule::FluorometerOjipData> VirtualSensorModule::retrieveFluorometerOjipData() {
+    return std::async(std::launch::async, [&]() {
+        Random::randomDelay();
+        return ISensorModule::FluorometerOjipData {
+            .measurement_id = 1235,
+            .detector_gain = Fluorometer_config::Gain::x1,
+            .timebase = Fluorometer_config::Timing::Logarithmic,
+            .emitor_intensity = 0.5f,
+            .samples = {},  
+            .read = false,
+            .length_ms = 1000,
+            .required_samples = 1000,
+            .captured_samples = 998,
+            .missing_samples = 2
+        };
+    });
+}
+
 
 
 

@@ -88,5 +88,10 @@ public:
      * @brief Checks if fluorometer OJIP capture is complete.
      */
     virtual std::future <bool> isFluorometerOjipCaptureComplete() = 0;
-};
+
+    /**
+     * @brief Retrieves OJIP data from the fluorometer.
+     */
+    virtual std::future<FluorometerOjipData> retrieveFluorometerOjipData() = 0;
+    };
     

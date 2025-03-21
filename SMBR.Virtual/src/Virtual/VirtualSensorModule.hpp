@@ -17,6 +17,7 @@ public:
     std::future <bool> printCustomText(std::string text) override;
     std::future <bool> startFluorometerOjipCapture(Fluorometer_config::Gain detector_gain, Fluorometer_config::Timing sample_timing, float emitor_intensity, uint16_t length_ms, uint16_t samples) override;
     std::future <bool> isFluorometerOjipCaptureComplete() override;
+    std::future<FluorometerOjipData> retrieveFluorometerOjipData() override;
     
 };
 

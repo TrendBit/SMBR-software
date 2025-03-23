@@ -11,6 +11,14 @@
 #include "codes/messages/fluorometer/data_sample.hpp"
 #include "codes/messages/fluorometer/fluorometer_config.hpp"
 
+struct MeasurementParams {
+        uint32_t api_id;
+        uint16_t samples;
+        uint16_t length_ms;
+        int timebase;
+        bool isRead;
+    };
+
 class CanSensorModule : public ISensorModule {
 public:
     CanSensorModule(std::string uidHex, ICanChannel::Ptr channel);
@@ -44,6 +52,12 @@ private:
     Fluorometer_config::Timing last_timebase = Fluorometer_config::Timing::Logarithmic; 
     uint16_t last_required_samples;
     uint16_t last_length_ms;
+
+    void sendCanRequest(uint32_t timeoutMs, std::shared_ptr<std::promise<ISensorModule::FluorometerOjipData>> promise);
+    void checkMeasurementCompletion(uint32_t timeoutMs, std::shared_ptr<std::promise<ISensorModule::FluorometerOjipData>> promise);
+    bool readMeasurementParams(const std::string& filePath, MeasurementParams& params);
+    bool writeMeasurementParams(const std::string& filePath, const MeasurementParams& params);
+
     
 };
 

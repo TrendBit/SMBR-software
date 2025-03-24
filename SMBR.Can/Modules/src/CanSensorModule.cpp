@@ -24,7 +24,7 @@
 #include <iostream>
 #include <thread>         // std::this_thread::sleep_for
 
-static const std::string PARAMS_FILE_PATH = "/home/reactor/measurement_params.txt";
+static const std::string PARAMS_FILE_PATH = "/data/fluorometer/measurement_params.bin";
 
 CanSensorModule::CanSensorModule(std::string uidHex, ICanChannel::Ptr channel) 
     : base({Modules::Sensor, uidHex}, channel), channel(channel) {
@@ -210,9 +210,9 @@ void CanSensorModule::checkMeasurementCompletion(uint32_t timeoutMs, std::shared
 }
 
 bool CanSensorModule::readMeasurementParams(const std::string& filePath, MeasurementParams& params) {
-    std::ifstream file(filePath);
+    std::ifstream file(filePath, std::ios::binary);
     if (file.is_open()) {
-        file >> params.api_id >> params.samples >> params.length_ms >> params.timebase >> params.isRead;
+        file.read(reinterpret_cast<char*>(&params), sizeof(params));
         file.close();
         return true;
     }
@@ -220,10 +220,9 @@ bool CanSensorModule::readMeasurementParams(const std::string& filePath, Measure
 }
 
 bool CanSensorModule::writeMeasurementParams(const std::string& filePath, const MeasurementParams& params) {
-    std::ofstream file(filePath, std::ios::trunc);
+    std::ofstream file(filePath, std::ios::binary | std::ios::trunc);
     if (file.is_open()) {
-        file << params.api_id << " " << params.samples << " " << params.length_ms << " "
-             << params.timebase << " " << params.isRead << "\n";
+        file.write(reinterpret_cast<const char*>(&params), sizeof(params));
         file.close();
         return true;
     }

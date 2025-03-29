@@ -17,6 +17,8 @@
 #include "codes/messages/fluorometer/ojip_retrieve_request.hpp"
 #include "codes/messages/fluorometer/data_sample.hpp"
 #include "codes/messages/fluorometer/fluorometer_config.hpp"
+#include "codes/messages/fluorometer/detector_info_request.hpp"
+#include "codes/messages/fluorometer/detector_info_response.hpp"
 #include "codes/codes.hpp"
 #include <iostream>       // std::cout
 #include <future>         // std::async, std::future
@@ -332,4 +334,18 @@ std::future<ISensorModule::FluorometerOjipData> CanSensorModule::retrieveFluorom
         checkMeasurementCompletion(timeoutMs, promise);
     }).detach();
     return promise->get_future();
+}
+
+std::future<ISensorModule::FluorometerDetectorInfo> CanSensorModule::getFluorometerDetectorInfo() {
+    return base.get<
+        App_messages::Fluorometer::Detector_info_request, 
+        App_messages::Fluorometer::Detector_info_response, 
+        FluorometerDetectorInfo
+    >([](App_messages::Fluorometer::Detector_info_response response){
+        return FluorometerDetectorInfo{
+            .peak_wavelength = response.wavelength,
+            .sensitivity = response.sensitivity
+            //.sampling_rate = response.type
+        };
+    }, 2000);
 }

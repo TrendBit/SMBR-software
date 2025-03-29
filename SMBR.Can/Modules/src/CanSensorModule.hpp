@@ -34,6 +34,7 @@ public:
         uint16_t samples) override;
     std::future <bool> isFluorometerOjipCaptureComplete() override;
     std::future <FluorometerOjipData> retrieveFluorometerOjipData() override;
+    std::future <FluorometerDetectorInfo> getFluorometerDetectorInfo() override;
     
 
 private:

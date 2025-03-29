@@ -41,6 +41,15 @@ public:
         int32_t missing_samples;
     };
 
+    /**
+     * @brief Structure representing detector info from the fluorometer.
+     */
+    struct FluorometerDetectorInfo {
+        uint16_t peak_wavelength;
+        uint16_t sensitivity;
+        uint16_t sampling_rate;
+    };
+
     virtual ModuleID id() const = 0;
     /** 
      * @brief Retrieves the measured temperature from the top sensor of the bottle.
@@ -93,5 +102,15 @@ public:
      * @brief Retrieves OJIP data from the fluorometer.
      */
     virtual std::future<FluorometerOjipData> retrieveFluorometerOjipData() = 0;
+
+    /**
+     * @brief Retrieves information about the fluorometer detector.
+     */
+    virtual std::future <FluorometerDetectorInfo> getFluorometerDetectorInfo() = 0;
+
+
+
     };
+
+    
     

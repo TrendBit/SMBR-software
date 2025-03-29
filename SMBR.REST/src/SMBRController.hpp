@@ -34,6 +34,7 @@
 #include "dto/CaptureEnumDto.hpp"
 #include "dto/FluorometerMeasurementDto.hpp"
 #include "dto/FluorometerSampleDto.hpp"
+#include "dto/FluorometerDetectorInfoDto.hpp"
 #include "oatpp/data/mapping/ObjectMapper.hpp"
 
 #include <future>
@@ -1320,6 +1321,33 @@ public:
 
     ADD_CORS(retrieveFluorometerOjipData)
     ENDPOINT("GET", "/sensor/fluorometer/ojip/read_last", retrieveFluorometerOjipData);
+
+    /**
+     * @brief Retrieves information about the fluorometer detector.
+     */
+    ENDPOINT_INFO(getFluorometerDetectorInfo) {
+        info->summary = "Retrieves information about the fluorometer detector";
+        info->description = "Contains:\n"
+                            "- detector peak wavelength in nm\n"
+                            "- detector sensitivity\n"
+                            "- sampling rate in kHz";
+        info->addTag("Sensor module");
+        auto example = FluorometerDetectorInfoDto::createShared();
+        example->peak_wavelength = 750;
+        example->sensitivity = 100;
+        example->sampling_rate = 500;
+        info->addResponse<Object<FluorometerDetectorInfoDto>>(Status::CODE_200, "application/json")
+            .addExample("application/json", example);
+        info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Fluorometer detector info not available")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Fluorometer detector info not available"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve detector info")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve detector info"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_504, "application/json", "Request timed out")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
+    }
+    ADD_CORS(getFluorometerDetectorInfo)
+    ENDPOINT("GET", "/sensor/fluorometer/detector/info", getFluorometerDetectorInfo);
+
 
     /**
     * @brief Measures API response time without communication with RPI/CAN bus.

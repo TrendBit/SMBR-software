@@ -96,6 +96,18 @@ std::future <ISensorModule::FluorometerOjipData> VirtualSensorModule::retrieveFl
     });
 }
 
+std::future <ISensorModule::FluorometerDetectorInfo> VirtualSensorModule::getFluorometerDetectorInfo() {
+    return std::async(std::launch::async, [&]() {
+        Random::randomDelay();
+        return ISensorModule::FluorometerDetectorInfo {
+            .peak_wavelength = 750,
+            .sensitivity = 100,
+            .sampling_rate = 500         
+        };
+    });
+}
+
+
 
 
 

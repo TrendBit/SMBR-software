@@ -37,6 +37,7 @@ public:
     std::future <FluorometerDetectorInfo> getFluorometerDetectorInfo() override;
     std::future <float> getFluorometerDetectorTemperature() override;
     std::future <FluorometerEmitorInfo> getFluorometerEmitorInfo() override;
+    std::future <float> getFluorometerEmitorTemperature() override;
     
 
 private:

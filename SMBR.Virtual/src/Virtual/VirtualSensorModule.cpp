@@ -124,6 +124,13 @@ std::future <ISensorModule::FluorometerEmitorInfo> VirtualSensorModule::getFluor
     });
 }
 
+std::future <float> VirtualSensorModule::getFluorometerEmitorTemperature() {
+    return std::async(std::launch::async, []() {
+        Random::randomDelay();
+        return Random::nextFloat(20.0, 30.0);
+    });
+}
+
 
 
 

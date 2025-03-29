@@ -1396,6 +1396,29 @@ public:
     ENDPOINT("GET", "/sensor/fluorometer/emitor/info", getFluorometerEmitorInfo);
 
     /**
+     * @brief Retrieves the temperature of the fluorometer emitor.
+     */
+    ENDPOINT_INFO(getFluorometerEmitorTemperature) {
+        info->summary = "Retrieves temperature of the fluorometer emitor";
+        info->description = "Retrieves temperature of the fluorometer emitor in °C. "
+                        "High temperature (>60°C) can have negative effect on emitor stability. "
+                        "Measurement performed in quick succession can lead to higher temperature.";
+        info->addTag("Sensor module");
+        auto example = TempDto::createShared();
+        example->temperature = 35.0; 
+        info->addResponse<Object<TempDto>>(Status::CODE_200, "application/json")
+            .addExample("application/json", example);
+        info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Fluorometer emitor temperature not available")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Fluorometer emitor temperature not available"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve temperature")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve temperature"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_504, "application/json", "Request timed out")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
+    }
+    ADD_CORS(getFluorometerEmitorTemperature)
+    ENDPOINT("GET", "/sensor/fluorometer/emitor/temperature", getFluorometerEmitorTemperature);
+
+    /**
     * @brief Measures API response time without communication with RPI/CAN bus.
     */
    /*

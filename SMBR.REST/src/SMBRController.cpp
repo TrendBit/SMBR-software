@@ -928,6 +928,15 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     });
 }
 
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getFluorometerEmitorTemperature() {
+    return process(__FUNCTION__, [&](){
+        auto temperature = wait(systemModule->sensorModule()->getFluorometerEmitorTemperature());
+        auto tempResponseDto = TempDto::createShared();
+        tempResponseDto->temperature = temperature;
+        return createDtoResponse(Status::CODE_200, tempResponseDto);
+    });
+}
+
 // ==========================================
 // Recipes
 // ==========================================

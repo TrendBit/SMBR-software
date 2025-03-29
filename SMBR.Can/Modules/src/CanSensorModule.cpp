@@ -23,6 +23,8 @@
 #include "codes/messages/fluorometer/detector_temperature_response.hpp"
 #include "codes/messages/fluorometer/emitor_info_request.hpp"
 #include "codes/messages/fluorometer/emitor_info_response.hpp"
+#include "codes/messages/fluorometer/emitor_temperature_request.hpp"
+#include "codes/messages/fluorometer/emitor_temperature_response.hpp"
 #include "codes/codes.hpp"
 #include <iostream>       // std::cout
 #include <future>         // std::async, std::future
@@ -374,5 +376,15 @@ std::future<ISensorModule::FluorometerEmitorInfo> CanSensorModule::getFluoromete
             .peak_wavelength = response.wavelength,
             .power_output = response.power_output
         };
+    }, 2000);
+}
+
+std::future<float> CanSensorModule::getFluorometerEmitorTemperature() {
+    return base.get<
+        App_messages::Fluorometer::Emitor_temperature_request, 
+        App_messages::Fluorometer::Emitor_temperature_response, 
+        float
+    >([](App_messages::Fluorometer::Emitor_temperature_response response){
+        return response.temperature;
     }, 2000);
 }

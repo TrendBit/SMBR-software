@@ -1474,6 +1474,27 @@ public:
     ENDPOINT("GET", "/sensor/spectrophotometer/channel_info/{channel}", getSpectrophotometerChannelInfo, PATH(oatpp::UInt8, channel));
 
     /**
+     * @brief Retrieves the temperature of the spectrophotometer emitor.
+     */
+    ENDPOINT_INFO(getSpectrophotometerEmitorTemperature) {
+        info->summary = "Read temperature of the spectrophotometer emitor";
+        info->description = "Retrieves the temperature of the spectrophotometer emitor in °C.";
+        info->addTag("Sensor module");
+        auto example = TempDto::createShared();
+        example->temperature = 30.2; 
+        info->addResponse<Object<TempDto>>(Status::CODE_200, "application/json")
+            .addExample("application/json", example);
+        info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Spectrophotometer emitor temperature not available")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Spectrophotometer emitor temperature not available"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve temperature")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve temperature"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_504, "application/json", "Request timed out")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
+    }
+    ADD_CORS(getSpectrophotometerEmitorTemperature)
+    ENDPOINT("GET", "/sensor/spectrophotometer/emitor_temperature", getSpectrophotometerEmitorTemperature);
+
+    /**
     * @brief Measures API response time without communication with RPI/CAN bus.
     */
    /*

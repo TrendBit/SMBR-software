@@ -29,6 +29,8 @@
 #include "codes/messages/spectrophotometer/channel_count_response.hpp"
 #include "codes/messages/spectrophotometer/channel_info_request.hpp"
 #include "codes/messages/spectrophotometer/channel_info_response.hpp"
+#include "codes/messages/spectrophotometer/temperature_request.hpp"
+#include "codes/messages/spectrophotometer/temperature_response.hpp"
 #include "codes/codes.hpp"
 #include <iostream>       // std::cout
 #include <future>         // std::async, std::future
@@ -415,5 +417,15 @@ std::future<ISensorModule::SpectroChannelInfo> CanSensorModule::getSpectrophotom
             .peak_wavelength = response.central_wavelength,
             .half_intensity_peak_width = response.half_sensitivity_width
         };
+    }, 2000);
+}
+
+std::future<float> CanSensorModule::getSpectrophotometerEmitorTemperature() {
+    return base.get<
+        App_messages::Spectrophotometer::Temperature_request, 
+        App_messages::Spectrophotometer::Temperature_response, 
+        float
+    >([](App_messages::Spectrophotometer::Temperature_response response){
+        return response.temperature;
     }, 2000);
 }

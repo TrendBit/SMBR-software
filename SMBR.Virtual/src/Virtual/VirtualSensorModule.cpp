@@ -148,6 +148,13 @@ std::future <ISensorModule::SpectroChannelInfo> VirtualSensorModule::getSpectrop
     });
 }
 
+std::future <float> VirtualSensorModule::getSpectrophotometerEmitorTemperature() {
+    return std::async(std::launch::async, []() {
+        Random::randomDelay();
+        return Random::nextFloat(20.0, 30.0);
+    });
+}
+
 
 
 

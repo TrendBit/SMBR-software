@@ -58,6 +58,15 @@ public:
         uint16_t power_output;
     };
 
+    /**
+     * @brief Structure representing info from the spectrophotometer.
+     */
+    struct SpectroChannelInfo {
+        uint8_t channel;
+        uint16_t peak_wavelength;
+        uint8_t half_intensity_peak_width;
+    };
+
     virtual ModuleID id() const = 0;
     /** 
      * @brief Retrieves the measured temperature from the top sensor of the bottle.
@@ -135,6 +144,11 @@ public:
      * @brief Reads number of channels available on spectrophotometer.
      */
     virtual std::future <int8_t> getSpectrophotometerChannels() = 0;
+
+    /**
+     * @brief Read information about spectrophotometer channel.
+     */
+    virtual std::future <SpectroChannelInfo> getSpectrophotometerChannelInfo(int8_t channel) = 0;
 
 
     };

@@ -27,6 +27,8 @@
 #include "codes/messages/fluorometer/emitor_temperature_response.hpp"
 #include "codes/messages/spectrophotometer/channel_count_request.hpp"
 #include "codes/messages/spectrophotometer/channel_count_response.hpp"
+#include "codes/messages/spectrophotometer/channel_info_request.hpp"
+#include "codes/messages/spectrophotometer/channel_info_response.hpp"
 #include "codes/codes.hpp"
 #include <iostream>       // std::cout
 #include <future>         // std::async, std::future
@@ -398,5 +400,20 @@ std::future<int8_t> CanSensorModule::getSpectrophotometerChannels() {
         int8_t
     >([](App_messages::Spectrophotometer::Channel_count_response response){
         return response.channel_count;
+    }, 2000);
+}
+
+std::future<ISensorModule::SpectroChannelInfo> CanSensorModule::getSpectrophotometerChannelInfo(int8_t channel) {
+    App_messages::Spectrophotometer::Channel_info_request r(channel);
+    return base.get<
+        App_messages::Spectrophotometer::Channel_info_request, 
+        App_messages::Spectrophotometer::Channel_info_response, 
+        SpectroChannelInfo
+    >(r, [](App_messages::Spectrophotometer::Channel_info_response response){
+        return SpectroChannelInfo{
+            .channel = response.channel,
+            .peak_wavelength = response.central_wavelength,
+            .half_intensity_peak_width = response.half_sensitivity_width
+        };
     }, 2000);
 }

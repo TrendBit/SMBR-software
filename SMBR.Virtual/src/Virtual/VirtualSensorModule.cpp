@@ -138,6 +138,15 @@ std::future <int8_t> VirtualSensorModule::getSpectrophotometerChannels() {
     });
 }
 
+std::future <ISensorModule::SpectroChannelInfo> VirtualSensorModule::getSpectrophotometerChannelInfo(int8_t channel) {
+    return std::async(std::launch::async, [&]() {
+        Random::randomDelay();
+        return ISensorModule::SpectroChannelInfo {
+            .peak_wavelength = 480,
+            .half_intensity_peak_width = 10
+        };
+    });
+}
 
 
 

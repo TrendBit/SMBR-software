@@ -37,6 +37,7 @@
 #include "dto/FluorometerDetectorInfoDto.hpp"
 #include "dto/FluorometerEmitorInfoDto.hpp"
 #include "dto/SpectroChannelsDto.hpp"
+#include "dto/SpectroChannelInfoDto.hpp"
 #include "oatpp/data/mapping/ObjectMapper.hpp"
 
 #include <future>
@@ -1442,6 +1443,35 @@ public:
     }
     ADD_CORS(getSpectrophotometerChannels)
     ENDPOINT("GET", "/sensor/spectrophotometer/channels", getSpectrophotometerChannels);
+
+    /**
+     * @brief Read information about spectrophotometer channel.
+     */
+    ENDPOINT_INFO(getSpectrophotometerChannelInfo) {
+        info->summary = "Read information about spectrophotometer channel";
+        info->description = 
+            "Read information about spectrophotometer channel.\n"
+            "Contains:\n"
+            "  - Peak wavelength in nm\n"
+            "  - Half intensity peak width in nm";
+        info->addTag("Sensor module");
+        
+        auto example = SpectroChannelInfoDto::createShared();
+        example->channel = 1;
+        example->peak_wavelength = 480;
+        example->half_intensity_peak_width = 10;
+        
+        info->addResponse<Object<SpectroChannelInfoDto>>(Status::CODE_200, "application/json")
+            .addExample("application/json", example);
+        info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Channel not found or not available")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Channel not found or not available"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve channel info")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve channel info"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_504, "application/json", "Request timed out")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
+    }
+    ADD_CORS(getSpectrophotometerChannelInfo)
+    ENDPOINT("GET", "/sensor/spectrophotometer/channel_info/{channel}", getSpectrophotometerChannelInfo, PATH(oatpp::UInt8, channel));
 
     /**
     * @brief Measures API response time without communication with RPI/CAN bus.

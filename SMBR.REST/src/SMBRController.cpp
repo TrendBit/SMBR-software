@@ -946,6 +946,17 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     });
 }
 
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getSpectrophotometerChannelInfo(const oatpp::UInt8& channel) {
+    return process(__FUNCTION__, [&](){
+        auto channelInfo = wait(systemModule->sensorModule()->getSpectrophotometerChannelInfo(channel));
+        auto responseDto = SpectroChannelInfoDto::createShared();
+        responseDto->channel = channelInfo.channel;
+        responseDto->peak_wavelength = channelInfo.peak_wavelength;
+        responseDto->half_intensity_peak_width = channelInfo.half_intensity_peak_width;
+        return createDtoResponse(Status::CODE_200, responseDto);
+    });
+}
+
 // ==========================================
 // Recipes
 // ==========================================

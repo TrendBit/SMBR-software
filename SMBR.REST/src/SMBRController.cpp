@@ -918,6 +918,16 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     });
 }
 
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getFluorometerEmitorInfo() {
+    return process(__FUNCTION__, [&](){
+        auto info = wait(systemModule->sensorModule()->getFluorometerEmitorInfo());
+        auto infoDto = FluorometerEmitorInfoDto::createShared();
+        infoDto->peak_wavelength = info.peak_wavelength;
+        infoDto->power_output = info.power_output;
+        return createDtoResponse(Status::CODE_200, infoDto);
+    });
+}
+
 // ==========================================
 // Recipes
 // ==========================================

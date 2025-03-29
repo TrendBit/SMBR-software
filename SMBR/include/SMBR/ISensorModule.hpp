@@ -50,6 +50,14 @@ public:
         uint16_t sampling_rate;
     };
 
+    /**
+     * @brief Structure representing emitor info from the fluorometer.
+     */
+    struct FluorometerEmitorInfo {
+        uint16_t peak_wavelength;
+        uint16_t power_output;
+    };
+
     virtual ModuleID id() const = 0;
     /** 
      * @brief Retrieves the measured temperature from the top sensor of the bottle.
@@ -112,6 +120,11 @@ public:
      * @brief Retrieves the temperature of the fluorometer detector.
      */
     virtual std::future <float> getFluorometerDetectorTemperature() = 0;
+
+    /**
+     * @brief Retrieves information about the fluorometer emitor.
+     */
+    virtual std::future <FluorometerEmitorInfo> getFluorometerEmitorInfo() = 0;
 
 
     };

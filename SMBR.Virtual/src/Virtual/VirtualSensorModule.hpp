@@ -20,6 +20,7 @@ public:
     std::future <FluorometerOjipData> retrieveFluorometerOjipData() override;
     std::future <FluorometerDetectorInfo> getFluorometerDetectorInfo() override;
     std::future <float> getFluorometerDetectorTemperature() override;
+    std::future <FluorometerEmitorInfo> getFluorometerEmitorInfo() override;
     
 };
 

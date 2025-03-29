@@ -35,6 +35,7 @@
 #include "dto/FluorometerMeasurementDto.hpp"
 #include "dto/FluorometerSampleDto.hpp"
 #include "dto/FluorometerDetectorInfoDto.hpp"
+#include "dto/FluorometerEmitorInfoDto.hpp"
 #include "oatpp/data/mapping/ObjectMapper.hpp"
 
 #include <future>
@@ -1369,6 +1370,30 @@ public:
     }
     ADD_CORS(getFluorometerDetectorTemperature)
     ENDPOINT("GET", "/sensor/fluorometer/detector/temperature", getFluorometerDetectorTemperature);
+
+    /**
+     * @brief Retrieves information about the fluorometer emitor.
+     */
+    ENDPOINT_INFO(getFluorometerEmitorInfo) {
+        info->summary = "Retrieves information about the fluorometer emitor";
+        info->description = "Contains:\n"
+                            "- peak wavelength in nm\n"
+                            "- max power output in mW";
+        info->addTag("Sensor module");
+        auto example = FluorometerEmitorInfoDto::createShared();
+        example->peak_wavelength = 525;
+        example->power_output = 10000;
+        info->addResponse<Object<FluorometerEmitorInfoDto>>(Status::CODE_200, "application/json")
+            .addExample("application/json", example);
+        info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Fluorometer emitor info not available")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Fluorometer emitor info not available"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve emitor info")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve emitor info"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_504, "application/json", "Request timed out")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
+    }
+    ADD_CORS(getFluorometerEmitorInfo)
+    ENDPOINT("GET", "/sensor/fluorometer/emitor/info", getFluorometerEmitorInfo);
 
     /**
     * @brief Measures API response time without communication with RPI/CAN bus.

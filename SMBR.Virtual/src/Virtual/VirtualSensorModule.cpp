@@ -114,6 +114,16 @@ std::future <float> VirtualSensorModule::getFluorometerDetectorTemperature() {
     });
 }
 
+std::future <ISensorModule::FluorometerEmitorInfo> VirtualSensorModule::getFluorometerEmitorInfo() {
+    return std::async(std::launch::async, [&]() {
+        Random::randomDelay();
+        return ISensorModule::FluorometerEmitorInfo {
+            .peak_wavelength = 525,
+            .power_output = 10000
+        };
+    });
+}
+
 
 
 

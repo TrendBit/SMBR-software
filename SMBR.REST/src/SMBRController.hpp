@@ -36,6 +36,7 @@
 #include "dto/FluorometerSampleDto.hpp"
 #include "dto/FluorometerDetectorInfoDto.hpp"
 #include "dto/FluorometerEmitorInfoDto.hpp"
+#include "dto/SpectroChannelsDto.hpp"
 #include "oatpp/data/mapping/ObjectMapper.hpp"
 
 #include <future>
@@ -1417,6 +1418,30 @@ public:
     }
     ADD_CORS(getFluorometerEmitorTemperature)
     ENDPOINT("GET", "/sensor/fluorometer/emitor/temperature", getFluorometerEmitorTemperature);
+
+    /**
+     * @brief Reads number of channels available on spectrophotometer.
+     */
+    ENDPOINT_INFO(getSpectrophotometerChannels) {
+        info->summary = "Reads number of channels available on spectrophotometer";
+        info->description = 
+            "Reads number of channels available on spectrophotometer.\n"
+            "Each channel can be used to measure absorbance of different wavelength.\n"
+            "Endpoints return N channels which are numbered from 0 to (N-1).";
+        info->addTag("Sensor module");
+        auto example = SpectroChannelsDto::createShared();
+        example->channels = 6; 
+        info->addResponse<Object<SpectroChannelsDto>>(Status::CODE_200, "application/json")
+            .addExample("application/json", example);
+        info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Spectrophotometer channels count not available")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Spectrophotometer channels count not available"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve channels count")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve channels count"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_504, "application/json", "Request timed out")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
+    }
+    ADD_CORS(getSpectrophotometerChannels)
+    ENDPOINT("GET", "/sensor/spectrophotometer/channels", getSpectrophotometerChannels);
 
     /**
     * @brief Measures API response time without communication with RPI/CAN bus.

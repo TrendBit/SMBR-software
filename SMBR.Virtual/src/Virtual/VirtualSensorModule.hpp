@@ -22,6 +22,7 @@ public:
     std::future <float> getFluorometerDetectorTemperature() override;
     std::future <FluorometerEmitorInfo> getFluorometerEmitorInfo() override;
     std::future <float> getFluorometerEmitorTemperature() override;
+    std::future <int8_t> getSpectrophotometerChannels() override;
     
 };
 

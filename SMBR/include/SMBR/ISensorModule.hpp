@@ -131,6 +131,11 @@ public:
      */
     virtual std::future <float> getFluorometerEmitorTemperature() = 0;
 
+    /**
+     * @brief Reads number of channels available on spectrophotometer.
+     */
+    virtual std::future <int8_t> getSpectrophotometerChannels() = 0;
+
 
     };
 

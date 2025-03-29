@@ -131,6 +131,13 @@ std::future <float> VirtualSensorModule::getFluorometerEmitorTemperature() {
     });
 }
 
+std::future <int8_t> VirtualSensorModule::getSpectrophotometerChannels() {
+    return std::async(std::launch::async, []() -> int8_t {
+        Random::randomDelay();
+        return static_cast<int8_t>(Random::nextFloat(20.0, 30.0));
+    });
+}
+
 
 
 

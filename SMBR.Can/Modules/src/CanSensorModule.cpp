@@ -25,6 +25,8 @@
 #include "codes/messages/fluorometer/emitor_info_response.hpp"
 #include "codes/messages/fluorometer/emitor_temperature_request.hpp"
 #include "codes/messages/fluorometer/emitor_temperature_response.hpp"
+#include "codes/messages/spectrophotometer/channel_count_request.hpp"
+#include "codes/messages/spectrophotometer/channel_count_response.hpp"
 #include "codes/codes.hpp"
 #include <iostream>       // std::cout
 #include <future>         // std::async, std::future
@@ -386,5 +388,15 @@ std::future<float> CanSensorModule::getFluorometerEmitorTemperature() {
         float
     >([](App_messages::Fluorometer::Emitor_temperature_response response){
         return response.temperature;
+    }, 2000);
+}
+
+std::future<int8_t> CanSensorModule::getSpectrophotometerChannels() {
+    return base.get<
+        App_messages::Spectrophotometer::Channel_count_request, 
+        App_messages::Spectrophotometer::Channel_count_response, 
+        int8_t
+    >([](App_messages::Spectrophotometer::Channel_count_response response){
+        return response.channel_count;
     }, 2000);
 }

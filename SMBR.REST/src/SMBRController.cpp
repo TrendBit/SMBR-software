@@ -937,6 +937,15 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     });
 }
 
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getSpectrophotometerChannels() {
+    return process(__FUNCTION__, [&](){
+        auto channels = wait(systemModule->sensorModule()->getSpectrophotometerChannels());
+        auto responseDto = SpectroChannelsDto::createShared();
+        responseDto->channels = channels;
+        return createDtoResponse(Status::CODE_200, responseDto);
+    });
+}
+
 // ==========================================
 // Recipes
 // ==========================================

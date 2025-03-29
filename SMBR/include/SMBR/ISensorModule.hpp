@@ -108,6 +108,10 @@ public:
      */
     virtual std::future <FluorometerDetectorInfo> getFluorometerDetectorInfo() = 0;
 
+    /**
+     * @brief Retrieves the temperature of the fluorometer detector.
+     */
+    virtual std::future <float> getFluorometerDetectorTemperature() = 0;
 
 
     };

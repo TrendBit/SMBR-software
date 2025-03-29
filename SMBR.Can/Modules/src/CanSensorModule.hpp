@@ -35,6 +35,7 @@ public:
     std::future <bool> isFluorometerOjipCaptureComplete() override;
     std::future <FluorometerOjipData> retrieveFluorometerOjipData() override;
     std::future <FluorometerDetectorInfo> getFluorometerDetectorInfo() override;
+    std::future <float> getFluorometerDetectorTemperature() override;
     
 
 private:

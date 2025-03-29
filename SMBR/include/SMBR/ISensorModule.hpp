@@ -101,6 +101,11 @@ public:
     virtual std::future <bool> printCustomText(std::string text) = 0;
 
     /**
+     * @brief Perform single sample measurement on fluorometer.
+     */
+    virtual std::future<FluorometerSample> takeFluorometerSingleSample(Fluorometer_config::Gain gain, float intensity) = 0;
+
+    /**
      * @brief Starts OJIP capture on fluorometer
      */
     virtual std::future <FluorometerOjipData> startFluorometerOjipCapture(

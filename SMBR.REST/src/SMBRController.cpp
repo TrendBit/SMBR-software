@@ -805,6 +805,28 @@ Fluorometer_config::Timing SMBRController::getTiming(const dto::TimingEnum& timi
     }
 }
 
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::performFluorometerSingleSample(
+    const oatpp::Enum<dto::GainEnum>::AsString& gain, 
+    const oatpp::Object<FluorometerSingleSampleRequestDto>& body
+) {
+    return process(__FUNCTION__, [&]() {
+        if (body->emitor_intensity < 0.2f || body->emitor_intensity > 1.0f) {
+            throw ArgumentException("Invalid emitor intensity. Must be between 0.2 and 1.0");
+        }
+
+        Fluorometer_config::Gain detector_gain = getGain(gain);
+        
+        auto sample = wait(systemModule->sensorModule()->takeFluorometerSingleSample(detector_gain, body->emitor_intensity));
+
+        auto responseDto = FluorometerSingleSampleResponseDto::createShared();
+        responseDto->raw_value = sample.raw_value;
+        responseDto->relative_value = sample.relative_value;
+        responseDto->absolute_value = sample.absolute_value;
+
+        return createDtoResponse(Status::CODE_200, responseDto);
+    });
+}
+
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::startFluorometerOjipCapture( 
     const oatpp::Enum<dto::GainEnum>::AsString& gain, 
     const oatpp::Enum<dto::TimingEnum>::AsString& timing,

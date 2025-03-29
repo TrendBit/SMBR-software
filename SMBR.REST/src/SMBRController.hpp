@@ -29,6 +29,8 @@
 #include "dto/ScriptRuntimeInfoDto.hpp"
 #include "dto/TextDto.hpp"
 #include "dto/MessageDto.hpp"
+#include "dto/FluorometerSingleSampleRequestDto.hpp"
+#include "dto/FluorometerSingleSampleResponseDto.hpp"
 #include "dto/FluorometerCaptureStatusDto.hpp"
 #include "dto/FluorometerOjipCaptureRequestDto.hpp"
 #include "dto/CaptureEnumDto.hpp"
@@ -1186,6 +1188,37 @@ public:
     }
     ADD_CORS(printCustomText)
     ENDPOINT("POST", "/sensor/oled/print_custom_text", printCustomText, BODY_DTO(Object<TextDto>, dto));
+
+    /**
+     * @brief Perform single sample measurement on fluorometer.
+     */
+    ENDPOINT_INFO(performFluorometerSingleSample) {
+        info->summary = "Perform single sample measurement on fluorometer";
+        info->description = 
+            "Perform single sample of data measurement on fluorometer.\n"
+            "This will start capturing of single sample and immediately retrieve it.\n"
+            "Detector gain and emitor intensity can be used to change relative range of measured values.\n"
+            "Emitor intensity is not strictly linear, so it is better to use gain of detector to change range.\n"
+            "Absolute value is calculated based on gain of detector and emitor intensity. And relates to detector max range.";
+        info->addTag("Sensor module");
+
+        auto exampleRequest = FluorometerSingleSampleRequestDto::createShared();
+        exampleRequest->emitor_intensity = 0.5f;
+        
+        auto exampleResponse = FluorometerSingleSampleResponseDto::createShared();
+        exampleResponse->raw_value = 1023;
+        exampleResponse->relative_value = 0.25f;
+        exampleResponse->absolute_value = 0.125f;
+
+        info->addConsumes<Object<FluorometerSingleSampleRequestDto>>("application/json")
+            .addExample("application/json", exampleRequest);
+        info->addResponse<Object<FluorometerSingleSampleResponseDto>>(Status::CODE_200, "application/json")
+            .addExample("application/json", exampleResponse);
+    }
+    ADD_CORS(performFluorometerSingleSample)
+    ENDPOINT("POST", "/sensor/fluorometer/single_sample", performFluorometerSingleSample, 
+        QUERY(oatpp::Enum<dto::GainEnum>::AsString, gain), 
+        BODY_DTO(Object<FluorometerSingleSampleRequestDto>, body));
 
     /**
      * @brief Starts OJIP capture on fluorometer.

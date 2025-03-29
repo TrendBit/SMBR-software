@@ -11,6 +11,8 @@
 #include "codes/messages/bottle_temperature/bottom_sensor_temperature_response.hpp"
 #include "codes/messages/mini_oled/clear_custom_text.hpp"
 #include "codes/messages/mini_oled/print_custom_text.hpp"
+#include "codes/messages/fluorometer/sample_request.hpp"
+#include "codes/messages/fluorometer/sample_response.hpp"
 #include "codes/messages/fluorometer/ojip_capture_request.hpp"
 #include "codes/messages/fluorometer/ojip_completed_request.hpp"
 #include "codes/messages/fluorometer/ojip_completed_response.hpp"
@@ -127,6 +129,28 @@ std::future <bool> CanSensorModule::printCustomText(std::string text) {
 
 uint8_t CanSensorModule::CalculateMeasurementID(uint32_t api_id) {
     return (api_id % 15) + 1;
+}
+
+std::future<ISensorModule::FluorometerSample> CanSensorModule::takeFluorometerSingleSample(
+    Fluorometer_config::Gain gain, 
+    float intensity
+) {
+
+    return base.get<
+        App_messages::Fluorometer::Sample_request,
+        App_messages::Fluorometer::Sample_response,
+        FluorometerSample
+    >(
+        App_messages::Fluorometer::Sample_request(CalculateMeasurementID(sample_id), gain, intensity),
+        [](App_messages::Fluorometer::Sample_response response) {
+            FluorometerSample result;
+            result.raw_value = response.sample_value;
+            result.relative_value = response.Relative_value();
+            result.absolute_value = response.Absolute_value();
+            return result;
+        },
+        2000 
+    );
 }
 
 std::future<bool> CanSensorModule::isFluorometerOjipCaptureComplete() {

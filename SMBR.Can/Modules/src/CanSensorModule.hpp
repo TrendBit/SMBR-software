@@ -26,6 +26,7 @@ public:
     std::future <float> getBottomSensorTemperature() override;   
     std::future <bool> clearCustomText() override;
     std::future <bool> printCustomText(std::string text) override;
+    std::future <FluorometerSample> takeFluorometerSingleSample(Fluorometer_config::Gain gain, float intensity) override;
     std::future <FluorometerOjipData> startFluorometerOjipCapture(
         Fluorometer_config::Gain detector_gain, 
         Fluorometer_config::Timing sample_timing, 
@@ -48,6 +49,7 @@ private:
     ICanChannel::Ptr channel;
     uint8_t CalculateMeasurementID(uint32_t api_id);
     std::atomic<uint32_t> last_api_id{0}; 
+    std::atomic<uint32_t> sample_id{0}; 
     bool isRead = false;
     ISensorModule::FluorometerOjipData last_measurement_data; 
     Fluorometer_config::Timing last_timebase = Fluorometer_config::Timing::Logarithmic; 

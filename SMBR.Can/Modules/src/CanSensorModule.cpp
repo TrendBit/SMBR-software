@@ -39,10 +39,12 @@
 #include <iostream>       // std::cout
 #include <future>         // std::async, std::future
 #include <fstream>
+#include <sys/stat.h>     // for mkdir
+#include <unistd.h>       // for access
 #include <iostream>
 #include <thread>         // std::this_thread::sleep_for
 
-static const std::string PARAMS_FILE_PATH = "/data/fluorometer/measurement_params.bin";
+static const std::string PARAMS_FILE_PATH = "/data/api-server/fluorometer/measurement_params.txt";
 
 CanSensorModule::CanSensorModule(std::string uidHex, ICanChannel::Ptr channel) 
     : base({Modules::Sensor, uidHex}, channel), channel(channel) {
@@ -249,10 +251,35 @@ void CanSensorModule::checkMeasurementCompletion(uint32_t timeoutMs, std::shared
     promise->set_exception(std::make_exception_ptr(std::runtime_error("Measurement did not complete within the expected time")));
 }
 
+
+bool CanSensorModule::ensureDirectoryExists(const std::string& filePath) {
+    size_t pos = filePath.find_last_of('/');
+    if (pos == std::string::npos) {
+        return true; 
+    }
+    
+    std::string dirPath = filePath.substr(0, pos);
+    if (access(dirPath.c_str(), F_OK) == 0) {
+        return true;
+    }
+    
+    std::string mkdirCommand = "mkdir -p " + dirPath;
+    if (system(mkdirCommand.c_str()) == 0) {
+        return true;
+    }
+    
+    std::cerr << "Failed to create directory: " << dirPath << std::endl;
+    return false;
+}
+
 bool CanSensorModule::readMeasurementParams(const std::string& filePath, MeasurementParams& params) {
-    std::ifstream file(filePath, std::ios::binary);
+    if (!ensureDirectoryExists(filePath)) {
+        return false;
+    }
+    
+    std::ifstream file(filePath);
     if (file.is_open()) {
-        file.read(reinterpret_cast<char*>(&params), sizeof(params));
+        file >> params.api_id >> params.samples >> params.length_ms >> params.timebase >> params.isRead;
         file.close();
         return true;
     }
@@ -260,9 +287,14 @@ bool CanSensorModule::readMeasurementParams(const std::string& filePath, Measure
 }
 
 bool CanSensorModule::writeMeasurementParams(const std::string& filePath, const MeasurementParams& params) {
-    std::ofstream file(filePath, std::ios::binary | std::ios::trunc);
+    if (!ensureDirectoryExists(filePath)) {
+        return false;
+    }
+    
+    std::ofstream file(filePath, std::ios::trunc);
     if (file.is_open()) {
-        file.write(reinterpret_cast<const char*>(&params), sizeof(params));
+        file << params.api_id << " " << params.samples << " " << params.length_ms << " "
+             << params.timebase << " " << params.isRead << "\n";
         file.close();
         return true;
     }

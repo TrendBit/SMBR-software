@@ -269,13 +269,7 @@ bool CanSensorModule::writeMeasurementParams(const std::string& filePath, const 
     return false;
 }
 
-std::future<ISensorModule::FluorometerOjipData> CanSensorModule::startFluorometerOjipCapture(
-    Fluorometer_config::Gain detector_gain,
-    Fluorometer_config::Timing sample_timing,
-    float emitor_intensity,
-    uint16_t length_ms,
-    uint16_t samples) {
-
+std::future<ISensorModule::FluorometerOjipData> CanSensorModule::captureFluorometerOjip(const ISensorModule::FluorometerInput& input) {
     uint32_t api_id; 
     uint8_t measurement_id; 
 
@@ -292,29 +286,29 @@ std::future<ISensorModule::FluorometerOjipData> CanSensorModule::startFluoromete
 
     last_measurement_data = ISensorModule::FluorometerOjipData{};
     isRead = false;
-    last_timebase = sample_timing;
+    last_timebase = input.sample_timing;
 
     params.api_id = api_id;
-    params.samples = samples;
-    params.length_ms = length_ms;
-    params.timebase = static_cast<int>(sample_timing);
+    params.samples = input.sample_count;
+    params.length_ms = input.length_ms;
+    params.timebase = static_cast<int>(input.sample_timing);
     params.isRead = isRead;
 
     if (!writeMeasurementParams(PARAMS_FILE_PATH, params)) {
         throw std::runtime_error("Failed to write measurement parameters file");
     }
 
-    auto timeoutMs = length_ms;
-    last_required_samples = samples;
-    last_length_ms = length_ms;
+    auto timeoutMs = input.length_ms;
+    last_required_samples = input.sample_count;
+    last_length_ms = input.length_ms;
 
     App_messages::Fluorometer::OJIP_capture_request r{
         measurement_id,
-        detector_gain,
-        sample_timing,
-        static_cast<uint8_t>(emitor_intensity * 255),
-        length_ms,
-        samples
+        input.detector_gain,
+        input.sample_timing,
+        static_cast<uint8_t>(input.emitor_intensity * 255),
+        input.length_ms,
+        input.sample_count
     };
 
     auto succes = base.set(r);
@@ -332,7 +326,7 @@ std::future<ISensorModule::FluorometerOjipData> CanSensorModule::startFluoromete
     }
 }
 
-std::future<ISensorModule::FluorometerOjipData> CanSensorModule::retrieveFluorometerOjipData() {
+std::future<ISensorModule::FluorometerOjipData> CanSensorModule::retrieveLastFluorometerOjipData() {
     auto promise = std::make_shared<std::promise<ISensorModule::FluorometerOjipData>>();
 
     if (last_api_id == 0) {

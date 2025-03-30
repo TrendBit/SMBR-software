@@ -64,7 +64,7 @@ std::future<ISensorModule::FluorometerSample> VirtualSensorModule::takeFluoromet
     });
 }
 
-std::future <ISensorModule::FluorometerOjipData> VirtualSensorModule::startFluorometerOjipCapture(Fluorometer_config::Gain detector_gain, Fluorometer_config::Timing sample_timing, float emitor_intensity, uint16_t length_ms, uint16_t samples) {
+std::future <ISensorModule::FluorometerOjipData> VirtualSensorModule::captureFluorometerOjip(const ISensorModule::FluorometerInput& input) {
     return std::async(std::launch::async, [&]() {
         Random::randomDelay();
         return ISensorModule::FluorometerOjipData {
@@ -89,7 +89,7 @@ std::future <bool> VirtualSensorModule::isFluorometerOjipCaptureComplete(){
     });
 }
 
-std::future <ISensorModule::FluorometerOjipData> VirtualSensorModule::retrieveFluorometerOjipData() {
+std::future <ISensorModule::FluorometerOjipData> VirtualSensorModule::retrieveLastFluorometerOjipData() {
     return std::async(std::launch::async, [&]() {
         Random::randomDelay();
         return ISensorModule::FluorometerOjipData {

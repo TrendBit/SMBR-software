@@ -15,6 +15,17 @@ public:
     virtual ~ISensorModule() = default;
 
     /**
+     * @brief Structure representing input data of fluorometer capture.
+     */
+    struct FluorometerInput {
+        Fluorometer_config::Gain detector_gain;
+        Fluorometer_config::Timing sample_timing;
+        float emitor_intensity = 1.0f;
+        uint16_t length_ms = 1000;      
+        uint16_t sample_count = 1000;  
+    };
+
+    /**
      * @brief Structure representing a single fluorometer sample.
      */
     struct FluorometerSample {
@@ -108,12 +119,7 @@ public:
     /**
      * @brief Starts OJIP capture on fluorometer
      */
-    virtual std::future <FluorometerOjipData> startFluorometerOjipCapture(
-        Fluorometer_config::Gain detector_gain, 
-        Fluorometer_config::Timing sample_timing, 
-        float emitor_intensity, 
-        uint16_t length_ms, 
-        uint16_t samples) = 0;
+    virtual std::future <FluorometerOjipData> captureFluorometerOjip(const FluorometerInput& input) = 0;
 
     /**
      * @brief Checks if fluorometer OJIP capture is complete.
@@ -123,7 +129,7 @@ public:
     /**
      * @brief Retrieves OJIP data from the fluorometer.
      */
-    virtual std::future<FluorometerOjipData> retrieveFluorometerOjipData() = 0;
+    virtual std::future<FluorometerOjipData> retrieveLastFluorometerOjipData() = 0;
 
     /**
      * @brief Retrieves information about the fluorometer detector.

@@ -29,7 +29,6 @@
 #include "dto/ScriptRuntimeInfoDto.hpp"
 #include "dto/TextDto.hpp"
 #include "dto/MessageDto.hpp"
-#include "dto/FluorometerSingleSampleRequestDto.hpp"
 #include "dto/FluorometerSingleSampleResponseDto.hpp"
 #include "dto/FluorometerCaptureStatusDto.hpp"
 #include "dto/FluorometerOjipCaptureRequestDto.hpp"
@@ -57,6 +56,7 @@
 #include <iostream>
 
 #include "SMBR/ISystemModule.hpp"
+#include "SMBR/ISensorModule.hpp"
 #include "SMBR/IScheduler.hpp"
 #include "SMBR/IRecipes.hpp"
 
@@ -1204,7 +1204,7 @@ public:
             "Absolute value is calculated based on gain of detector and emitor intensity. And relates to detector max range.";
         info->addTag("Sensor module");
 
-        auto exampleRequest = FluorometerSingleSampleRequestDto::createShared();
+        auto exampleRequest = FluorometerOjipCaptureRequestDto::createShared();
         exampleRequest->emitor_intensity = 0.5f;
         
         auto exampleResponse = FluorometerSingleSampleResponseDto::createShared();
@@ -1212,7 +1212,7 @@ public:
         exampleResponse->relative_value = 0.25f;
         exampleResponse->absolute_value = 0.125f;
 
-        info->addConsumes<Object<FluorometerSingleSampleRequestDto>>("application/json")
+        info->addConsumes<Object<FluorometerOjipCaptureRequestDto>>("application/json")
             .addExample("application/json", exampleRequest);
         info->addResponse<Object<FluorometerSingleSampleResponseDto>>(Status::CODE_200, "application/json")
             .addExample("application/json", exampleResponse);
@@ -1220,12 +1220,12 @@ public:
     ADD_CORS(performFluorometerSingleSample)
     ENDPOINT("POST", "/sensor/fluorometer/single_sample", performFluorometerSingleSample, 
         QUERY(oatpp::Enum<dto::GainEnum>::AsString, gain), 
-        BODY_DTO(Object<FluorometerSingleSampleRequestDto>, body));
+        BODY_DTO(Object<FluorometerOjipCaptureRequestDto>, body));
 
     /**
-     * @brief Starts OJIP capture on fluorometer.
+     * @brief Perform OJIP capture on fluorometer.
      */
-    ENDPOINT_INFO(startFluorometerOjipCapture) {
+    ENDPOINT_INFO(captureFluorometerOjip) {
         info->summary = "Perform OJIP capture on fluorometer";
         info->description = 
             "Start OJIP capture on fluorometer and return captured data.\n"
@@ -1239,6 +1239,7 @@ public:
             "Absolute value is calculated based on the gain of the detector and emitter intensity. And relates to the detector's max range.\n"
             "More info about the returned data can be found in the read_last endpoint description.";
         info->addTag("Sensor module");
+
         auto example = FluorometerMeasurementDto::createShared();
         example->measurement_id = 1235;
         example->read = false;
@@ -1265,8 +1266,6 @@ public:
 
         auto example2 = FluorometerOjipCaptureRequestDto::createShared();
         example2->emitor_intensity = 1.0;
-        example2->length_ms = 1000;
-        example2->sample_count = 1000;
 
         example->samples = {sample1, sample2};
 
@@ -1278,10 +1277,12 @@ public:
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "OJIP data not available"}}));
     }
 
-    ADD_CORS(startFluorometerOjipCapture)
-    ENDPOINT("POST", "/sensor/fluorometer/ojip/capture", startFluorometerOjipCapture,
+    ADD_CORS(captureFluorometerOjip)
+    ENDPOINT("POST", "/sensor/fluorometer/ojip/capture", captureFluorometerOjip,
         QUERY(oatpp::Enum<dto::GainEnum>::AsString, gain), 
         QUERY(oatpp::Enum<dto::TimingEnum>::AsString, timing),
+        QUERY(oatpp::UInt16, length_ms),
+        QUERY(oatpp::UInt16, sample_count),
         BODY_DTO(Object<FluorometerOjipCaptureRequestDto>, body));
 
     /**
@@ -1305,7 +1306,7 @@ public:
 /**
      * @brief Retrieve OJIP data from fluorometer.
      */
-    ENDPOINT_INFO(retrieveFluorometerOjipData) {
+    ENDPOINT_INFO(retrieveLastFluorometerOjipData) {
         info->summary = "Retrieve OJIP data from last fluorometer capture";
         info->description = 
             "Retrieve OJIP data from last fluorometer capture.\n"
@@ -1357,8 +1358,8 @@ public:
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "OJIP data not available"}}));
     }
 
-    ADD_CORS(retrieveFluorometerOjipData)
-    ENDPOINT("GET", "/sensor/fluorometer/ojip/read_last", retrieveFluorometerOjipData);
+    ADD_CORS(retrieveLastFluorometerOjipData)
+    ENDPOINT("GET", "/sensor/fluorometer/ojip/read_last", retrieveLastFluorometerOjipData);
 
     /**
      * @brief Retrieves information about the fluorometer detector.

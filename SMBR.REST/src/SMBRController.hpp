@@ -40,6 +40,7 @@
 #include "dto/FluorometerEmitorInfoDto.hpp"
 #include "dto/SpectroChannelsDto.hpp"
 #include "dto/SpectroChannelInfoDto.hpp"
+#include "dto/SingleChannelMeasurementDto.hpp"
 #include "oatpp/data/mapping/ObjectMapper.hpp"
 
 #include <future>
@@ -1526,6 +1527,33 @@ public:
     }
     ADD_CORS(getSpectrophotometerEmitorTemperature)
     ENDPOINT("GET", "/sensor/spectrophotometer/emitor_temperature", getSpectrophotometerEmitorTemperature);
+
+    /**
+     * @brief Measure selected single channel and return response.
+     */
+    ENDPOINT_INFO(measureSingleSpectrophotometerChannel) {
+        info->summary = "Measure selected single channel and return response";
+        info->description = 
+            "Measure selected single channel and return response.\n"
+            "Each channel can be used to measure absorbance of different wavelength.\n"
+            "To get information about wavelength channel_info/{channel} could be used.";
+        info->addTag("Sensor module");
+        
+        auto example = SingleChannelMeasurementDto::createShared();
+        example->channel = 1;
+        example->relative_value = 0.236f;
+        
+        info->addResponse<Object<SingleChannelMeasurementDto>>(Status::CODE_200, "application/json")
+            .addExample("application/json", example);
+        info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Channel not available")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Channel not available"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to perform measurement")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to perform measurement"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_504, "application/json", "Request timed out")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
+    }
+    ADD_CORS(measureSingleSpectrophotometerChannel)
+    ENDPOINT("POST", "/sensor/spectrophotometer/measure/{channel}", measureSingleSpectrophotometerChannel, PATH(Int8, channel));
 
     /**
     * @brief Measures API response time without communication with RPI/CAN bus.

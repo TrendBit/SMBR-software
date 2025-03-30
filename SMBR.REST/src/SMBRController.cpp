@@ -988,6 +988,16 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     });
 }
 
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::measureSingleSpectrophotometerChannel(const Int8& channel) {
+    return process(__FUNCTION__, [&](){
+        auto measurement = wait(systemModule->sensorModule()->measureSpectrophotometerChannel(channel));
+        auto responseDto = SingleChannelMeasurementDto::createShared();
+        responseDto->channel = channel;
+        responseDto->relative_value = measurement;
+        return createDtoResponse(Status::CODE_200, responseDto);
+    });
+}
+
 // ==========================================
 // Recipes
 // ==========================================

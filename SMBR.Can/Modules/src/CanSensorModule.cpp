@@ -33,6 +33,8 @@
 #include "codes/messages/spectrophotometer/channel_info_response.hpp"
 #include "codes/messages/spectrophotometer/temperature_request.hpp"
 #include "codes/messages/spectrophotometer/temperature_response.hpp"
+#include "codes/messages/spectrophotometer/measurement_request.hpp"
+#include "codes/messages/spectrophotometer/measurement_response.hpp"
 #include "codes/codes.hpp"
 #include <iostream>       // std::cout
 #include <future>         // std::async, std::future
@@ -452,4 +454,15 @@ std::future<float> CanSensorModule::getSpectrophotometerEmitorTemperature() {
     >([](App_messages::Spectrophotometer::Temperature_response response){
         return response.temperature;
     }, 2000);
+}
+
+std::future<float> CanSensorModule::measureSpectrophotometerChannel(int8_t channel) {
+    App_messages::Spectrophotometer::Measurement_request request(channel);
+    return base.get<
+        App_messages::Spectrophotometer::Measurement_request,
+        App_messages::Spectrophotometer::Measurement_response,
+        float
+    >(request, [](App_messages::Spectrophotometer::Measurement_response response) {
+        return response.value;
+    }, 2500); 
 }

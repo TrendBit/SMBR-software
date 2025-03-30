@@ -446,16 +446,6 @@ std::future<ISensorModule::SpectroChannelInfo> CanSensorModule::getSpectrophotom
     }, 2000);
 }
 
-std::future<float> CanSensorModule::getSpectrophotometerEmitorTemperature() {
-    return base.get<
-        App_messages::Spectrophotometer::Temperature_request, 
-        App_messages::Spectrophotometer::Temperature_response, 
-        float
-    >([](App_messages::Spectrophotometer::Temperature_response response){
-        return response.temperature;
-    }, 2000);
-}
-
 std::future<float> CanSensorModule::measureSpectrophotometerChannel(int8_t channel) {
     App_messages::Spectrophotometer::Measurement_request request(channel);
     return base.get<
@@ -465,4 +455,14 @@ std::future<float> CanSensorModule::measureSpectrophotometerChannel(int8_t chann
     >(request, [](App_messages::Spectrophotometer::Measurement_response response) {
         return response.value;
     }, 2500); 
+}
+
+std::future<float> CanSensorModule::getSpectrophotometerEmitorTemperature() {
+    return base.get<
+        App_messages::Spectrophotometer::Temperature_request, 
+        App_messages::Spectrophotometer::Temperature_response, 
+        float
+    >([](App_messages::Spectrophotometer::Temperature_response response){
+        return response.temperature;
+    }, 2000);
 }

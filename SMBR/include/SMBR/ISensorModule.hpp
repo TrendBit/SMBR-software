@@ -156,14 +156,14 @@ public:
     virtual std::future <SpectroChannelInfo> getSpectrophotometerChannelInfo(int8_t channel) = 0;
 
     /**
-     * @brief Retrieves the temperature of the spectrophotometer emitor.
-     */
-    virtual std::future <float> getSpectrophotometerEmitorTemperature() = 0;
-
-    /**
      * @brief Measure selected single channel and return response.
      */
     virtual std::future <float> measureSpectrophotometerChannel(int8_t channel) = 0;
+
+    /**
+     * @brief Retrieves the temperature of the spectrophotometer emitor.
+     */
+    virtual std::future <float> getSpectrophotometerEmitorTemperature() = 0;
 
 
     };

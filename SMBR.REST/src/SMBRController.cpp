@@ -979,12 +979,22 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     });
 }
 
-std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getSpectrophotometerEmitorTemperature() {
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::measureAllSpectrophotometerChannels() {
     return process(__FUNCTION__, [&](){
-        auto temperature = wait(systemModule->sensorModule()->getSpectrophotometerEmitorTemperature());
-        auto tempResponseDto = TempDto::createShared();
-        tempResponseDto->temperature = temperature;
-        return createDtoResponse(Status::CODE_200, tempResponseDto);
+        auto channelCount = wait(systemModule->sensorModule()->getSpectrophotometerChannels());
+        
+        auto measurementsDto = SpectroMeasurementsDto::createShared();
+        measurementsDto->measurements = oatpp::Vector<oatpp::Object<SingleChannelMeasurementDto>>::createShared();
+        
+        for (int8_t channel = 0; channel < channelCount; channel++) {
+            auto measurement = wait(systemModule->sensorModule()->measureSpectrophotometerChannel(channel));
+            auto channelMeasurement = SingleChannelMeasurementDto::createShared();
+            channelMeasurement->channel = channel;
+            channelMeasurement->relative_value = measurement;
+            measurementsDto->measurements->push_back(channelMeasurement);
+        }
+        
+        return createDtoResponse(Status::CODE_200, measurementsDto);
     });
 }
 
@@ -995,6 +1005,15 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         responseDto->channel = channel;
         responseDto->relative_value = measurement;
         return createDtoResponse(Status::CODE_200, responseDto);
+    });
+}
+
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getSpectrophotometerEmitorTemperature() {
+    return process(__FUNCTION__, [&](){
+        auto temperature = wait(systemModule->sensorModule()->getSpectrophotometerEmitorTemperature());
+        auto tempResponseDto = TempDto::createShared();
+        tempResponseDto->temperature = temperature;
+        return createDtoResponse(Status::CODE_200, tempResponseDto);
     });
 }
 

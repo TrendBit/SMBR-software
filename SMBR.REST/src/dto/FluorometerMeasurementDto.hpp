@@ -25,6 +25,11 @@ class FluorometerMeasurementDto : public oatpp::DTO {
   DTO_FIELD(Boolean, read);  
 
   /**
+   * @brief Flag indicating if the data has been saturated.
+   */
+  DTO_FIELD(Boolean, saturated);  
+
+  /**
    * @brief Gain setting of the detector.
    */
   DTO_FIELD(Enum<dto::GainEnum>::AsString, detector_gain); 

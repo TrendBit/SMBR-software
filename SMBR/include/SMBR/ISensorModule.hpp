@@ -50,6 +50,7 @@ public:
         int16_t required_samples;
         int16_t captured_samples;
         int32_t missing_samples;
+        bool saturated;
     };
 
     /**

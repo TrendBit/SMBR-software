@@ -1243,6 +1243,7 @@ public:
         auto example = FluorometerMeasurementDto::createShared();
         example->measurement_id = 1235;
         example->read = false;
+        example->saturated = false;
         example->detector_gain = dto::GainEnum::x1;
         example->emitor_intensity = 0.5;
         example->timebase = dto::TimingEnum::Logarithmic;
@@ -1256,7 +1257,7 @@ public:
         sample1->time_ms = 1.2f; 
         sample1->raw_value = 1023; 
         sample1->relative_value = 0.5f; 
-        sample1->absolute_value = 0.125f; 
+        sample1->absolute_value = 0.125f;
 
         auto sample2 = FluorometerSampleDto::createShared();
         sample2->time_ms = 10.0f;
@@ -1330,6 +1331,7 @@ public:
         auto example = FluorometerMeasurementDto::createShared();
         example->measurement_id = 1235;
         example->read = false;
+        example->saturated = false;
         example->detector_gain = dto::GainEnum::x1;
         example->emitor_intensity = 0.5;
         example->timebase = dto::TimingEnum::Logarithmic;

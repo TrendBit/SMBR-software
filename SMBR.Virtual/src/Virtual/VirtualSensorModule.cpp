@@ -77,7 +77,8 @@ std::future <ISensorModule::FluorometerOjipData> VirtualSensorModule::captureFlu
             .length_ms = 1000,
             .required_samples = 1000,
             .captured_samples = 998,
-            .missing_samples = 2
+            .missing_samples = 2,
+            .saturated = false
         };
     });
 }

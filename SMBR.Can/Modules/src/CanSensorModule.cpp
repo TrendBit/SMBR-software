@@ -222,6 +222,7 @@ void CanSensorModule::sendCanRequest(uint32_t timeoutMs, std::shared_ptr<std::pr
             result.captured_samples = static_cast<int16_t>(result.samples.size());
             result.missing_samples = result.required_samples - result.captured_samples;
             result.read = isRead;
+            result.saturated = (result.captured_samples > result.required_samples);
 
             last_measurement_data = result;
 
@@ -382,6 +383,8 @@ std::future<ISensorModule::FluorometerOjipData> CanSensorModule::retrieveLastFlu
         } else {
             last_measurement_data.read = true;
         }
+
+        last_measurement_data.saturated = (last_measurement_data.captured_samples > last_measurement_data.required_samples);
 
         MeasurementParams params = {last_api_id, last_required_samples, last_length_ms, static_cast<int>(last_timebase), isRead};
         if (!writeMeasurementParams(PARAMS_FILE_PATH, params)) {

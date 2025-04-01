@@ -1,0 +1,27 @@
+main:
+    loop
+        count_down
+        display "OJIP Capture"
+        measure_ojip 1000 1000
+
+count_down:
+    display "10"
+    wait 1
+    display "9"
+    wait 1
+    display "8"
+    wait 1
+    display "7"
+    wait 1
+    display "6"
+    wait 1
+    display "5"
+    wait 1
+    display "4"
+    wait 1
+    display "3"
+    wait 1
+    display "2"
+    wait 1
+    display "1"
+    wait 1

@@ -46,7 +46,7 @@
 
 static const std::string PARAMS_FILE_PATH = "/data/api-server/fluorometer/measurement_params.txt";
 
-CanSensorModule::CanSensorModule(std::string uidHex, ICanChannel::Ptr channel) 
+CanSensorModule::CanSensorModule(std::string uidHex, ICanChannel::Ptr channel)
     : base({Modules::Sensor, uidHex}, channel), channel(channel) {
 }
 
@@ -57,8 +57,8 @@ ModuleID CanSensorModule::id() const {
 std::future <float> CanSensorModule::getBottleTemperature() {
 
     return base.get<
-        App_messages::Bottle_temperature::Temperature_request, 
-        App_messages::Bottle_temperature::Temperature_response, 
+        App_messages::Bottle_temperature::Temperature_request,
+        App_messages::Bottle_temperature::Temperature_response,
         float
     >([](App_messages::Bottle_temperature::Temperature_response response){
         return response.temperature;
@@ -68,8 +68,8 @@ std::future <float> CanSensorModule::getBottleTemperature() {
 std::future <float> CanSensorModule::getTopMeasuredTemperature() {
 
     return base.get<
-        App_messages::Bottle_temperature::Top_measured_temperature_request, 
-        App_messages::Bottle_temperature::Top_measured_temperature_response, 
+        App_messages::Bottle_temperature::Top_measured_temperature_request,
+        App_messages::Bottle_temperature::Top_measured_temperature_response,
         float
     >([](App_messages::Bottle_temperature::Top_measured_temperature_response response){
         return response.temperature;
@@ -79,8 +79,8 @@ std::future <float> CanSensorModule::getTopMeasuredTemperature() {
 std::future <float> CanSensorModule::getBottomMeasuredTemperature() {
 
     return base.get<
-        App_messages::Bottle_temperature::Bottom_measured_temperature_request, 
-        App_messages::Bottle_temperature::Bottom_measured_temperature_response, 
+        App_messages::Bottle_temperature::Bottom_measured_temperature_request,
+        App_messages::Bottle_temperature::Bottom_measured_temperature_response,
         float
     >([](App_messages::Bottle_temperature::Bottom_measured_temperature_response response){
         return response.temperature;
@@ -90,8 +90,8 @@ std::future <float> CanSensorModule::getBottomMeasuredTemperature() {
 std::future <float> CanSensorModule::getTopSensorTemperature() {
 
     return base.get<
-        App_messages::Bottle_temperature::Top_sensor_temperature_request, 
-        App_messages::Bottle_temperature::Top_sensor_temperature_response, 
+        App_messages::Bottle_temperature::Top_sensor_temperature_request,
+        App_messages::Bottle_temperature::Top_sensor_temperature_response,
         float
     >([](App_messages::Bottle_temperature::Top_sensor_temperature_response response){
         return response.temperature;
@@ -101,8 +101,8 @@ std::future <float> CanSensorModule::getTopSensorTemperature() {
 std::future <float> CanSensorModule::getBottomSensorTemperature() {
 
     return base.get<
-        App_messages::Bottle_temperature::Bottom_sensor_temperature_request, 
-        App_messages::Bottle_temperature::Bottom_sensor_temperature_response, 
+        App_messages::Bottle_temperature::Bottom_sensor_temperature_request,
+        App_messages::Bottle_temperature::Bottom_sensor_temperature_response,
         float
     >([](App_messages::Bottle_temperature::Bottom_sensor_temperature_response response){
         return response.temperature;
@@ -136,7 +136,7 @@ uint8_t CanSensorModule::CalculateMeasurementID(uint32_t api_id) {
 }
 
 std::future<ISensorModule::FluorometerSample> CanSensorModule::takeFluorometerSingleSample(
-    Fluorometer_config::Gain gain, 
+    Fluorometer_config::Gain gain,
     float intensity
 ) {
 
@@ -153,14 +153,14 @@ std::future<ISensorModule::FluorometerSample> CanSensorModule::takeFluorometerSi
             result.absolute_value = response.Absolute_value();
             return result;
         },
-        2000 
+        2000
     );
 }
 
 std::future<bool> CanSensorModule::isFluorometerOjipCaptureComplete() {
     return base.get<
-        App_messages::Fluorometer::OJIP_completed_request, 
-        App_messages::Fluorometer::OJIP_completed_response, 
+        App_messages::Fluorometer::OJIP_completed_request,
+        App_messages::Fluorometer::OJIP_completed_response,
         bool
     >([](App_messages::Fluorometer::OJIP_completed_response response){
         return response.completed;
@@ -195,7 +195,7 @@ void CanSensorModule::sendCanRequest(uint32_t timeoutMs, std::shared_ptr<std::pr
                 App_messages::Fluorometer::Data_sample sampleResponse;
                 if (sampleResponse.Interpret_data(dataCopy) &&
                     sampleResponse.Measurement_id() == CalculateMeasurementID(last_api_id)) {
-                    
+
                     if (!metadataLoaded) {
                         result.detector_gain = sampleResponse.gain;
                         result.emitor_intensity = sampleResponse.Emitor_intensity();
@@ -256,19 +256,19 @@ void CanSensorModule::checkMeasurementCompletion(uint32_t timeoutMs, std::shared
 bool CanSensorModule::ensureDirectoryExists(const std::string& filePath) {
     size_t pos = filePath.find_last_of('/');
     if (pos == std::string::npos) {
-        return true; 
+        return true;
     }
-    
+
     std::string dirPath = filePath.substr(0, pos);
     if (access(dirPath.c_str(), F_OK) == 0) {
         return true;
     }
-    
+
     std::string mkdirCommand = "mkdir -p " + dirPath;
     if (system(mkdirCommand.c_str()) == 0) {
         return true;
     }
-    
+
     std::cerr << "Failed to create directory: " << dirPath << std::endl;
     return false;
 }
@@ -277,7 +277,7 @@ bool CanSensorModule::readMeasurementParams(const std::string& filePath, Measure
     if (!ensureDirectoryExists(filePath)) {
         return false;
     }
-    
+
     std::ifstream file(filePath);
     if (file.is_open()) {
         file >> params.api_id >> params.samples >> params.length_ms >> params.timebase >> params.isRead;
@@ -291,7 +291,7 @@ bool CanSensorModule::writeMeasurementParams(const std::string& filePath, const 
     if (!ensureDirectoryExists(filePath)) {
         return false;
     }
-    
+
     std::ofstream file(filePath, std::ios::trunc);
     if (file.is_open()) {
         file << params.api_id << " " << params.samples << " " << params.length_ms << " "
@@ -303,8 +303,8 @@ bool CanSensorModule::writeMeasurementParams(const std::string& filePath, const 
 }
 
 std::future<ISensorModule::FluorometerOjipData> CanSensorModule::captureFluorometerOjip(const ISensorModule::FluorometerInput& input) {
-    uint32_t api_id; 
-    uint8_t measurement_id; 
+    uint32_t api_id;
+    uint8_t measurement_id;
 
     MeasurementParams params;
     if (readMeasurementParams(PARAMS_FILE_PATH, params)) {
@@ -339,7 +339,7 @@ std::future<ISensorModule::FluorometerOjipData> CanSensorModule::captureFluorome
         measurement_id,
         input.detector_gain,
         input.sample_timing,
-        static_cast<uint8_t>(input.emitor_intensity * 255),
+        input.emitor_intensity,
         input.length_ms,
         input.sample_count
     };
@@ -405,8 +405,8 @@ std::future<ISensorModule::FluorometerOjipData> CanSensorModule::retrieveLastFlu
 
 std::future<ISensorModule::FluorometerDetectorInfo> CanSensorModule::getFluorometerDetectorInfo() {
     return base.get<
-        App_messages::Fluorometer::Detector_info_request, 
-        App_messages::Fluorometer::Detector_info_response, 
+        App_messages::Fluorometer::Detector_info_request,
+        App_messages::Fluorometer::Detector_info_response,
         FluorometerDetectorInfo
     >([](App_messages::Fluorometer::Detector_info_response response){
         return FluorometerDetectorInfo{
@@ -419,8 +419,8 @@ std::future<ISensorModule::FluorometerDetectorInfo> CanSensorModule::getFluorome
 
 std::future<float> CanSensorModule::getFluorometerDetectorTemperature() {
     return base.get<
-        App_messages::Fluorometer::Detector_temperature_request, 
-        App_messages::Fluorometer::Detector_temperature_response, 
+        App_messages::Fluorometer::Detector_temperature_request,
+        App_messages::Fluorometer::Detector_temperature_response,
         float
     >([](App_messages::Fluorometer::Detector_temperature_response response){
         return response.temperature;
@@ -429,8 +429,8 @@ std::future<float> CanSensorModule::getFluorometerDetectorTemperature() {
 
 std::future<ISensorModule::FluorometerEmitorInfo> CanSensorModule::getFluorometerEmitorInfo() {
     return base.get<
-        App_messages::Fluorometer::Emitor_info_request, 
-        App_messages::Fluorometer::Emitor_info_response, 
+        App_messages::Fluorometer::Emitor_info_request,
+        App_messages::Fluorometer::Emitor_info_response,
         FluorometerEmitorInfo
     >([](App_messages::Fluorometer::Emitor_info_response response){
         return FluorometerEmitorInfo{
@@ -442,8 +442,8 @@ std::future<ISensorModule::FluorometerEmitorInfo> CanSensorModule::getFluoromete
 
 std::future<float> CanSensorModule::getFluorometerEmitorTemperature() {
     return base.get<
-        App_messages::Fluorometer::Emitor_temperature_request, 
-        App_messages::Fluorometer::Emitor_temperature_response, 
+        App_messages::Fluorometer::Emitor_temperature_request,
+        App_messages::Fluorometer::Emitor_temperature_response,
         float
     >([](App_messages::Fluorometer::Emitor_temperature_response response){
         return response.temperature;
@@ -452,8 +452,8 @@ std::future<float> CanSensorModule::getFluorometerEmitorTemperature() {
 
 std::future<int8_t> CanSensorModule::getSpectrophotometerChannels() {
     return base.get<
-        App_messages::Spectrophotometer::Channel_count_request, 
-        App_messages::Spectrophotometer::Channel_count_response, 
+        App_messages::Spectrophotometer::Channel_count_request,
+        App_messages::Spectrophotometer::Channel_count_response,
         int8_t
     >([](App_messages::Spectrophotometer::Channel_count_response response){
         return response.channel_count;
@@ -463,8 +463,8 @@ std::future<int8_t> CanSensorModule::getSpectrophotometerChannels() {
 std::future<ISensorModule::SpectroChannelInfo> CanSensorModule::getSpectrophotometerChannelInfo(int8_t channel) {
     App_messages::Spectrophotometer::Channel_info_request r(channel);
     return base.get<
-        App_messages::Spectrophotometer::Channel_info_request, 
-        App_messages::Spectrophotometer::Channel_info_response, 
+        App_messages::Spectrophotometer::Channel_info_request,
+        App_messages::Spectrophotometer::Channel_info_response,
         SpectroChannelInfo
     >(r, [](App_messages::Spectrophotometer::Channel_info_response response){
         return SpectroChannelInfo{
@@ -483,13 +483,13 @@ std::future<float> CanSensorModule::measureSpectrophotometerChannel(int8_t chann
         float
     >(request, [](App_messages::Spectrophotometer::Measurement_response response) {
         return response.value;
-    }, 2500); 
+    }, 2500);
 }
 
 std::future<float> CanSensorModule::getSpectrophotometerEmitorTemperature() {
     return base.get<
-        App_messages::Spectrophotometer::Temperature_request, 
-        App_messages::Spectrophotometer::Temperature_response, 
+        App_messages::Spectrophotometer::Temperature_request,
+        App_messages::Spectrophotometer::Temperature_response,
         float
     >([](App_messages::Spectrophotometer::Temperature_response response){
         return response.temperature;

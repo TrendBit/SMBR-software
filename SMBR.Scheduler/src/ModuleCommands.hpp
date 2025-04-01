@@ -1,4 +1,5 @@
 #include <future>
+#include <iostream>
 #include <Poco/String.h>
 #include <SMBR/Interpreter.hpp>
 #include <SMBR/ISensorModule.hpp>
@@ -134,7 +135,11 @@ namespace Scripting {
                 if (l.noArgs()){
                     input.message = "";
                 } else {
-                    input.message = l.arg(0);
+                    input.message = "";
+                    for (int i = 0; i < l.args(); i++) {
+                        if (i > 0) input.message += " ";
+                        input.message += l.arg(i);
+                    }
                     input.message = Poco::replace(input.message, "\"", "");
                 }
                 return input;

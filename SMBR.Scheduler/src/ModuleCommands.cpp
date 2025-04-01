@@ -92,4 +92,18 @@ void registerModuleBlocks(CommandFactory & f){
             return std::make_shared<Scripting::DisplayCommand>(block, ctx);
         });
     }
+
+    {
+        CommandInfo info(
+            "measure_ojip",
+            {
+                {"length", "Length of measurement in ms", true},
+                {"samples", "Number of samples to capture", true},
+            },
+            "Capture OJIP data from fluorometer, does not export them"
+        );
+        f.registerCommand(info, [](Block::Ptr block, ParseContext::Ptr ctx) {
+            return std::make_shared<Scripting::FluorometerCommand>(block, ctx);
+        });
+    }
 }

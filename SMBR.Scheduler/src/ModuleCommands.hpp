@@ -1,7 +1,8 @@
-#include <SMBR/Interpreter.hpp>
-#include <SMBR/Script.hpp>
 #include <future>
 #include <Poco/String.h>
+#include <SMBR/Interpreter.hpp>
+#include <SMBR/ISensorModule.hpp>
+#include <SMBR/Script.hpp>
 
 namespace Scripting {
 
@@ -151,12 +152,34 @@ namespace Scripting {
             }
     };
 
+    class Fluorometer {
+        public:
+            ISensorModule::FluorometerInput parse(ScriptLine l){
+                ISensorModule::FluorometerInput input;
+                input.detector_gain = Fluorometer_config::Gain::x1;
+                input.sample_timing = Fluorometer_config::Timing::Logarithmic;
+                input.emitor_intensity = 1.0f;
+                input.length_ms = l.argAsInt(0, 500, 2000);
+                input.sample_count = l.argAsInt(1, 500, 1000);
+                return input;
+            }
+
+            std::future <bool> run(ISensorModule::FluorometerInput input, ISystemModule::Ptr m){
+                return std::async(std::launch::async, [input, m]() {
+                    auto ojip_data = m->sensorModule()->captureFluorometerOjip(input).get();
+                    std::cout << "OJIP measurement is missing: " << ojip_data.missing_samples <<" samples" << std::endl;
+                    return ojip_data.captured_samples != 0;
+                });
+            }
+    };
+
     typedef ModuleCommand <Heater, HeaterInput> HeaterCommand;
     typedef ModuleCommand <Illumination, IlluminationInput> IlluminationCommand;
     typedef ModuleCommand <Mixer, MixerInput> MixerCommand;
     typedef ModuleCommand <Pump, PumpInput> PumpCommand;
     typedef ModuleCommand <Aerator, AeratorInput> AeratorCommand;
     typedef ModuleCommand <Display, DisplayInput> DisplayCommand;
+    typedef ModuleCommand <Fluorometer, ISensorModule::FluorometerInput> FluorometerCommand;
 }
 
 

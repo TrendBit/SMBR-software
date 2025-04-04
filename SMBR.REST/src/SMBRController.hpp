@@ -29,6 +29,7 @@
 #include "dto/ScriptRuntimeInfoDto.hpp"
 #include "dto/TextDto.hpp"
 #include "dto/MessageDto.hpp"
+#include "dto/FluorometerSingleSampleRequestDto.hpp"
 #include "dto/FluorometerSingleSampleResponseDto.hpp"
 #include "dto/FluorometerCaptureStatusDto.hpp"
 #include "dto/FluorometerOjipCaptureRequestDto.hpp"
@@ -1204,7 +1205,7 @@ public:
             "Absolute value is calculated based on gain of detector and emitor intensity. And relates to detector max range.";
         info->addTag("Sensor module");
 
-        auto exampleRequest = FluorometerOjipCaptureRequestDto::createShared();
+        auto exampleRequest = FluorometerSingleSampleRequestDto::createShared();
         exampleRequest->emitor_intensity = 0.5f;
         
         auto exampleResponse = FluorometerSingleSampleResponseDto::createShared();
@@ -1212,7 +1213,7 @@ public:
         exampleResponse->relative_value = 0.25f;
         exampleResponse->absolute_value = 0.125f;
 
-        info->addConsumes<Object<FluorometerOjipCaptureRequestDto>>("application/json")
+        info->addConsumes<Object<FluorometerSingleSampleRequestDto>>("application/json")
             .addExample("application/json", exampleRequest);
         info->addResponse<Object<FluorometerSingleSampleResponseDto>>(Status::CODE_200, "application/json")
             .addExample("application/json", exampleResponse);
@@ -1220,7 +1221,7 @@ public:
     ADD_CORS(performFluorometerSingleSample)
     ENDPOINT("POST", "/sensor/fluorometer/single_sample", performFluorometerSingleSample, 
         QUERY(oatpp::Enum<dto::GainEnum>::AsString, gain), 
-        BODY_DTO(Object<FluorometerOjipCaptureRequestDto>, body));
+        BODY_DTO(Object<FluorometerSingleSampleRequestDto>, body));
 
     /**
      * @brief Perform OJIP capture on fluorometer.
@@ -1267,6 +1268,9 @@ public:
 
         auto example2 = FluorometerOjipCaptureRequestDto::createShared();
         example2->emitor_intensity = 1.0;
+        example2->timebase = dto::TimingEnum::Logarithmic;
+        example2->length_ms = 1000;
+        example2->sample_count = 1000;
 
         example->samples = {sample1, sample2};
 
@@ -1282,8 +1286,8 @@ public:
     ENDPOINT("POST", "/sensor/fluorometer/ojip/capture", captureFluorometerOjip,
         QUERY(oatpp::Enum<dto::GainEnum>::AsString, gain), 
         QUERY(oatpp::Enum<dto::TimingEnum>::AsString, timing),
-        QUERY(oatpp::UInt16, length_ms),
-        QUERY(oatpp::UInt16, sample_count),
+        QUERY(oatpp::String, length_ms, "length_ms", ""),
+        QUERY(oatpp::String, sample_count, "sample_count", ""),
         BODY_DTO(Object<FluorometerOjipCaptureRequestDto>, body));
 
     /**

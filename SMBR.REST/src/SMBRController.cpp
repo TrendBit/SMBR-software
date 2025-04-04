@@ -822,7 +822,7 @@ Fluorometer_config::Timing SMBRController::getTiming(const dto::TimingEnum& timi
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::performFluorometerSingleSample(
     const oatpp::Enum<dto::GainEnum>::AsString& gain, 
-    const oatpp::Object<FluorometerOjipCaptureRequestDto>& body
+    const oatpp::Object<FluorometerSingleSampleRequestDto>& body
 ) {
     return process(__FUNCTION__, [&]() {
         if (body->emitor_intensity < 0.2f || body->emitor_intensity > 1.0f) {
@@ -845,27 +845,29 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::captureFluorometerOjip( 
     const oatpp::Enum<dto::GainEnum>::AsString& gain, 
     const oatpp::Enum<dto::TimingEnum>::AsString& timing,
-    const oatpp::UInt16& length_ms,
-    const oatpp::UInt16& sample_count,
+    const oatpp::String& length_ms,
+    const oatpp::String& sample_count,
     const oatpp::Object<FluorometerOjipCaptureRequestDto>& body
+
 ) {
     return process(__FUNCTION__, [&]() {
-        if (body->emitor_intensity < 0.2f || body->emitor_intensity > 1.0f) {
-            throw ArgumentException("Invalid emitor intensity. Must be between 0.2 and 1.");
+
+        auto final_length_ms = length_ms->empty() ? body->length_ms : static_cast<oatpp::UInt16>(std::stoi(length_ms->c_str()));
+        if (final_length_ms < 200 || final_length_ms > 4000) {
+            throw ArgumentException("Invalid length. Must be between 200 and 4000.");
         }
-        if (length_ms < 100 || length_ms > 4000) {
-            throw ArgumentException("Invalid length. Must be between 100 and 4000.");
-        }
-        if (sample_count < 100 || sample_count > 4000) {
-            throw ArgumentException("Invalid sample count. Must be between 100 and 4000.");
+
+        auto final_sample_count = sample_count->empty() ? body->sample_count : static_cast<oatpp::UInt16>(std::stoi(sample_count->c_str()));
+        if (final_sample_count < 200 || final_sample_count > 4000) {
+            throw ArgumentException("Invalid sample count. Must be between 200 and 4000.");
         }
 
         ISensorModule::FluorometerInput input{
             .detector_gain = getGain(gain),
             .sample_timing = getTiming(timing),
             .emitor_intensity = body->emitor_intensity,
-            .length_ms = length_ms,
-            .sample_count = sample_count
+            .length_ms = final_length_ms,
+            .sample_count = final_sample_count
         };
 
         auto fluorometerData = wait(systemModule->sensorModule()->captureFluorometerOjip(input));
@@ -896,7 +898,6 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         return createDtoResponse(Status::CODE_200, ojipDataDto);
     });
 }
-
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::checkFluorometerOjipCaptureComplete() {
     return process(__FUNCTION__, [&](){

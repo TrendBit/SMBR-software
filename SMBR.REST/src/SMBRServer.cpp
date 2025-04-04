@@ -1,9 +1,11 @@
 #include <SMBR/SMBRServer.hpp>
+#include <SMBR/Log.hpp>
 #include "SMBRController.hpp"
 #include "AppComponent.hpp"
 
 #include "oatpp/network/Server.hpp"
 #include "oatpp-swagger/Controller.hpp"
+
 
 SMBRServer::SMBRServer(std::shared_ptr<ISystemModule> systemModule) : systemModule(systemModule)
 {
@@ -39,9 +41,11 @@ void SMBRServer::run()
 
     oatpp::network::Server server(connectionProvider, connectionHandler);
 
-    OATPP_LOGi("App", "Server running on port {}", connectionProvider->getProperty("port").toString()->c_str());
-
+    LNOTICE("API") << "Server running on port: " << *connectionProvider->getProperty("port").toString() << LE;
+    
     server.run();
+
+    LNOTICE("API") << "Server stopped" << LE;
 
     oatpp::Environment::destroy();
 }

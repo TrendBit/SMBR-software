@@ -14,46 +14,89 @@
 #include <chrono>
 #include <thread>
 
-int main(int argc, char ** argv){
-    
-    //sleep for 2s after start - uncomment when using better systemd order
+#include <Poco/Util/Application.h>
+#include <Poco/Util/Option.h>
+#include <Poco/Util/OptionSet.h>
+#include <Poco/Util/HelpFormatter.h>
+#include <Poco/Util/IniFileConfiguration.h>
+
+#include <SMBR/Log.hpp>
+
+using namespace Poco;
+using namespace Poco::Util;
 
 
-    try {
+class MyApp : public Application {
+protected:
+    void initialize(Application& self) override {
 
-    //system("ip link set can0 up type can bitrate 500000");
-
-    bool isVirtual = false;
-    int logLevel = 3;
-
-    for (int arg = 1; arg < argc; arg++){
-        if (std::string(argv[arg]) == "--virtual") {
-            isVirtual = true;
+        // Load default configuration
+        try {
+            loadConfiguration("/etc/reactor/reactor-api-server.properties");
+        } catch (...) {
+            std::cerr << "No default configuration found.\n";
         }
-        if (std::string(argv[arg]) == "--fulllog") {
-            logLevel = 8;
+        // Load and override with custom configuration (if exists)
+        try {
+            loadConfiguration("/data/config/reactor-api-server.properties"); 
+        } catch (...) {
+            std::cout << "No custom configuration found, using default.\n";
         }
+
+        Application::initialize(self);
+        LNOTICE("APP") << "--------------------------" << LE;
+        LNOTICE("APP") << "reactor-api-server started" << LE;
     }
 
-    SMBR::initLogs("reactor-api-server", logLevel, "/run/user/");
-
-    std::shared_ptr<ISystemModule> systemModule = nullptr;
-
-
-    if (isVirtual){
-        systemModule = VirtualModulesFactory::create();
-    } else {
-        systemModule = CanModulesFactory::create();
+    void uninitialize() override {
+        LNOTICE("APP") << "reactor-api-server stopped" << LE;
+        Application::uninitialize();
     }
 
+    int main(const std::vector<std::string>& args) override {
+        try {
 
-    //std::shared_ptr<ISystemModule> proxy = std::make_shared <ProxySystemModule<LoggingProxyTransformation> >(systemModule);
+            //system("ip link set can0 up type can bitrate 500000");
 
-    SMBRServer server(systemModule);
-    server.run();
+            
+            //take it from properties file
+            bool isVirtual = config().getBool("server.virtual", false);
+                
+/*
+            for (int arg = 1; arg < argc; arg++){
+                if (std::string(argv[arg]) == "--virtual") {
+                    isVirtual = true;
+                }
+            }
+*/
+            //SMBR::initLogs("reactor-api-server", logLevel, "/run/user/");
 
-    } catch (std::exception & e){
-        std::cerr << "EXCEPTION: " << e.what() << std::endl;
+            std::shared_ptr<ISystemModule> systemModule = nullptr;
+
+
+            if (isVirtual){
+                systemModule = VirtualModulesFactory::create();
+            } else {
+                systemModule = CanModulesFactory::create();
+            }
+
+            //std::shared_ptr<ISystemModule> proxy = std::make_shared <ProxySystemModule<LoggingProxyTransformation> >(systemModule);
+
+            SMBRServer server(systemModule);
+            server.run();
+
+        } catch (std::exception & e){
+            LERROR("APP") << "reactor-api-server failed: " << e.what() << LE;
+        }
+        return Application::EXIT_OK;
     }
-    return 0;
+
+public:
+    MyApp() {}
+};
+
+int main(int argc, char** argv) {
+    MyApp app;
+    app.init(argc, argv);
+    return app.run();
 }

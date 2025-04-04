@@ -4,24 +4,31 @@
 
 #include "SMBR/Recipes.hpp"
 #include "SMBR/Scheduler.hpp"
+#include "SMBR/Log.hpp"
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::process(
     std::string name,
     std::function<std::shared_ptr<oatpp::web::protocol::http::outgoing::Response>()> body
 ){
     try {
-        return body();
+        LDEBUG("API") << "Api " << name << " begin" << LE;
+        auto b = body();
+        LDEBUG("API") << "Api " << name << " end" << LE;
+        return b;
     } catch (TimeoutException & e){
         auto dto = MessageDto::createShared();
         dto->message = name + " timed out: " + std::string(e.what());
+        LWARNING("API") << "Api " << name << " failed with TimeoutException " << std::string(e.what()) << LE;
         return createDtoResponse(Status::CODE_504, dto);
     } catch (NotFoundException & e){
         auto dto = MessageDto::createShared();
         dto->message = name + " not found: " + std::string(e.what());
+        LWARNING("API") << "Api " << name << " failed with NotFoundException " << std::string(e.what()) << LE;
         return createDtoResponse(Status::CODE_404, dto);
     } catch (std::exception & e){
         auto dto = MessageDto::createShared();
         dto->message = "Failed to retrieve " + name + ": " + std::string(e.what());
+        LWARNING("API") << "Api " << name << " failed with Exception " << std::string(e.what()) << LE;
         return createDtoResponse(Status::CODE_500, dto);
     }
 }
@@ -31,26 +38,32 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     std::function<bool()> body
 ){
     try {
+        LDEBUG("API") << "Api " << name << " begin" << LE;
         bool success = body();
         auto dto = MessageDto::createShared();
         if (success) {
             dto->message = name + " successful";
+            LDEBUG("API") << "Api " << name << " end (return value = true)" << LE;
             return createDtoResponse(Status::CODE_200, dto);
         } else {
             dto->message = name + " failed";
+            LDEBUG("API") << "Api " << name << " end (return value = false)" << LE;
             return createDtoResponse(Status::CODE_500, dto);
         }
     } catch (TimeoutException & e){
         auto dto = MessageDto::createShared();
         dto->message = name + " timed out: " + std::string(e.what());
+        LWARNING("API") << "Api " << name << " failed with TimeoutException " << std::string(e.what()) << LE;
         return createDtoResponse(Status::CODE_504, dto);
     } catch (NotFoundException & e){
         auto dto = MessageDto::createShared();
         dto->message = name + " not found: " + std::string(e.what());
+        LWARNING("API") << "Api " << name << " failed with NotFoundException " << std::string(e.what()) << LE;
         return createDtoResponse(Status::CODE_404, dto);
     } catch (std::exception & e){
         auto dto = MessageDto::createShared();
         dto->message = "Failed to retrieve " + name + ": " + std::string(e.what());
+        LWARNING("API") << "Api " << name << " failed with Exception " << std::string(e.what()) << LE;
         return createDtoResponse(Status::CODE_500, dto);
     }
 }
@@ -74,6 +87,7 @@ SMBRController::SMBRController(const std::shared_ptr<oatpp::web::mime::ContentMa
   // ==========================================
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getSystemModules() {
+    LDEBUG("API") << "Api getSystemModules begin" << LE;
     auto dtoList = oatpp::List<oatpp::Object<ModuleInfoDto>>::createShared();
 
     auto future = systemModule->getAvailableModules();        
@@ -99,6 +113,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         dtoList->push_back(moduleInfoDto);
     }
 
+    LDEBUG("API") << "Api getSystemModules end" << LE;
     return createDtoResponse(Status::CODE_200, dtoList);
 }
 

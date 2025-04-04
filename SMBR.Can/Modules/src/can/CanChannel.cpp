@@ -58,15 +58,15 @@ static void dump(bool isWrite, std::string message, std::shared_ptr<CanChannel::
 
     Poco::LocalDateTime dt;
     if (isWrite){
-       LLEVEL("Can.Send", priority) 
-              << " >> "
+       LLEVEL("CAN.Send", priority) 
+              << "Can >> "
               << " " << Poco::NumberFormatter::format0(r->uid, 5)
               << " " << r->request.request().id
               << " " << message
               << " (after " << r->startedAt.elapsed() / 1000 << "ms)" << LE;
     } else {
-         LLEVEL("Can.Recv", priority) 
-              << " << "
+         LLEVEL("CAN.Recv", priority) 
+              << "Can << "
               << " " << Poco::NumberFormatter::format0(r->uid, 5)
               << " " << r->request.request().id
               << " " << r->response.status

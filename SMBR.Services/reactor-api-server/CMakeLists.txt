@@ -12,6 +12,7 @@ target_link_libraries(${PROJECT_NAME}
   SMBR.Scheduler
   SMBR.Virtual
   SMBR.Can.Modules
+  PocoUtil
 )
 
 add_dependencies(${PROJECT_NAME} 
@@ -36,6 +37,9 @@ install(TARGETS ${PROJECT_NAME}
 
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/reactor-api-server.service
   DESTINATION ${SMBR_INSTALL_SERVICES}
+)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/reactor-api-server.properties
+  DESTINATION ${SMBR_INSTALL_ETC}/reactor/
 )
 
 #add_custom_target(install-service

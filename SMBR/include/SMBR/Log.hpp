@@ -27,28 +27,7 @@ namespace SMBR {
     
     void threadDebug();
 
-    struct LogHistory {
-            std::string path;
-            int size;
-    };
-
-    struct LogParams {
-            bool printToCout;
-            std::string rotation;
-            bool deleteOld;
-            LogParams();
-            LogParams(bool printToCout, bool deleteOld = true);
-    };
-
-    void initLogs(std::string logName, int level, std::string logDir = "", LogParams params = LogParams());
-    
-    void separeLog(std::string logName, std::string fileName, int level = 8, LogParams params = LogParams());
-    
-
-
-    void dumpBacktrace(std::string name, std::string logname = "TS", int level = 4);
-
-    void initSepareLogs(const std::set<std::string> & names, std::string dir, std::string prefix = "", LogParams params = LogParams());
-
+   
+    void dumpBacktrace(std::string name, std::string logname = "SMBR", int level = 4);
 }
 

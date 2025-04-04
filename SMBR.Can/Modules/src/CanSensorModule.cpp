@@ -324,12 +324,15 @@ void CanSensorModule::sendCanRequest(uint32_t timeoutMs, std::shared_ptr<std::pr
             ISensorModule::FluorometerOjipData result;
             bool metadataLoaded = false;
             bool isSaturated = false;
+            bool anyDataReceived = false;
 
             for (const auto& rr : response.responseData) {
                 auto dataCopy = rr.data;
                 App_messages::Fluorometer::Data_sample sampleResponse;
                 if (sampleResponse.Interpret_data(dataCopy) &&
                     sampleResponse.Measurement_id() == CalculateMeasurementID(last_api_id)) {
+
+                    anyDataReceived = true; 
 
                     if (!metadataLoaded) {
                         result.detector_gain = sampleResponse.gain;
@@ -350,6 +353,12 @@ void CanSensorModule::sendCanRequest(uint32_t timeoutMs, std::shared_ptr<std::pr
                 }
             }
 
+            if (!anyDataReceived) {
+                promise->set_exception(std::make_exception_ptr(
+                    std::runtime_error("No measurement data available on the device")));
+                return;
+            }
+
             std::sort(result.samples.begin(), result.samples.end(), [](const FluorometerSample& a, const FluorometerSample& b) {
                 return a.time_ms < b.time_ms;
             });
@@ -361,7 +370,6 @@ void CanSensorModule::sendCanRequest(uint32_t timeoutMs, std::shared_ptr<std::pr
             result.missing_samples = result.required_samples - result.captured_samples;
             result.read = isRead;
             result.saturated = isSaturated;
-
             last_measurement_data = result;
 
             promise->set_value(result);
@@ -446,7 +454,6 @@ std::future<ISensorModule::FluorometerOjipData> CanSensorModule::captureFluorome
         return promise->get_future();
     }
 }
-
 std::future<ISensorModule::FluorometerOjipData> CanSensorModule::retrieveLastFluorometerOjipData() {
     auto promise = std::make_shared<std::promise<ISensorModule::FluorometerOjipData>>();
 
@@ -471,10 +478,11 @@ std::future<ISensorModule::FluorometerOjipData> CanSensorModule::retrieveLastFlu
         } else {
             last_measurement_data.read = true;
         }
-
-        MeasurementParams params = {last_api_id, last_required_samples, last_length_ms, static_cast<int>(last_timebase), isRead};
+        MeasurementParams params = {last_api_id, last_required_samples, last_length_ms, 
+                                  static_cast<int>(last_timebase), isRead};
         if (!writeMeasurementParams(PARAMS_FILE_PATH, params)) {
-            promise->set_exception(std::make_exception_ptr(std::runtime_error("Failed to update measurement parameters file")));
+            promise->set_exception(std::make_exception_ptr(
+                std::runtime_error("Failed to update measurement parameters file")));
             return promise->get_future();
         }
 
@@ -483,10 +491,24 @@ std::future<ISensorModule::FluorometerOjipData> CanSensorModule::retrieveLastFlu
     }
 
     auto timeoutMs = last_length_ms;
-    std::thread([this, promise, timeoutMs]() {
-        checkMeasurementCompletion(timeoutMs, promise);
+    auto threadPromise = std::make_shared<std::promise<ISensorModule::FluorometerOjipData>>();
+    auto future = threadPromise->get_future();
+
+    std::thread([this, threadPromise, timeoutMs]() {
+        checkMeasurementCompletion(timeoutMs, threadPromise);
     }).detach();
-    return promise->get_future();
+
+    return std::async(std::launch::deferred, [this, future = std::move(future)]() mutable {  
+        ISensorModule::FluorometerOjipData result = future.get(); 
+
+        if (!isRead) {
+            isRead = true;
+            MeasurementParams params = {last_api_id, last_required_samples, last_length_ms, 
+                                  static_cast<int>(last_timebase), isRead};
+            writeMeasurementParams(PARAMS_FILE_PATH, params);
+        }
+        return result;
+    });
 }
 
 std::future<ISensorModule::FluorometerDetectorInfo> CanSensorModule::getFluorometerDetectorInfo() {

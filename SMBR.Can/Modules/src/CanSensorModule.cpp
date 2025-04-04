@@ -308,71 +308,79 @@ void CanSensorModule::sendCanRequest(uint32_t timeoutMs, std::shared_ptr<std::pr
     RequestData requestData(requestId, rawRequest.Export_data());
     ResponseInfo responseInfo;
     responseInfo.timeoutMs = timeoutMs;
+
+    auto result = std::make_shared<ISensorModule::FluorometerOjipData>();
+    auto receivedSamples = std::make_shared<int>(0);
+    auto metadataLoaded = std::make_shared<bool>(false);
+    auto isSaturated = std::make_shared<bool>(false);
+
     responseInfo.acceptFunction = [](const ResponseData& response) {
         App_messages::Fluorometer::Data_sample rawResponse;
         return response.id.messageType() == static_cast<uint16_t>(rawResponse.Type());
     };
-    responseInfo.isDoneFunction = [](const std::vector<ResponseData>& responses) {
-        return false;
+
+    responseInfo.isDoneFunction = [this, result, receivedSamples, metadataLoaded, isSaturated](const std::vector<ResponseData>& responses) {
+        result->samples.clear();
+        *receivedSamples = 0;
+        *metadataLoaded = false;
+        *isSaturated = false;
+
+        for (const auto& rr : responses) {
+            auto dataCopy = rr.data;
+            App_messages::Fluorometer::Data_sample sampleResponse;
+            if (sampleResponse.Interpret_data(dataCopy) && sampleResponse.Measurement_id() == CalculateMeasurementID(last_api_id)) {
+                (*receivedSamples)++;
+
+                if (!*metadataLoaded) {
+                    result->detector_gain = sampleResponse.gain;
+                    result->emitor_intensity = sampleResponse.Emitor_intensity();
+                    *metadataLoaded = true;
+                }
+
+                ISensorModule::FluorometerSample sample;
+                sample.time_ms = sampleResponse.Time_ms();
+                sample.raw_value = sampleResponse.sample_value;
+                sample.relative_value = sampleResponse.Relative_value();
+                sample.absolute_value = sampleResponse.Absolute_value();
+                result->samples.push_back(sample);
+                result->measurement_id = last_api_id;
+
+                if (sample.raw_value > 4000) {
+                    *isSaturated = true;
+                }
+            }
+        }
+
+        return *receivedSamples >= last_required_samples;
     };
+
     responseInfo.successOnTimeout = true;
 
     CanRequest canRequest(requestData, responseInfo);
 
-    channel->send(canRequest, [this, promise](ICanChannel::Response response) {
+    channel->send(canRequest, [this, promise, result, receivedSamples, isSaturated](ICanChannel::Response response) {
         if (response.status == CanRequestStatus::Success || response.status == CanRequestStatus::Timeout) {
-            ISensorModule::FluorometerOjipData result;
-            bool metadataLoaded = false;
-            bool isSaturated = false;
-            bool anyDataReceived = false;
-
-            for (const auto& rr : response.responseData) {
-                auto dataCopy = rr.data;
-                App_messages::Fluorometer::Data_sample sampleResponse;
-                if (sampleResponse.Interpret_data(dataCopy) &&
-                    sampleResponse.Measurement_id() == CalculateMeasurementID(last_api_id)) {
-
-                    anyDataReceived = true; 
-
-                    if (!metadataLoaded) {
-                        result.detector_gain = sampleResponse.gain;
-                        result.emitor_intensity = sampleResponse.Emitor_intensity();
-                        metadataLoaded = true;
-                    }
-
-                    ISensorModule::FluorometerSample sample;
-                    sample.time_ms = sampleResponse.Time_ms();
-                    sample.raw_value = sampleResponse.sample_value;
-                    sample.relative_value = sampleResponse.Relative_value();
-                    sample.absolute_value = sampleResponse.Absolute_value();
-                    result.samples.push_back(sample);
-                    result.measurement_id = last_api_id;
-                    if (sample.raw_value > 4000) {
-                        isSaturated = true;
-                    }
-                }
-            }
-
-            if (!anyDataReceived) {
+            if (result->samples.empty()) {
                 promise->set_exception(std::make_exception_ptr(
                     std::runtime_error("No measurement data available on the device")));
                 return;
             }
 
-            std::sort(result.samples.begin(), result.samples.end(), [](const FluorometerSample& a, const FluorometerSample& b) {
+            std::sort(result->samples.begin(), result->samples.end(), [](const FluorometerSample& a, const FluorometerSample& b) {
                 return a.time_ms < b.time_ms;
             });
 
-            result.timebase = last_timebase;
-            result.length_ms = last_length_ms;
-            result.required_samples = last_required_samples;
-            result.captured_samples = static_cast<int16_t>(result.samples.size());
-            result.missing_samples = result.required_samples - result.captured_samples;
-            result.read = isRead;
-            result.saturated = isSaturated;
-            last_measurement_data = result;
+            result->timebase = last_timebase;
+            result->length_ms = last_length_ms;
+            result->required_samples = last_required_samples;
+            result->captured_samples = static_cast<int16_t>(result->samples.size());
+            result->missing_samples = result->required_samples - result->captured_samples;
+            result->read = isRead;
+            result->saturated = *isSaturated;
 
-            promise->set_value(result);
+            last_measurement_data = *result;
+
+            promise->set_value(*result);
         } else {
             promise->set_exception(std::make_exception_ptr(std::runtime_error("Failed to send request")));
         }
@@ -428,6 +436,7 @@ std::future<ISensorModule::FluorometerOjipData> CanSensorModule::captureFluorome
     }
 
     auto timeoutMs = input.length_ms;
+    auto sampleTimeoutMs = 1.2 * input.sample_count;
     last_required_samples = input.sample_count;
     last_length_ms = input.length_ms;
 
@@ -444,8 +453,8 @@ std::future<ISensorModule::FluorometerOjipData> CanSensorModule::captureFluorome
     if (succes.get()) {
         auto promise = std::make_shared<std::promise<ISensorModule::FluorometerOjipData>>();
         std::this_thread::sleep_for(std::chrono::milliseconds(timeoutMs));
-        std::thread([this, promise, timeoutMs]() {
-            checkMeasurementCompletion(timeoutMs, promise);
+        std::thread([this, promise, sampleTimeoutMs]() {
+            checkMeasurementCompletion(sampleTimeoutMs, promise);
         }).detach();
         return promise->get_future();
     } else {
@@ -490,12 +499,12 @@ std::future<ISensorModule::FluorometerOjipData> CanSensorModule::retrieveLastFlu
         return promise->get_future();
     }
 
-    auto timeoutMs = last_length_ms;
+    auto sampleTimeoutMs = 1.2 * last_required_samples;
     auto threadPromise = std::make_shared<std::promise<ISensorModule::FluorometerOjipData>>();
     auto future = threadPromise->get_future();
 
-    std::thread([this, threadPromise, timeoutMs]() {
-        checkMeasurementCompletion(timeoutMs, threadPromise);
+    std::thread([this, threadPromise, sampleTimeoutMs]() {
+        checkMeasurementCompletion(sampleTimeoutMs, threadPromise);
     }).detach();
 
     return std::async(std::launch::deferred, [this, future = std::move(future)]() mutable {  

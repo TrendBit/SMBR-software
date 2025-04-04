@@ -26,6 +26,7 @@ target_include_directories(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
   PocoFoundation
+  PocoJSON
   SMBR
   SMBR.Can.Codes
 )

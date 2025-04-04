@@ -43,8 +43,14 @@
 #include <unistd.h>       // for access
 #include <iostream>
 #include <thread>         // std::this_thread::sleep_for
+#include <Poco/JSON/Parser.h>
+#include <Poco/JSON/Object.h>
+#include <Poco/File.h>
+#include <Poco/Path.h>
+#include <fstream>
+#include <memory>
 
-static const std::string PARAMS_FILE_PATH = "/data/api-server/fluorometer/measurement_params.txt";
+static const std::string PARAMS_FILE_PATH = "/data/api-server/fluorometer/measurement_params.json";
 
 CanSensorModule::CanSensorModule(std::string uidHex, ICanChannel::Ptr channel)
     : base({Modules::Sensor, uidHex}, channel), channel(channel) {
@@ -167,6 +173,134 @@ std::future<bool> CanSensorModule::isFluorometerOjipCaptureComplete() {
     }, 2000);
 }
 
+bool CanSensorModule::ensureDirectoryExists(const std::string& filePath) {
+    try {
+        Poco::Path path(filePath);
+        if (path.isDirectory()) {
+            return true;
+        }
+        
+        Poco::File dir(path.parent());
+        if (!dir.exists()) {
+            dir.createDirectories();
+        }
+        return dir.exists();
+    } catch (const Poco::Exception& e) {
+        std::cerr << "Directory error [" << filePath << "]: " << e.displayText() << std::endl;
+        return false;
+    }
+}
+
+bool CanSensorModule::readMeasurementParams(const std::string& filePath, MeasurementParams& params) {
+    if (!ensureDirectoryExists(filePath)) {
+        return false;
+    }
+
+    try {
+        Poco::File file(filePath);
+        if (!file.exists() || file.getSize() == 0) {
+            return false;
+        }
+
+        std::ifstream input(filePath);
+        if (!input.is_open()) {
+            std::cerr << "Failed to open file: " << filePath << std::endl;
+            return false;
+        }
+
+        Poco::JSON::Parser parser;
+        auto result = parser.parse(input);
+        input.close();  
+
+        auto object = result.extract<Poco::JSON::Object::Ptr>();
+        if (!object) {
+            std::cerr << "Invalid JSON structure in file: " << filePath << std::endl;
+            return false;
+        }
+
+        static const std::vector<std::string> requiredFields = {
+            "api_id", "samples", "length_ms", "timebase", "isRead"
+        };
+
+        for (const auto& field : requiredFields) {
+            if (!object->has(field)) {
+                std::cerr << "Missing field '" << field << "' in JSON file: " << filePath << std::endl;
+                return false;
+            }
+        }
+
+        try {
+            params.api_id = object->getValue<int>("api_id");
+            params.samples = object->getValue<int>("samples");
+            params.length_ms = object->getValue<int>("length_ms");
+            params.timebase = object->getValue<int>("timebase");
+            params.isRead = object->getValue<bool>("isRead");
+        } catch (const Poco::Exception& e) {
+            std::cerr << "Type mismatch in JSON file [" << filePath << "]: " << e.displayText() << std::endl;
+            return false;
+        }
+
+        return true;
+    } catch (const Poco::Exception& e) {
+        std::cerr << "JSON parse error [" << filePath << "]: " << e.displayText() << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << "System error [" << filePath << "]: " << e.what() << std::endl;
+    } catch (...) {
+        std::cerr << "Unknown error processing file: " << filePath << std::endl;
+    }
+
+    return false;
+}
+
+bool CanSensorModule::writeMeasurementParams(const std::string& filePath, const MeasurementParams& params) {
+    if (!ensureDirectoryExists(filePath)) {
+        return false;
+    }
+
+    const std::string tempPath = filePath + ".tmp";
+    try {
+        {
+            std::ofstream output(tempPath, std::ios::binary);
+            if (!output.is_open()) {
+                std::cerr << "Failed to create temp file: " << tempPath << std::endl;
+                return false;
+            }
+
+            Poco::JSON::Object json;
+            json.set("api_id", params.api_id);
+            json.set("samples", params.samples);
+            json.set("length_ms", params.length_ms);
+            json.set("timebase", params.timebase);
+            json.set("isRead", params.isRead);
+
+            Poco::JSON::Stringifier::stringify(json, output);
+            output.close();  
+
+            if (output.fail()) {
+                std::cerr << "Write error for temp file: " << tempPath << std::endl;
+                Poco::File(tempPath).remove();
+                return false;
+            }
+        }
+
+        Poco::File tempFile(tempPath);
+        tempFile.renameTo(filePath);
+
+        return true;
+    } catch (const Poco::Exception& e) {
+        std::cerr << "Write operation failed [" << filePath << "]: " << e.displayText() << std::endl;
+        Poco::File(tempPath).remove();
+    } catch (const std::exception& e) {
+        std::cerr << "System error [" << filePath << "]: " << e.what() << std::endl;
+        Poco::File(tempPath).remove();
+    } catch (...) {
+        std::cerr << "Unknown error writing file: " << filePath << std::endl;
+        Poco::File(tempPath).remove();
+    }
+
+    return false;
+}
+
 void CanSensorModule::sendCanRequest(uint32_t timeoutMs, std::shared_ptr<std::promise<ISensorModule::FluorometerOjipData>> promise) {
     App_messages::Fluorometer::OJIP_retrieve_request rawRequest;
     CanID requestId = BaseModule::createId(rawRequest.Type(), Codes::Module::Sensor_module, Codes::Instance::Exclusive, false);
@@ -250,56 +384,6 @@ void CanSensorModule::checkMeasurementCompletion(uint32_t timeoutMs, std::shared
     }
 
     promise->set_exception(std::make_exception_ptr(std::runtime_error("Measurement did not complete within the expected time")));
-}
-
-
-bool CanSensorModule::ensureDirectoryExists(const std::string& filePath) {
-    size_t pos = filePath.find_last_of('/');
-    if (pos == std::string::npos) {
-        return true;
-    }
-
-    std::string dirPath = filePath.substr(0, pos);
-    if (access(dirPath.c_str(), F_OK) == 0) {
-        return true;
-    }
-
-    std::string mkdirCommand = "mkdir -p " + dirPath;
-    if (system(mkdirCommand.c_str()) == 0) {
-        return true;
-    }
-
-    std::cerr << "Failed to create directory: " << dirPath << std::endl;
-    return false;
-}
-
-bool CanSensorModule::readMeasurementParams(const std::string& filePath, MeasurementParams& params) {
-    if (!ensureDirectoryExists(filePath)) {
-        return false;
-    }
-
-    std::ifstream file(filePath);
-    if (file.is_open()) {
-        file >> params.api_id >> params.samples >> params.length_ms >> params.timebase >> params.isRead;
-        file.close();
-        return true;
-    }
-    return false;
-}
-
-bool CanSensorModule::writeMeasurementParams(const std::string& filePath, const MeasurementParams& params) {
-    if (!ensureDirectoryExists(filePath)) {
-        return false;
-    }
-
-    std::ofstream file(filePath, std::ios::trunc);
-    if (file.is_open()) {
-        file << params.api_id << " " << params.samples << " " << params.length_ms << " "
-             << params.timebase << " " << params.isRead << "\n";
-        file.close();
-        return true;
-    }
-    return false;
 }
 
 std::future<ISensorModule::FluorometerOjipData> CanSensorModule::captureFluorometerOjip(const ISensorModule::FluorometerInput& input) {

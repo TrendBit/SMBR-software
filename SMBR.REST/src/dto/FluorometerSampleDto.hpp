@@ -20,7 +20,7 @@ class FluorometerSampleDto : public oatpp::DTO {
   /**
    * @brief Raw value from the sensor.
    */
-  DTO_FIELD(Int16, raw_value);       
+  DTO_FIELD(UInt16, raw_value);       
 
   /**
    * @brief Relative value calculated from the raw value.

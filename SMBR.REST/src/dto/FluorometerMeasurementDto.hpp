@@ -17,7 +17,7 @@ class FluorometerMeasurementDto : public oatpp::DTO {
   /**
    * @brief Unique identifier for the measurement.
    */
-  DTO_FIELD(Int32, measurement_id);  
+  DTO_FIELD(UInt32, measurement_id);  
 
   /**
    * @brief Flag indicating if the data has been read.
@@ -47,22 +47,22 @@ class FluorometerMeasurementDto : public oatpp::DTO {
   /**
    * @brief Length of the measurement in milliseconds.
    */
-  DTO_FIELD(Int16, length_ms);  
+  DTO_FIELD(UInt16, length_ms);  
 
   /**
    * @brief Number of required samples for the measurement.
    */
-  DTO_FIELD(Int16, required_samples);  
+  DTO_FIELD(UInt16, required_samples);  
 
   /**
    * @brief Number of captured samples.
    */
-  DTO_FIELD(Int16, captured_samples);  
+  DTO_FIELD(UInt16, captured_samples);  
 
   /**
    * @brief Number of missing samples.
    */
-  DTO_FIELD(Int32, missing_samples);  
+  DTO_FIELD(UInt16, missing_samples);  
 
   /**
    * @brief Vector of fluorometer samples.

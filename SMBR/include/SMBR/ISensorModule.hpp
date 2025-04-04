@@ -30,7 +30,7 @@ public:
      */
     struct FluorometerSample {
         float time_ms;
-        int16_t raw_value;
+        uint16_t raw_value;
         float relative_value;
         float absolute_value;
     };
@@ -39,17 +39,17 @@ public:
      * @brief Structure representing OJIP data from the fluorometer.
      */
     struct FluorometerOjipData {
-        int32_t measurement_id;
+        uint32_t measurement_id;
         Fluorometer_config::Gain detector_gain;
         Fluorometer_config::Timing timebase;
         float emitor_intensity;
         std::vector<FluorometerSample> samples;
 
         bool read;
-        int16_t length_ms;
-        int16_t required_samples;
-        int16_t captured_samples;
-        int32_t missing_samples;
+        uint16_t length_ms;
+        uint16_t required_samples;
+        uint16_t captured_samples;
+        uint16_t missing_samples;
         bool saturated;
     };
 

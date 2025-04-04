@@ -62,7 +62,7 @@ class FluorometerMeasurementDto : public oatpp::DTO {
   /**
    * @brief Number of missing samples.
    */
-  DTO_FIELD(UInt16, missing_samples);  
+  DTO_FIELD(Int16, missing_samples);  
 
   /**
    * @brief Vector of fluorometer samples.

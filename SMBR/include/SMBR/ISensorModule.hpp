@@ -49,7 +49,7 @@ public:
         uint16_t length_ms;
         uint16_t required_samples;
         uint16_t captured_samples;
-        uint16_t missing_samples;
+        int16_t missing_samples;
         bool saturated;
     };
 

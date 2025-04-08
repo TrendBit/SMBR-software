@@ -1,2 +1,49 @@
 main:
-    display "Measurement"
+    print "start"
+    display "Measurement recipe"
+
+    temperature 30.0
+    illumination 0.0 0.0 0.5 0.0
+    wait 5
+
+    mix 86400 3000
+
+    loop 10
+        pump_into
+        cycle
+
+        display "OJIP Capture"
+        measure_ojip 1000 1000
+        wait 5
+        display "OJIP Done"
+
+    print "done"
+    display "done"
+
+cycle:
+    loop 3
+        shake
+        wait 26
+
+pump_into:
+    pump 30 100
+    wait 30
+
+shake:
+    display "Shaking"
+    loop 5
+        pump 1 120
+        wait 2
+        pump -1 100
+        wait 2
+    display " --- "
+
+
+    loop 10
+        pump_into
+        cycle
+        
+cycle:
+    loop 3
+        shake
+        wait 26

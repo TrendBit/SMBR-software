@@ -161,11 +161,23 @@ namespace Scripting {
         public:
             ISensorModule::FluorometerInput parse(ScriptLine l){
                 ISensorModule::FluorometerInput input;
-                input.detector_gain = Fluorometer_config::Gain::x1;
                 input.sample_timing = Fluorometer_config::Timing::Logarithmic;
                 input.emitor_intensity = 1.0f;
+
                 input.length_ms = l.argAsInt(0, 500, 2000);
                 input.sample_count = l.argAsInt(1, 500, 1000);
+                int gain = l.argAsInt(2, 1, 50);
+
+                if (gain == 1){
+                    input.detector_gain = Fluorometer_config::Gain::x1;
+                } else if (gain == 10){
+                    input.detector_gain = Fluorometer_config::Gain::x10;
+                } else if (gain == 50){
+                    input.detector_gain = Fluorometer_config::Gain::x50;
+                } else{
+                    throw std::runtime_error("Invalid gain value: " + std::to_string(gain));
+                }
+
                 return input;
             }
 

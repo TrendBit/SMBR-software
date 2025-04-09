@@ -99,6 +99,7 @@ void registerModuleBlocks(CommandFactory & f){
             {
                 {"length", "Length of measurement in ms", true},
                 {"samples", "Number of samples to capture", true},
+                {"gain", "Signal amplifier gain (1,10,50)", true},
             },
             "Capture OJIP data from fluorometer, does not export them"
         );

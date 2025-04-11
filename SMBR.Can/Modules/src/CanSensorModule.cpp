@@ -528,8 +528,8 @@ std::future<ISensorModule::FluorometerDetectorInfo> CanSensorModule::getFluorome
     >([](App_messages::Fluorometer::Detector_info_response response){
         return FluorometerDetectorInfo{
             .peak_wavelength = response.wavelength,
-            .sensitivity = response.sensitivity
-            //.sampling_rate = response.type
+            .sensitivity = response.sensitivity,
+            .sampling_rate = response.sampling_rate
         };
     }, 2000);
 }

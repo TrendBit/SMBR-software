@@ -35,6 +35,7 @@
 #include "codes/messages/spectrophotometer/temperature_response.hpp"
 #include "codes/messages/spectrophotometer/measurement_request.hpp"
 #include "codes/messages/spectrophotometer/measurement_response.hpp"
+#include "codes/messages/spectrophotometer/calibrate.hpp"
 #include "codes/codes.hpp"
 #include <iostream>       // std::cout
 #include <future>         // std::async, std::future
@@ -611,4 +612,9 @@ std::future<float> CanSensorModule::getSpectrophotometerEmitorTemperature() {
     >([](App_messages::Spectrophotometer::Temperature_response response){
         return response.temperature;
     }, 2000);
+}
+
+std::future<bool> CanSensorModule::calibrateSpectrophotometer() {
+    App_messages::Spectrophotometer::Calibrate r;
+    return base.set(r);
 }

@@ -43,6 +43,7 @@
 #include "dto/SpectroChannelInfoDto.hpp"
 #include "dto/SpectroMeasurementsDto.hpp"
 #include "dto/SingleChannelMeasurementDto.hpp"
+#include "dto/SpectroCalibrateDto.hpp"
 #include "oatpp/data/mapping/ObjectMapper.hpp"
 
 #include <future>
@@ -1604,6 +1605,34 @@ public:
     }
     ADD_CORS(getSpectrophotometerEmitorTemperature)
     ENDPOINT("GET", "/sensor/spectrophotometer/emitor_temperature", getSpectrophotometerEmitorTemperature);
+
+
+/**
+     * @brief Request self-calibration of spectrophotometer.
+     */
+    ENDPOINT_INFO(calibrateSpectrophotometer) {
+        info->summary = "Calibrate spectrophotometer";
+        info->description = 
+            "Request self-calibration of spectrophotometer.\n"
+            "For calibration cuvette should be empty or filled with clean medium.\n"
+            "No algae or other particles should be present in cuvette.\n"
+            "Calibration is preserved in persistent memory of spectrophotometer.\n"
+            "And will be loaded during next power up.";
+        info->addTag("Sensor module");
+        
+        auto exampleRequest = SpectroCalibrateDto::createShared();
+        exampleRequest->calibrationMode=nullptr;
+        
+        info->addConsumes<Object<SpectroCalibrateDto>>("application/json")
+            .addExample("application/json", exampleRequest);
+        info->addResponse<Object<MessageDto>>(Status::CODE_200, "application/json", "Calibration started")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Calibration started"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to start calibration")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to start calibration"}}));
+
+    }
+    ADD_CORS(calibrateSpectrophotometer)
+    ENDPOINT("POST", "/sensor/spectrophotometer/calibrate", calibrateSpectrophotometer);
 
     /**
     * @brief Measures API response time without communication with RPI/CAN bus.

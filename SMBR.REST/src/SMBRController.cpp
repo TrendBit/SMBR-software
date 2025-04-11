@@ -1039,6 +1039,12 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     });
 }
 
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::calibrateSpectrophotometer() {
+    return processBool(__FUNCTION__, [&](){
+        return wait(systemModule->sensorModule()->calibrateSpectrophotometer());
+    });
+}
+
 // ==========================================
 // Recipes
 // ==========================================

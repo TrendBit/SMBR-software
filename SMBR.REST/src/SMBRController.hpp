@@ -6,6 +6,7 @@
 #include "dto/ChannelEnum.hpp"
 #include "dto/PingResponseDto.hpp"
 #include "dto/TempDto.hpp"
+#include "dto/TempNullDto.hpp"
 #include "dto/ModuleInfoDto.hpp"
 #include "dto/LoadResponseDto.hpp"
 #include "dto/ModuleActionRequestDto.hpp"
@@ -617,6 +618,7 @@ public:
         info->summary = "Get heater target temperature";
         info->description = "Retrieves the currently set target temperature for the heater (temperature of bottle) in °C.";
         info->addTag("Control module");
+        
         auto example = TempDto::createShared();
         example->temperature = 30.5; 
         info->addResponse<Object<TempDto>>(Status::CODE_200, "application/json")

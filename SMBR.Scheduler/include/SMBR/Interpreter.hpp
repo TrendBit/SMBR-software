@@ -71,6 +71,7 @@ class ICommand {
         typedef std::shared_ptr<ICommand> Ptr;
         virtual ~ICommand() = default;
         virtual void run(RunContext::Ptr runCtx) = 0;
+        virtual std::string name() const = 0;
 };
 
 struct CommandArgument {

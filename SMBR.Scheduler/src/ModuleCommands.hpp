@@ -4,6 +4,7 @@
 #include <SMBR/Interpreter.hpp>
 #include <SMBR/ISensorModule.hpp>
 #include <SMBR/Script.hpp>
+#include <SMBR/Log.hpp>
 
 namespace Scripting {
 
@@ -14,6 +15,7 @@ namespace Scripting {
                 input = Impl().parse(block->line);
             }
             void run(RunContext::Ptr rctx) override {
+                LTRACE("Scheduler") << "run " << name() << LE;
                 rctx->stack->updateTop(lineNumber);
                 if (rctx->module == nullptr){
                     throw std::runtime_error("Module is null");
@@ -23,6 +25,18 @@ namespace Scripting {
                 if (!ftr.get()) {
                     throw std::runtime_error("Command failed");
                 }
+            }
+            std::string name() const override {
+                //return name of Impl type
+                std::string name = typeid(Impl).name();
+                Poco::replaceInPlace(name, "class ", "");
+                Poco::replaceInPlace(name, "Impl", "");
+                Poco::replaceInPlace(name, "ModuleCommand<", "");
+                Poco::replaceInPlace(name, ">", "");
+                Poco::replaceInPlace(name, "std::", "");
+                Poco::replaceInPlace(name, "::", "-");
+                return name + "-line-" + std::to_string(lineNumber);
+
             }
         private:
             int lineNumber;

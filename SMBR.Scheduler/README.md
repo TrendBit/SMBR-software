@@ -18,14 +18,14 @@ main:
     for 3
         print "next loop"
         my_measure
-        wait 10000
+        wait 10
 
     print "testing script done"
 
 my_measure:
     illumination 0.1 0.1 0 0
     heat 10
-    wait 1000
+    wait 1
     illumination 0 0 0 0
 ```
 
@@ -88,7 +88,7 @@ Pauses execution for a specified time.
 #### Arguments
 | Name | Description | Required |
 |------|-------------|----------|
-| `milliseconds` | Time to wait in milliseconds | Yes |
+| `seconds` | Time to wait in seconds | Yes |
 
 ### `loop [times]`
 Repeats the indented block of commands for the given number of iterations.

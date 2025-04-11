@@ -1,0 +1,14 @@
+main:
+    print "- A begin"
+    loop 2
+        print "-- 2"
+        loop 2
+            print "-- 2A"
+            print "-- 2B"
+    loop 3
+        print "-- 3x3" 
+        print "-- 3x3"
+        print "-- 3x3"
+    print "- A end"
+    
+

@@ -72,11 +72,11 @@ Script Parser::parseStream(std::string name, std::istream & s){
                 lastBlock->nestedBlocks.push_back(nestedBlock);
                 blockStack.push_back(nestedBlock);
             } else if (indent == lastBlock->indent) {
-
                 if (blockStack.size() < 2){
                     throw std::runtime_error("Syntax error on line " + std::to_string(lineNumber) + ": Incorrect indentation A.");
                 }
 
+                //why pop is here
                 blockStack.pop_back();
                 Block::Ptr parentBlock = blockStack.back();
                 Block::Ptr nestedBlock = std::make_shared<Block>();
@@ -86,7 +86,7 @@ Script Parser::parseStream(std::string name, std::istream & s){
 
                 blockStack.push_back(nestedBlock);
             } else if (indent < lastBlock->indent) {
-                while (!blockStack.empty() && indent < blockStack.back()->indent) {
+                while (!blockStack.empty() && indent <= blockStack.back()->indent) {
                     blockStack.pop_back();
                 }
                 if (blockStack.empty()) {

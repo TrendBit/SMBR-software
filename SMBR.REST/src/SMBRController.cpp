@@ -498,13 +498,14 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     return process(__FUNCTION__, [&](){
         auto temperature = wait(systemModule->controlModule()->getHeaterTargetTemperature());
         
-        if (std::isnan(temperature)) {
-            auto dto = MessageDto::createShared();
-            dto->message = "Target temperature is not set";
-            return createDtoResponse(Status::CODE_404, dto); 
-        }
-        
         auto tempResponseDto = TempDto::createShared();
+
+        if (std::isnan(temperature)) {
+            auto tempNullDto = TempNullDto::createShared();
+            tempNullDto->temperature = nullptr;  
+            return createDtoResponse(Status::CODE_200, tempNullDto);  
+        }
+
         tempResponseDto->temperature = oatpp::Float32(temperature);
         
         return createDtoResponse(Status::CODE_200, tempResponseDto);
@@ -944,6 +945,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     return process(__FUNCTION__, [&](){
         auto info = wait(systemModule->sensorModule()->getFluorometerDetectorInfo());
         auto infoDto = FluorometerDetectorInfoDto::createShared();
+        std::cout<<info.peak_wavelength<<" "<<info.sensitivity<<" "<<info.sampling_rate<<std::endl;
         infoDto->peak_wavelength = info.peak_wavelength;
         infoDto->sensitivity = info.sensitivity;
         infoDto->sampling_rate = info.sampling_rate;

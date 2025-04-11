@@ -174,6 +174,13 @@ std::future <float> VirtualSensorModule::getSpectrophotometerEmitorTemperature()
     });
 }
 
+std::future <bool> VirtualSensorModule::calibrateSpectrophotometer() {
+    return std::async(std::launch::async, []() {
+        Random::randomDelay();
+        return true;
+    });
+}
+
 
 
 

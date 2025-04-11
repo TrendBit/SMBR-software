@@ -38,6 +38,7 @@ public:
     std::future <SpectroChannelInfo> getSpectrophotometerChannelInfo(int8_t channel) override;
     std::future <float> measureSpectrophotometerChannel(int8_t channel) override;
     std::future <float> getSpectrophotometerEmitorTemperature() override;
+    std::future <bool> calibrateSpectrophotometer() override;
     
 
 private:

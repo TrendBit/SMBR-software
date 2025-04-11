@@ -172,6 +172,11 @@ public:
      */
     virtual std::future <float> getSpectrophotometerEmitorTemperature() = 0;
 
+    /**
+     * @brief Request self-calibration of spectrophotometer.
+     */
+    virtual std::future <bool> calibrateSpectrophotometer() = 0;
+
 
     };
 

@@ -52,6 +52,7 @@
 #include <utility>
 #include <unordered_set>
 #include <optional>
+#include <queue>
 
 #include <thread> 
 #include <chrono> 
@@ -1789,7 +1790,7 @@ public:
     ADD_CORS(getSchedulerInfo)
     ENDPOINT("GET", "/scheduler/runtime", getSchedulerInfo);
 
-    
+    ~SMBRController(); 
 
 private:
     
@@ -1808,6 +1809,13 @@ private:
     );
 
     std::string instanceToString(Instance instance);
+
+    std::shared_ptr<std::promise<std::shared_ptr<oatpp::web::protocol::http::outgoing::Response>>> currentCapturePromise;
+    std::thread captureWorker;
+    std::condition_variable queueCv;
+    std::atomic<bool> stopWorker = false;
+    std::queue<std::function<void()>> captureQueue;
+    std::mutex queueMutex;
 
 private:
     std::shared_ptr<ISystemModule> systemModule;

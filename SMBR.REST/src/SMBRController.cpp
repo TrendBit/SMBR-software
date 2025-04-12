@@ -77,10 +77,47 @@ T wait(std::future<T> future){
 SMBRController::SMBRController(const std::shared_ptr<oatpp::web::mime::ContentMappers>& apiContentMappers,
                            std::shared_ptr<ISystemModule> systemModule)
     : oatpp::web::server::api::ApiController(apiContentMappers)
-    , systemModule(systemModule){
+    , systemModule(systemModule)
+    , currentCapturePromise(nullptr){
         scheduler_ = std::make_shared<Scheduler>(systemModule);
         recipes_ = std::make_shared<Recipes>("/data/recipes/");
+
+    captureWorker = std::thread([this]() {
+        while (true) {
+            std::function<void()> task;
+
+            {
+                std::unique_lock<std::mutex> lock(queueMutex);
+                queueCv.wait(lock, [this]() { return stopWorker || !captureQueue.empty(); });
+
+                if (stopWorker && captureQueue.empty()) break;
+
+                task = std::move(captureQueue.front());
+                captureQueue.pop();
+            }
+
+            task();
+        }
+    });
     }
+
+SMBRController::~SMBRController() {
+    {
+        std::lock_guard<std::mutex> lock(queueMutex);
+        stopWorker = true;
+        if (currentCapturePromise) {
+            try {
+                currentCapturePromise->set_exception(std::make_exception_ptr(std::runtime_error("Controller is being destroyed")));
+            } catch (...) {
+                std::cerr << "Exception caught while setting exception on currentCapturePromise" << std::endl;
+            }
+            currentCapturePromise.reset();
+        }
+    }
+    queueCv.notify_all();
+    if (captureWorker.joinable())
+        captureWorker.join();
+}
 
   // ==========================================
   // System Endpoints
@@ -849,55 +886,88 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     const oatpp::String& length_ms,
     const oatpp::String& sample_count,
     const oatpp::Object<FluorometerOjipCaptureRequestDto>& body
-
 ) {
-    return process(__FUNCTION__, [&]() {
+    oatpp::UInt16 final_length_ms;
+    try {
+        final_length_ms = length_ms->empty() ? body->length_ms : static_cast<oatpp::UInt16>(std::stoi(length_ms->c_str()));
+    } catch (const std::exception& e) {
+        auto dto = MessageDto::createShared();
+        dto->message = "Invalid value for length_ms.";
+        return createDtoResponse(Status::CODE_500, dto);
+    }
 
-        auto final_length_ms = length_ms->empty() ? body->length_ms : static_cast<oatpp::UInt16>(std::stoi(length_ms->c_str()));
-        if (final_length_ms < 200 || final_length_ms > 4000) {
-            throw ArgumentException("Invalid length. Must be between 200 and 4000.");
-        }
+    if (final_length_ms < 200 || final_length_ms > 4000) {
+        auto dto = MessageDto::createShared();
+        dto->message = "Invalid sample count. Must be between 200 and 4000.";
+        return createDtoResponse(Status::CODE_500, dto);
+    }
 
-        auto final_sample_count = sample_count->empty() ? body->sample_count : static_cast<oatpp::UInt16>(std::stoi(sample_count->c_str()));
-        if (final_sample_count < 200 || final_sample_count > 4000) {
-            throw ArgumentException("Invalid sample count. Must be between 200 and 4000.");
-        }
+    oatpp::UInt16 final_sample_count;
+    try {
+        final_sample_count = sample_count->empty() ? body->sample_count : static_cast<oatpp::UInt16>(std::stoi(sample_count->c_str()));
+    } catch (const std::exception& e) {
+        auto dto = MessageDto::createShared();
+        dto->message = "Invalid value for sample_count.";
+        return createDtoResponse(Status::CODE_500, dto);
+    }
 
-        ISensorModule::FluorometerInput input{
-            .detector_gain = getGain(gain),
-            .sample_timing = getTiming(timing),
-            .emitor_intensity = body->emitor_intensity,
-            .length_ms = final_length_ms,
-            .sample_count = final_sample_count
-        };
+    if (final_sample_count < 200 || final_sample_count > 4000) {
+        auto dto = MessageDto::createShared();
+        dto->message = "Invalid sample count. Must be between 200 and 4000.";
+        return createDtoResponse(Status::CODE_500, dto);
+    }
+    auto promise = std::make_shared<std::promise<std::shared_ptr<oatpp::web::protocol::http::outgoing::Response>>>();
+    auto future = promise->get_future();
+    
+    {
+        std::lock_guard<std::mutex> lock(queueMutex);
+        
+        captureQueue.push([this, promise, gain, timing, final_length_ms, final_sample_count, body]() {
+             
+            try {
+                ISensorModule::FluorometerInput input{
+                    .detector_gain = getGain(gain),
+                    .sample_timing = getTiming(timing),
+                    .emitor_intensity = body->emitor_intensity,
+                    .length_ms = final_length_ms,
+                    .sample_count = final_sample_count
+                };
 
-        auto fluorometerData = wait(systemModule->sensorModule()->captureFluorometerOjip(input));
+                auto fluorometerData = wait(systemModule->sensorModule()->captureFluorometerOjip(input));
 
-        auto ojipDataDto = FluorometerMeasurementDto::createShared();
-        ojipDataDto->measurement_id = fluorometerData.measurement_id;
-        ojipDataDto->detector_gain = static_cast<dto::GainEnum>(fluorometerData.detector_gain);
-        ojipDataDto->timebase = static_cast<dto::TimingEnum>(fluorometerData.timebase);
-        ojipDataDto->emitor_intensity = fluorometerData.emitor_intensity;
-        ojipDataDto->length_ms = fluorometerData.length_ms;
-        ojipDataDto->required_samples = fluorometerData.required_samples;
-        ojipDataDto->captured_samples = fluorometerData.captured_samples;
-        ojipDataDto->missing_samples = fluorometerData.missing_samples;
-        ojipDataDto->read = fluorometerData.read;
-        ojipDataDto->saturated = fluorometerData.saturated;
+                auto ojipDataDto = FluorometerMeasurementDto::createShared();
+                ojipDataDto->measurement_id = fluorometerData.measurement_id;
+                ojipDataDto->detector_gain = static_cast<dto::GainEnum>(fluorometerData.detector_gain);
+                ojipDataDto->timebase = static_cast<dto::TimingEnum>(fluorometerData.timebase);
+                ojipDataDto->emitor_intensity = fluorometerData.emitor_intensity;
+                ojipDataDto->length_ms = fluorometerData.length_ms;
+                ojipDataDto->required_samples = fluorometerData.required_samples;
+                ojipDataDto->captured_samples = fluorometerData.captured_samples;
+                ojipDataDto->missing_samples = fluorometerData.missing_samples;
+                ojipDataDto->read = fluorometerData.read;
+                ojipDataDto->saturated = fluorometerData.saturated;
 
-        oatpp::Vector<oatpp::Object<FluorometerSampleDto>> samples = oatpp::Vector<oatpp::Object<FluorometerSampleDto>>::createShared();
-        for (const auto& sample : fluorometerData.samples) {
-            auto sampleDto = FluorometerSampleDto::createShared();
-            sampleDto->time_ms = sample.time_ms;
-            sampleDto->raw_value = sample.raw_value;
-            sampleDto->relative_value = sample.relative_value;
-            sampleDto->absolute_value = sample.absolute_value;
-            samples->push_back(sampleDto);
-        }
-        ojipDataDto->samples = samples;
+                oatpp::Vector<oatpp::Object<FluorometerSampleDto>> samples = oatpp::Vector<oatpp::Object<FluorometerSampleDto>>::createShared();
+                for (const auto& sample : fluorometerData.samples) {
+                    auto sampleDto = FluorometerSampleDto::createShared();
+                    sampleDto->time_ms = sample.time_ms;
+                    sampleDto->raw_value = sample.raw_value;
+                    sampleDto->relative_value = sample.relative_value;
+                    sampleDto->absolute_value = sample.absolute_value;
+                    samples->push_back(sampleDto);
+                }
+                ojipDataDto->samples = samples;
 
-        return createDtoResponse(Status::CODE_200, ojipDataDto);
-    });
+                promise->set_value(createDtoResponse(Status::CODE_200, ojipDataDto));
+            } catch (const std::exception& e) {
+                promise->set_exception(std::make_exception_ptr(e));
+            }
+        });
+    }
+
+    queueCv.notify_all();
+
+    return future.get();
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::checkFluorometerOjipCaptureComplete() {

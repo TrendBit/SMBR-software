@@ -78,7 +78,7 @@ SMBRController::SMBRController(const std::shared_ptr<oatpp::web::mime::ContentMa
                            std::shared_ptr<ISystemModule> systemModule)
     : oatpp::web::server::api::ApiController(apiContentMappers)
     , systemModule(systemModule)
-    , currentCapturePromise(nullptr){
+    , activeCapturePromise(nullptr){
         scheduler_ = std::make_shared<Scheduler>(systemModule);
         recipes_ = std::make_shared<Recipes>("/data/recipes/");
 
@@ -88,9 +88,9 @@ SMBRController::SMBRController(const std::shared_ptr<oatpp::web::mime::ContentMa
 
             {
                 std::unique_lock<std::mutex> lock(queueMutex);
-                queueCv.wait(lock, [this]() { return stopWorker || !captureQueue.empty(); });
+                captureQueueCondition.wait(lock, [this]() { return stopCaptureWorker || !captureQueue.empty(); });
 
-                if (stopWorker && captureQueue.empty()) break;
+                if (stopCaptureWorker && captureQueue.empty()) break;
 
                 task = std::move(captureQueue.front());
                 captureQueue.pop();
@@ -99,22 +99,22 @@ SMBRController::SMBRController(const std::shared_ptr<oatpp::web::mime::ContentMa
             task();
         }
     });
-    }
+}
 
 SMBRController::~SMBRController() {
     {
         std::lock_guard<std::mutex> lock(queueMutex);
-        stopWorker = true;
-        if (currentCapturePromise) {
+        stopCaptureWorker = true;
+        if (activeCapturePromise) {
             try {
-                currentCapturePromise->set_exception(std::make_exception_ptr(std::runtime_error("Controller is being destroyed")));
+                activeCapturePromise->set_exception(std::make_exception_ptr(std::runtime_error("Controller is being destroyed")));
             } catch (...) {
-                std::cerr << "Exception caught while setting exception on currentCapturePromise" << std::endl;
+                std::cerr << "Exception caught while setting exception on activeCapturePromise" << std::endl;
             }
-            currentCapturePromise.reset();
+            activeCapturePromise.reset();
         }
     }
-    queueCv.notify_all();
+    captureQueueCondition.notify_all();
     if (captureWorker.joinable())
         captureWorker.join();
 }
@@ -887,50 +887,65 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     const oatpp::String& sample_count,
     const oatpp::Object<FluorometerOjipCaptureRequestDto>& body
 ) {
-    oatpp::UInt16 final_length_ms;
+    oatpp::UInt16 finalLengthMs;
     try {
-        final_length_ms = length_ms->empty() ? body->length_ms : static_cast<oatpp::UInt16>(std::stoi(length_ms->c_str()));
+        finalLengthMs = length_ms->empty() ? body->length_ms : static_cast<oatpp::UInt16>(std::stoi(length_ms->c_str()));
     } catch (const std::exception& e) {
         auto dto = MessageDto::createShared();
         dto->message = "Invalid value for length_ms.";
         return createDtoResponse(Status::CODE_500, dto);
     }
 
-    if (final_length_ms < 200 || final_length_ms > 4000) {
+    if (finalLengthMs < 200 || finalLengthMs > 4000) {
         auto dto = MessageDto::createShared();
         dto->message = "Invalid sample count. Must be between 200 and 4000.";
         return createDtoResponse(Status::CODE_500, dto);
     }
 
-    oatpp::UInt16 final_sample_count;
+    oatpp::UInt16 finalSampleCount;
     try {
-        final_sample_count = sample_count->empty() ? body->sample_count : static_cast<oatpp::UInt16>(std::stoi(sample_count->c_str()));
+        finalSampleCount = sample_count->empty() ? body->sample_count : static_cast<oatpp::UInt16>(std::stoi(sample_count->c_str()));
     } catch (const std::exception& e) {
         auto dto = MessageDto::createShared();
         dto->message = "Invalid value for sample_count.";
         return createDtoResponse(Status::CODE_500, dto);
     }
 
-    if (final_sample_count < 200 || final_sample_count > 4000) {
+    if (finalSampleCount < 200 || finalSampleCount > 4000) {
         auto dto = MessageDto::createShared();
         dto->message = "Invalid sample count. Must be between 200 and 4000.";
         return createDtoResponse(Status::CODE_500, dto);
     }
+
+    {
+        std::unique_lock<std::mutex> lock(retrieveMutex);
+        retrieveCondition.wait(lock, [this]() {
+            return !retrievingInProgress;
+        });
+    }
+
+    std::unique_lock<std::mutex> captureLock(captureMutex);
+
     auto promise = std::make_shared<std::promise<std::shared_ptr<oatpp::web::protocol::http::outgoing::Response>>>();
-    auto future = promise->get_future();
+    auto future = std::make_shared<std::shared_future<std::shared_ptr<oatpp::web::protocol::http::outgoing::Response>>>(promise->get_future().share());
+
+    {
+        std::lock_guard<std::mutex> lock(activeCaptureMutex);
+        activeCaptureFuture = future;
+    }
     
     {
         std::lock_guard<std::mutex> lock(queueMutex);
         
-        captureQueue.push([this, promise, gain, timing, final_length_ms, final_sample_count, body]() {
+        captureQueue.push([this, promise, gain, timing, finalLengthMs, finalSampleCount, body]() {
              
             try {
                 ISensorModule::FluorometerInput input{
                     .detector_gain = getGain(gain),
                     .sample_timing = getTiming(timing),
                     .emitor_intensity = body->emitor_intensity,
-                    .length_ms = final_length_ms,
-                    .sample_count = final_sample_count
+                    .length_ms = finalLengthMs,
+                    .sample_count = finalSampleCount
                 };
 
                 auto fluorometerData = wait(systemModule->sensorModule()->captureFluorometerOjip(input));
@@ -962,12 +977,14 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
             } catch (const std::exception& e) {
                 promise->set_exception(std::make_exception_ptr(e));
             }
+
+            std::lock_guard<std::mutex> lock(activeCaptureMutex);
+            activeCaptureFuture.reset();
         });
     }
 
-    queueCv.notify_all();
-
-    return future.get();
+    captureQueueCondition.notify_all();
+    return future->get();
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::checkFluorometerOjipCaptureComplete() {
@@ -980,68 +997,66 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::retrieveLastFluorometerOjipData() {
-    return process(__FUNCTION__, [&]() {
-        static std::mutex mutex;
-        static std::weak_ptr<std::shared_future<oatpp::Object<FluorometerMeasurementDto>>> weakFuturePtr;
-        static std::shared_ptr<std::shared_future<oatpp::Object<FluorometerMeasurementDto>>> sharedFuturePtr;
-        
-        std::shared_ptr<std::shared_future<oatpp::Object<FluorometerMeasurementDto>>> currentFuture;
-        
-        {
-            std::lock_guard<std::mutex> lock(mutex);
-            
-            currentFuture = weakFuturePtr.lock();
-            if (!currentFuture) {
-                auto promise = std::make_shared<std::promise<oatpp::Object<FluorometerMeasurementDto>>>();
-                currentFuture = std::make_shared<std::shared_future<oatpp::Object<FluorometerMeasurementDto>>>(promise->get_future().share());
-                weakFuturePtr = currentFuture;
-                sharedFuturePtr = currentFuture; 
-                
-                std::thread([this, promise]() {
-                    try {
-                        auto fluorometerData = wait(systemModule->sensorModule()->retrieveLastFluorometerOjipData());
-
-                        auto dto = FluorometerMeasurementDto::createShared();
-                        dto->measurement_id = fluorometerData.measurement_id;
-                        dto->detector_gain = static_cast<dto::GainEnum>(fluorometerData.detector_gain);
-                        dto->timebase = static_cast<dto::TimingEnum>(fluorometerData.timebase);
-                        dto->emitor_intensity = fluorometerData.emitor_intensity;
-                        dto->length_ms = fluorometerData.length_ms;
-                        dto->required_samples = fluorometerData.required_samples;
-                        dto->captured_samples = fluorometerData.captured_samples;
-                        dto->missing_samples = fluorometerData.missing_samples;
-                        dto->read = fluorometerData.read;
-                        dto->saturated = fluorometerData.saturated;
-
-                        oatpp::Vector<oatpp::Object<FluorometerSampleDto>> samples = oatpp::Vector<oatpp::Object<FluorometerSampleDto>>::createShared();
-                        for (const auto& sample : fluorometerData.samples) {
-                            auto sampleDto = FluorometerSampleDto::createShared();
-                            sampleDto->time_ms = sample.time_ms;
-                            sampleDto->raw_value = sample.raw_value;
-                            sampleDto->relative_value = sample.relative_value;
-                            sampleDto->absolute_value = sample.absolute_value;
-                            samples->push_back(sampleDto);
-                        }
-                        dto->samples = samples;
-                            
-                            promise->set_value(dto);
-                        } catch (...) {
-                            promise->set_exception(std::current_exception());
-                        }
-                    
-                    std::lock_guard<std::mutex> lock(mutex);
-                    sharedFuturePtr.reset();
-                }).detach();
+    
+    {
+        std::lock_guard<std::mutex> lock(activeCaptureMutex);
+        if (activeCaptureFuture) {
+            try {
+                return activeCaptureFuture->get();
+            } catch (const std::exception& e) {
+                return createResponse(Status::CODE_500, e.what());
             }
         }
-        
-        try {
-            auto dto = currentFuture->get();
-            return createDtoResponse(Status::CODE_200, dto);
-        } catch (const std::exception& e) {
-            return createResponse(Status::CODE_500, e.what());
+    }
+
+    std::unique_lock<std::mutex> lock(retrieveMutex);
+
+    if (retrievingInProgress) {
+        retrieveCondition.wait(lock, [this]() {
+            return !retrievingInProgress;
+        });
+
+        return cachedResponse;
+    }
+
+    retrievingInProgress = true;
+    cachedResponse = nullptr;
+    lock.unlock();
+
+    auto response = process(__FUNCTION__, [&]() {
+        auto fluorometerData = wait(systemModule->sensorModule()->retrieveLastFluorometerOjipData());
+
+        auto dto = FluorometerMeasurementDto::createShared();
+        dto->measurement_id = fluorometerData.measurement_id;
+        dto->detector_gain = static_cast<dto::GainEnum>(fluorometerData.detector_gain);
+        dto->timebase = static_cast<dto::TimingEnum>(fluorometerData.timebase);
+        dto->emitor_intensity = fluorometerData.emitor_intensity;
+        dto->length_ms = fluorometerData.length_ms;
+        dto->required_samples = fluorometerData.required_samples;
+        dto->captured_samples = fluorometerData.captured_samples;
+        dto->missing_samples = fluorometerData.missing_samples;
+        dto->read = fluorometerData.read;
+        dto->saturated = fluorometerData.saturated;
+
+        oatpp::Vector<oatpp::Object<FluorometerSampleDto>> samples = oatpp::Vector<oatpp::Object<FluorometerSampleDto>>::createShared();
+        for (const auto& sample : fluorometerData.samples) {
+            auto sampleDto = FluorometerSampleDto::createShared();
+            sampleDto->time_ms = sample.time_ms;
+            sampleDto->raw_value = sample.raw_value;
+            sampleDto->relative_value = sample.relative_value;
+            sampleDto->absolute_value = sample.absolute_value;
+            samples->push_back(sampleDto);
         }
+        dto->samples = samples;
+
+        return createDtoResponse(Status::CODE_200, dto);
     });
+
+    lock.lock();
+    cachedResponse = response;
+    retrievingInProgress = false;
+    retrieveCondition.notify_all();
+    return response;
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getFluorometerDetectorInfo() {

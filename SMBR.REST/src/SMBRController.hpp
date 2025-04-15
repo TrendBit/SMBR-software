@@ -1810,12 +1810,21 @@ private:
 
     std::string instanceToString(Instance instance);
 
-    std::shared_ptr<std::promise<std::shared_ptr<oatpp::web::protocol::http::outgoing::Response>>> currentCapturePromise;
+    std::shared_ptr<std::promise<std::shared_ptr<oatpp::web::protocol::http::outgoing::Response>>> activeCapturePromise;
     std::thread captureWorker;
-    std::condition_variable queueCv;
-    std::atomic<bool> stopWorker = false;
+    std::condition_variable captureQueueCondition;
+    std::atomic<bool> stopCaptureWorker = false;
     std::queue<std::function<void()>> captureQueue;
     std::mutex queueMutex;
+
+    std::shared_ptr<std::shared_future<std::shared_ptr<oatpp::web::protocol::http::outgoing::Response>>> activeCaptureFuture;
+    std::mutex activeCaptureMutex;
+    std::mutex captureMutex;
+
+    std::mutex retrieveMutex;
+    std::condition_variable retrieveCondition;
+    bool retrievingInProgress = false;
+    std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> cachedResponse = nullptr;
 
 private:
     std::shared_ptr<ISystemModule> systemModule;

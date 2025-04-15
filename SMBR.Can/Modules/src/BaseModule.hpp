@@ -131,6 +131,64 @@ class BaseModule {
             return promise->get_future();
         }
 
+        template <class Request, class RawResponse, class Result>
+        std::future<Result> getByChannel(int8_t channelNumber,
+                                        int timeoutMs,
+                                        std::function<Result(const RawResponse&)> interpret) {
+            auto promise = std::make_shared<std::promise<Result>>();
+            
+            Request rawRequest(channelNumber);
+            CanID requestId = BaseModule::createId(rawRequest.Type(), Codes::Module::Sensor_module, Codes::Instance::Exclusive, false);
+            
+            RequestData requestData(requestId, rawRequest.Export_data());
+            ResponseInfo responseInfo;
+            responseInfo.timeoutMs = timeoutMs;
+
+            responseInfo.acceptFunction = [channelNumber](const ResponseData& response) {
+                RawResponse rawResponse;
+                auto dataCopy = response.data;
+                if (rawResponse.Interpret_data(dataCopy)) {
+                    return response.id.messageType() == static_cast<uint16_t>(rawResponse.Type()) &&
+                        static_cast<int8_t>(rawResponse.channel) == channelNumber;
+                }
+                return false;
+            };
+
+            responseInfo.isDoneFunction = [](const std::vector<ResponseData>& responses) {
+                return !responses.empty(); 
+            };
+
+            responseInfo.successOnTimeout = false;
+            CanRequest canRequest(requestData, responseInfo);
+
+            channel->send(canRequest, [promise, channelNumber, interpret](ICanChannel::Response response) {
+                try {
+                    if (response.status == CanRequestStatus::Success) {
+                        for (const auto& rr : response.responseData) {
+                            RawResponse rawResponse;
+                            auto dataCopy = rr.data;
+                            if (rawResponse.Interpret_data(dataCopy) &&
+                                static_cast<int8_t>(rawResponse.channel) == channelNumber) {
+                                auto result = interpret(rawResponse);
+                                promise->set_value(result);
+                                return;
+                            }
+                        }
+                        throw std::runtime_error("No valid response data received");
+                    } else if (response.status == CanRequestStatus::Timeout) {
+                        throw std::runtime_error("Timeout");
+                    } else {
+                        throw std::runtime_error("Failed to send request");
+                    }
+                }
+                catch (...) {
+                    promise->set_exception(std::current_exception());
+                }
+            });
+
+            return promise->get_future();
+        }
+
     private:
         ModuleID id_;
         ICanChannel::Ptr channel;

@@ -150,7 +150,7 @@ std::future <int8_t> VirtualSensorModule::getSpectrophotometerChannels() {
     });
 }
 
-std::future <ISensorModule::SpectroChannelInfo> VirtualSensorModule::getSpectrophotometerChannelInfo(int8_t channel) {
+std::future <ISensorModule::SpectroChannelInfo> VirtualSensorModule::getSpectrophotometerChannelInfo(int8_t channelNumber) {
     return std::async(std::launch::async, [&]() {
         Random::randomDelay();
         return ISensorModule::SpectroChannelInfo {
@@ -160,10 +160,13 @@ std::future <ISensorModule::SpectroChannelInfo> VirtualSensorModule::getSpectrop
     });
 }
 
-std::future <float> VirtualSensorModule::measureSpectrophotometerChannel(int8_t channel) {
+std::future <ISensorModule::SpectroChannelMeasurement> VirtualSensorModule::measureSpectrophotometerChannel(int8_t channelNumber) {
     return std::async(std::launch::async, []() {
         Random::randomDelay();
-        return Random::nextFloat(0.0, 1.0);
+        return ISensorModule::SpectroChannelMeasurement {
+            .channel = 1,
+            .value = 0.1
+        };
     });
 }
 

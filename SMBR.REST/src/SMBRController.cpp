@@ -1131,8 +1131,8 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         for (int8_t channel = 0; channel < channelCount; channel++) {
             auto measurement = wait(systemModule->sensorModule()->measureSpectrophotometerChannel(channel));
             auto channelMeasurement = SingleChannelMeasurementDto::createShared();
-            channelMeasurement->channel = channel;
-            channelMeasurement->relative_value = measurement;
+            channelMeasurement->channel = measurement.channel;
+            channelMeasurement->relative_value = measurement.value;
             measurementsDto->measurements->push_back(channelMeasurement);
         }
         
@@ -1144,8 +1144,8 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     return process(__FUNCTION__, [&](){
         auto measurement = wait(systemModule->sensorModule()->measureSpectrophotometerChannel(channel));
         auto responseDto = SingleChannelMeasurementDto::createShared();
-        responseDto->channel = channel;
-        responseDto->relative_value = measurement;
+        responseDto->channel = measurement.channel;
+        responseDto->relative_value = measurement.value;
         return createDtoResponse(Status::CODE_200, responseDto);
     });
 }

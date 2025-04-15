@@ -602,8 +602,8 @@ std::future<int8_t> CanSensorModule::getSpectrophotometerChannels() {
     }, 2000);
 }
 
-std::future<ISensorModule::SpectroChannelInfo> CanSensorModule::getSpectrophotometerChannelInfo(int8_t channel) {
-    App_messages::Spectrophotometer::Channel_info_request r(channel);
+std::future<ISensorModule::SpectroChannelInfo> CanSensorModule::getSpectrophotometerChannelInfo(int8_t channelNumber) {
+    App_messages::Spectrophotometer::Channel_info_request r(channelNumber);
     return base.get<
         App_messages::Spectrophotometer::Channel_info_request,
         App_messages::Spectrophotometer::Channel_info_response,
@@ -617,15 +617,17 @@ std::future<ISensorModule::SpectroChannelInfo> CanSensorModule::getSpectrophotom
     }, 2000);
 }
 
-std::future<float> CanSensorModule::measureSpectrophotometerChannel(int8_t channel) {
-    App_messages::Spectrophotometer::Measurement_request request(channel);
-    return base.get<
+std::future<ISensorModule::SpectroChannelMeasurement> CanSensorModule::measureSpectrophotometerChannel(int8_t channelNumber) {
+    return base.getByChannel<
         App_messages::Spectrophotometer::Measurement_request,
         App_messages::Spectrophotometer::Measurement_response,
-        float
-    >(request, [](App_messages::Spectrophotometer::Measurement_response response) {
-        return response.value;
-    }, 2500);
+        ISensorModule::SpectroChannelMeasurement
+    >(channelNumber, 2500, [channelNumber](const App_messages::Spectrophotometer::Measurement_response& resp) {
+        ISensorModule::SpectroChannelMeasurement result;
+        result.channel = resp.channel;
+        result.value = resp.value;
+        return result;
+    });
 }
 
 std::future<float> CanSensorModule::getSpectrophotometerEmitorTemperature() {

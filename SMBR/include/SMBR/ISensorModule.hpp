@@ -79,6 +79,14 @@ public:
         uint8_t half_intensity_peak_width;
     };
 
+    /**
+     * @brief Structure representing measurement of single channel of the spectrophotometer.
+     */
+    struct SpectroChannelMeasurement {
+        uint8_t channel;
+        float value;
+    };
+
     virtual ModuleID id() const = 0;
     /** 
      * @brief Retrieves the measured temperature from the top sensor of the bottle.
@@ -160,12 +168,12 @@ public:
     /**
      * @brief Read information about spectrophotometer channel.
      */
-    virtual std::future <SpectroChannelInfo> getSpectrophotometerChannelInfo(int8_t channel) = 0;
+    virtual std::future <SpectroChannelInfo> getSpectrophotometerChannelInfo(int8_t channelNumber) = 0;
 
     /**
      * @brief Measure selected single channel and return response.
      */
-    virtual std::future <float> measureSpectrophotometerChannel(int8_t channel) = 0;
+    virtual std::future <SpectroChannelMeasurement> measureSpectrophotometerChannel(int8_t channelNumber) = 0;
 
     /**
      * @brief Retrieves the temperature of the spectrophotometer emitor.

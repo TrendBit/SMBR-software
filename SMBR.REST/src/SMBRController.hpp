@@ -1633,7 +1633,7 @@ public:
 
     }
     ADD_CORS(calibrateSpectrophotometer)
-    ENDPOINT("POST", "/sensor/spectrophotometer/calibrate", calibrateSpectrophotometer);
+    ENDPOINT("POST", "/sensor/spectrophotometer/calibrate", calibrateSpectrophotometer, BODY_STRING(String, requestBody));
 
     /**
     * @brief Measures API response time without communication with RPI/CAN bus.

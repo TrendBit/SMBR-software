@@ -1159,7 +1159,12 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     });
 }
 
-std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::calibrateSpectrophotometer() {
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::calibrateSpectrophotometer(const oatpp::String& body)  {
+    if (body != "{}") {
+        auto dto = MessageDto::createShared();
+        dto->message = "Invalid input";
+        return createDtoResponse(Status::CODE_500, dto);
+    }
     return processBool(__FUNCTION__, [&](){
         return wait(systemModule->sensorModule()->calibrateSpectrophotometer());
     });

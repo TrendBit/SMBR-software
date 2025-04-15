@@ -603,18 +603,17 @@ std::future<int8_t> CanSensorModule::getSpectrophotometerChannels() {
 }
 
 std::future<ISensorModule::SpectroChannelInfo> CanSensorModule::getSpectrophotometerChannelInfo(int8_t channelNumber) {
-    App_messages::Spectrophotometer::Channel_info_request r(channelNumber);
-    return base.get<
+    return base.getByChannel<
         App_messages::Spectrophotometer::Channel_info_request,
         App_messages::Spectrophotometer::Channel_info_response,
-        SpectroChannelInfo
-    >(r, [](App_messages::Spectrophotometer::Channel_info_response response){
-        return SpectroChannelInfo{
-            .channel = response.channel,
-            .peak_wavelength = response.central_wavelength,
-            .half_intensity_peak_width = response.half_sensitivity_width
-        };
-    }, 2000);
+        ISensorModule::SpectroChannelInfo
+    >(channelNumber, 2000, [channelNumber](const App_messages::Spectrophotometer::Channel_info_response& response) {
+        ISensorModule::SpectroChannelInfo result;
+        result.channel = response.channel;
+        result.peak_wavelength = response.central_wavelength;
+        result.half_intensity_peak_width = response.half_sensitivity_width;
+        return result;
+    });
 }
 
 std::future<ISensorModule::SpectroChannelMeasurement> CanSensorModule::measureSpectrophotometerChannel(int8_t channelNumber) {
@@ -622,10 +621,10 @@ std::future<ISensorModule::SpectroChannelMeasurement> CanSensorModule::measureSp
         App_messages::Spectrophotometer::Measurement_request,
         App_messages::Spectrophotometer::Measurement_response,
         ISensorModule::SpectroChannelMeasurement
-    >(channelNumber, 2500, [channelNumber](const App_messages::Spectrophotometer::Measurement_response& resp) {
+    >(channelNumber, 2500, [channelNumber](const App_messages::Spectrophotometer::Measurement_response& response) {
         ISensorModule::SpectroChannelMeasurement result;
-        result.channel = resp.channel;
-        result.value = resp.value;
+        result.channel = response.channel;
+        result.value = response.value;
         return result;
     });
 }

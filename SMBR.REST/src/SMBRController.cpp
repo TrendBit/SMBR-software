@@ -975,7 +975,9 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
                 promise->set_value(createDtoResponse(Status::CODE_200, ojipDataDto));
             } catch (const std::exception& e) {
-                promise->set_exception(std::make_exception_ptr(e));
+                auto dto = MessageDto::createShared();
+                dto->message = "Error during fluorometer capture: " + std::string(e.what());
+                promise->set_value(createDtoResponse(Status::CODE_504, dto));
             }
 
             std::lock_guard<std::mutex> lock(activeCaptureMutex);

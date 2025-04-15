@@ -389,22 +389,35 @@ void CanSensorModule::sendCanRequest(uint32_t timeoutMs, std::shared_ptr<std::pr
 }
 
 void CanSensorModule::checkMeasurementCompletion(uint32_t timeoutMs, std::shared_ptr<std::promise<ISensorModule::FluorometerOjipData>> promise) {
-    int attempts = 0;
-    const int maxAttempts = 20;
-    const std::chrono::milliseconds delay(100);
+    try {
+        int attempts = 0;
+        const int maxAttempts = 20;
+        const std::chrono::milliseconds delay(100);
+        while (attempts < maxAttempts) {
+            try {
+                auto future = isFluorometerOjipCaptureComplete();
+                if (future.get()) {
+                    sendCanRequest(timeoutMs, promise);
+                    return;
+                }
+            } catch (const std::exception& e) {
+                std::cerr << "Error during fluorometer capture check: " << e.what() << std::endl;
+            }
 
-    while (attempts < maxAttempts) {
-        auto future = isFluorometerOjipCaptureComplete();
-        if (future.get()) {
-            sendCanRequest(timeoutMs, promise);
-            return;
+            std::this_thread::sleep_for(delay);
+            attempts++;
         }
 
-        std::this_thread::sleep_for(delay);
-        attempts++;
+        promise->set_exception(std::make_exception_ptr(
+            std::runtime_error("Measurement did not complete within the expected time")
+        ));
+    } catch (const std::exception& e) {
+        promise->set_exception(std::make_exception_ptr(e));
+    } catch (...) {
+        promise->set_exception(std::make_exception_ptr(
+            std::runtime_error("Unknown error occurred during measurement completion check")
+        ));
     }
-
-    promise->set_exception(std::make_exception_ptr(std::runtime_error("Measurement did not complete within the expected time")));
 }
 
 std::future<ISensorModule::FluorometerOjipData> CanSensorModule::captureFluorometerOjip(const ISensorModule::FluorometerInput& input) {
@@ -437,7 +450,7 @@ std::future<ISensorModule::FluorometerOjipData> CanSensorModule::captureFluorome
     }
 
     auto timeoutMs = input.length_ms;
-    auto sampleTimeoutMs = 1.2 * input.sample_count;
+    auto sampleTimeoutMs = 2 * input.sample_count;
     last_required_samples = input.sample_count;
     last_length_ms = input.length_ms;
 
@@ -453,10 +466,16 @@ std::future<ISensorModule::FluorometerOjipData> CanSensorModule::captureFluorome
     auto succes = base.set(r);
     if (succes.get()) {
         auto promise = std::make_shared<std::promise<ISensorModule::FluorometerOjipData>>();
-        std::this_thread::sleep_for(std::chrono::milliseconds(timeoutMs));
+    
         std::thread([this, promise, sampleTimeoutMs]() {
-            checkMeasurementCompletion(sampleTimeoutMs, promise);
+            try {
+                std::this_thread::sleep_for(std::chrono::milliseconds(sampleTimeoutMs));
+                checkMeasurementCompletion(sampleTimeoutMs, promise);
+            } catch (const std::exception& e) {
+                promise->set_exception(std::make_exception_ptr(e));
+            }
         }).detach();
+
         return promise->get_future();
     } else {
         auto promise = std::make_shared<std::promise<ISensorModule::FluorometerOjipData>>();
@@ -464,6 +483,7 @@ std::future<ISensorModule::FluorometerOjipData> CanSensorModule::captureFluorome
         return promise->get_future();
     }
 }
+
 std::future<ISensorModule::FluorometerOjipData> CanSensorModule::retrieveLastFluorometerOjipData() {
     auto promise = std::make_shared<std::promise<ISensorModule::FluorometerOjipData>>();
 
@@ -500,12 +520,16 @@ std::future<ISensorModule::FluorometerOjipData> CanSensorModule::retrieveLastFlu
         return promise->get_future();
     }
 
-    auto sampleTimeoutMs = 1.2 * last_required_samples;
+    auto sampleTimeoutMs = 2 * last_required_samples;
     auto threadPromise = std::make_shared<std::promise<ISensorModule::FluorometerOjipData>>();
     auto future = threadPromise->get_future();
 
     std::thread([this, threadPromise, sampleTimeoutMs]() {
-        checkMeasurementCompletion(sampleTimeoutMs, threadPromise);
+            try {
+                checkMeasurementCompletion(sampleTimeoutMs, threadPromise);
+            } catch (const std::exception& e) {
+                threadPromise->set_exception(std::make_exception_ptr(e));
+            }
     }).detach();
 
     return std::async(std::launch::deferred, [this, future = std::move(future)]() mutable {  

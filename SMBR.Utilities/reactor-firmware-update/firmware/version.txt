@@ -1,3 +1,3 @@
-version: v0.7-51
+version: v0.7-57
 branch: measurement_regulation
-commit: 32d9c2d
+commit: dcfef77

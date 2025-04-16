@@ -180,7 +180,7 @@ bool CanSensorModule::ensureDirectoryExists(const std::string& filePath) {
         if (path.isDirectory()) {
             return true;
         }
-        
+
         Poco::File dir(path.parent());
         if (!dir.exists()) {
             dir.createDirectories();
@@ -211,7 +211,7 @@ bool CanSensorModule::readMeasurementParams(const std::string& filePath, Measure
 
         Poco::JSON::Parser parser;
         auto result = parser.parse(input);
-        input.close();  
+        input.close();
 
         auto object = result.extract<Poco::JSON::Object::Ptr>();
         if (!object) {
@@ -275,7 +275,7 @@ bool CanSensorModule::writeMeasurementParams(const std::string& filePath, const 
             json.set("isRead", params.isRead);
 
             Poco::JSON::Stringifier::stringify(json, output);
-            output.close();  
+            output.close();
 
             if (output.fail()) {
                 std::cerr << "Write error for temp file: " << tempPath << std::endl;
@@ -466,7 +466,7 @@ std::future<ISensorModule::FluorometerOjipData> CanSensorModule::captureFluorome
     auto succes = base.set(r);
     if (succes.get()) {
         auto promise = std::make_shared<std::promise<ISensorModule::FluorometerOjipData>>();
-    
+
         std::thread([this, promise, sampleTimeoutMs]() {
             try {
                 std::this_thread::sleep_for(std::chrono::milliseconds(sampleTimeoutMs));
@@ -508,7 +508,7 @@ std::future<ISensorModule::FluorometerOjipData> CanSensorModule::retrieveLastFlu
         } else {
             last_measurement_data.read = true;
         }
-        MeasurementParams params = {last_api_id, last_required_samples, last_length_ms, 
+        MeasurementParams params = {last_api_id, last_required_samples, last_length_ms,
                                   static_cast<int>(last_timebase), isRead};
         if (!writeMeasurementParams(PARAMS_FILE_PATH, params)) {
             promise->set_exception(std::make_exception_ptr(
@@ -532,12 +532,12 @@ std::future<ISensorModule::FluorometerOjipData> CanSensorModule::retrieveLastFlu
             }
     }).detach();
 
-    return std::async(std::launch::deferred, [this, future = std::move(future)]() mutable {  
-        ISensorModule::FluorometerOjipData result = future.get(); 
+    return std::async(std::launch::deferred, [this, future = std::move(future)]() mutable {
+        ISensorModule::FluorometerOjipData result = future.get();
 
         if (!isRead) {
             isRead = true;
-            MeasurementParams params = {last_api_id, last_required_samples, last_length_ms, 
+            MeasurementParams params = {last_api_id, last_required_samples, last_length_ms,
                                   static_cast<int>(last_timebase), isRead};
             writeMeasurementParams(PARAMS_FILE_PATH, params);
         }
@@ -624,7 +624,8 @@ std::future<ISensorModule::SpectroChannelMeasurement> CanSensorModule::measureSp
     >(channelNumber, 2500, [channelNumber](const App_messages::Spectrophotometer::Measurement_response& response) {
         ISensorModule::SpectroChannelMeasurement result;
         result.channel = response.channel;
-        result.value = response.value;
+        result.relative_value = response.relative_value;
+        result.absolute_value = response.absolute_value;
         return result;
     });
 }

@@ -72,7 +72,7 @@ std::future <ISensorModule::FluorometerOjipData> VirtualSensorModule::captureFlu
             .detector_gain = Fluorometer_config::Gain::x1,
             .timebase = Fluorometer_config::Timing::Logarithmic,
             .emitor_intensity = 0.5f,
-            .samples = {},  
+            .samples = {},
             .read = false,
             .length_ms = 1000,
             .required_samples = 1000,
@@ -98,7 +98,7 @@ std::future <ISensorModule::FluorometerOjipData> VirtualSensorModule::retrieveLa
             .detector_gain = Fluorometer_config::Gain::x1,
             .timebase = Fluorometer_config::Timing::Logarithmic,
             .emitor_intensity = 0.5f,
-            .samples = {},  
+            .samples = {},
             .read = false,
             .length_ms = 1000,
             .required_samples = 1000,
@@ -114,7 +114,7 @@ std::future <ISensorModule::FluorometerDetectorInfo> VirtualSensorModule::getFlu
         return ISensorModule::FluorometerDetectorInfo {
             .peak_wavelength = 750,
             .sensitivity = 100,
-            .sampling_rate = 500         
+            .sampling_rate = 500
         };
     });
 }
@@ -165,7 +165,8 @@ std::future <ISensorModule::SpectroChannelMeasurement> VirtualSensorModule::meas
         Random::randomDelay();
         return ISensorModule::SpectroChannelMeasurement {
             .channel = 1,
-            .value = 0.1
+            .relative_value = 0.1,
+            .absolute_value = 1000
         };
     });
 }

@@ -1,4 +1,4 @@
-#pragma once    
+#pragma once
 
 #include <memory>
 #include <string>
@@ -21,8 +21,8 @@ public:
         Fluorometer_config::Gain detector_gain;
         Fluorometer_config::Timing sample_timing;
         float emitor_intensity = 1.0f;
-        uint16_t length_ms = 1000;      
-        uint16_t sample_count = 1000;  
+        uint16_t length_ms = 1000;
+        uint16_t sample_count = 1000;
     };
 
     /**
@@ -84,11 +84,12 @@ public:
      */
     struct SpectroChannelMeasurement {
         uint8_t channel;
-        float value;
+        float relative_value;
+        uint16_t absolute_value;
     };
 
     virtual ModuleID id() const = 0;
-    /** 
+    /**
      * @brief Retrieves the measured temperature from the top sensor of the bottle.
      */
     virtual std::future <float> getBottleTemperature() = 0;
@@ -108,7 +109,7 @@ public:
      * @brief Retrieves the temperature of the bottom sensor case of the bottle.
      */
     virtual std::future <float> getBottomSensorTemperature() = 0;
-    
+
     /**
      * @brief Clears custom text on Mini OLED display and displays the serial number.
      */
@@ -188,5 +189,4 @@ public:
 
     };
 
-    
-    
+

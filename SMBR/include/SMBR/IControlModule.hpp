@@ -15,10 +15,18 @@ public:
 
     virtual ModuleID id() const = 0;
 
+    /**
+     * @brief Structure representing the intensity measurement of a single LED channel.
+     */
+    struct LedIntensityMeasurement  {
+        uint8_t channel;
+        float intensity;
+    };
+
    /**
     * @brief Sets the intensity of LEDs on a module.
     */
-    virtual std::future <bool> setIntensity(float intensity, int channel) = 0;
+    virtual std::future <bool> setIntensity(float intensity, int8_t channelNumber) = 0;
 
    /**
     * @brief Sets the intensities of LEDs on a module.
@@ -27,7 +35,7 @@ public:
     /**
      * @brief Retrieves the current intensity of LEDs for a specified module and channel.
      */
-    virtual std::future <float> getIntensity(int channel) = 0;
+    virtual std::future <LedIntensityMeasurement> getIntensity(int8_t channelNumber) = 0;
 
     /**
      * @brief Retrieves the current temperature of LEDs for a specified module and channel.

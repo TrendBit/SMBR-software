@@ -20,4 +20,9 @@ class SingleChannelMeasurementDto : public oatpp::DTO {
      * @brief Relative absorbance measurement value.
      */
     DTO_FIELD(Float32, relative_value);
+
+    /**
+     * @brief Absolute measurement value.
+     */
+    DTO_FIELD(UInt16, absolute_value);
 };

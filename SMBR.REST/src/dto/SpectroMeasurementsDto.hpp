@@ -15,7 +15,7 @@ class SpectroMeasurementsDto : public oatpp::DTO {
     /**
      * @brief Array of measurements for all available channels.
      */
-    DTO_FIELD(Vector<Object<SingleChannelMeasurementDto>>, measurements);
+    DTO_FIELD(Vector<Object<SingleChannelMeasurementDto>>, samples);
 };
 
 #include OATPP_CODEGEN_END(DTO)

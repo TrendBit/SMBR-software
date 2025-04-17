@@ -1126,14 +1126,15 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         auto channelCount = wait(systemModule->sensorModule()->getSpectrophotometerChannels());
 
         auto measurementsDto = SpectroMeasurementsDto::createShared();
-        measurementsDto->measurements = oatpp::Vector<oatpp::Object<SingleChannelMeasurementDto>>::createShared();
+        measurementsDto->samples = oatpp::Vector<oatpp::Object<SingleChannelMeasurementDto>>::createShared();
 
         for (int8_t channel = 0; channel < channelCount; channel++) {
             auto measurement = wait(systemModule->sensorModule()->measureSpectrophotometerChannel(channel));
             auto channelMeasurement = SingleChannelMeasurementDto::createShared();
             channelMeasurement->channel = measurement.channel;
             channelMeasurement->relative_value = measurement.relative_value;
-            measurementsDto->measurements->push_back(channelMeasurement);
+            channelMeasurement->absolute_value = measurement.absolute_value;
+            measurementsDto->samples->push_back(channelMeasurement);
         }
 
         return createDtoResponse(Status::CODE_200, measurementsDto);
@@ -1146,6 +1147,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         auto responseDto = SingleChannelMeasurementDto::createShared();
         responseDto->channel = measurement.channel;
         responseDto->relative_value = measurement.relative_value;
+        responseDto->absolute_value = measurement.absolute_value;
         return createDtoResponse(Status::CODE_200, responseDto);
     });
 }

@@ -1531,21 +1531,22 @@ public:
         info->addTag("Sensor module");
         
         auto example = SpectroMeasurementsDto::createShared();
-        example->measurements = oatpp::Vector<oatpp::Object<SingleChannelMeasurementDto>>::createShared();
+        example->samples = oatpp::Vector<oatpp::Object<SingleChannelMeasurementDto>>::createShared();
 
-        auto addExampleMeasurement = [&](int8_t channel, float value) {
+        auto addExampleMeasurement = [&](int8_t channel, float relative, uint16_t absolute) {
             auto measurement = SingleChannelMeasurementDto::createShared();
             measurement->channel = channel;
-            measurement->relative_value = value;
-            example->measurements->push_back(measurement);
+            measurement->relative_value = relative;
+            measurement->absolute_value = absolute;
+            example->samples->push_back(measurement);
         };
 
-        addExampleMeasurement(0, 0.125f);
-        addExampleMeasurement(1, 0.236f);
-        addExampleMeasurement(2, 0.180f);
-        addExampleMeasurement(3, 0.452f);
-        addExampleMeasurement(4, 0.561f);
-        addExampleMeasurement(5, 0.473f);
+        addExampleMeasurement(0, 0.125f, 28);
+        addExampleMeasurement(1, 0.236f, 2015);
+        addExampleMeasurement(2, 0.180f, 38);
+        addExampleMeasurement(3, 0.452f, 1115);
+        addExampleMeasurement(4, 0.561f, 3845);
+        addExampleMeasurement(5, 0.473f, 5724);
         
         info->addResponse<Object<SpectroMeasurementsDto>>(Status::CODE_200, "application/json")
             .addExample("application/json", example);
@@ -1573,6 +1574,7 @@ public:
         auto example = SingleChannelMeasurementDto::createShared();
         example->channel = 1;
         example->relative_value = 0.236f;
+        example->absolute_value = 5012;
         
         info->addResponse<Object<SingleChannelMeasurementDto>>(Status::CODE_200, "application/json")
             .addExample("application/json", example);

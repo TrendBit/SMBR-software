@@ -34,6 +34,7 @@ public:
     std::future <float> getFluorometerDetectorTemperature() override;
     std::future <FluorometerEmitorInfo> getFluorometerEmitorInfo() override;
     std::future <float> getFluorometerEmitorTemperature() override;
+    std::future <bool> calibrateFluorometer() override;
     std::future <int8_t> getSpectrophotometerChannels() override;
     std::future <SpectroChannelInfo> getSpectrophotometerChannelInfo(int8_t channelNumber) override;
     std::future <SpectroChannelMeasurement> measureSpectrophotometerChannel(int8_t channelNumber) override;

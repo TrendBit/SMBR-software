@@ -162,6 +162,11 @@ public:
     virtual std::future <float> getFluorometerEmitorTemperature() = 0;
 
     /**
+     * @brief Request self-calibration of fluorometer.
+     */
+    virtual std::future <bool> calibrateFluorometer() = 0;
+
+    /**
      * @brief Reads number of channels available on spectrophotometer.
      */
     virtual std::future <int8_t> getSpectrophotometerChannels() = 0;

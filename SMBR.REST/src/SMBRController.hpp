@@ -1467,6 +1467,34 @@ public:
     ENDPOINT("GET", "/sensor/fluorometer/emitor/temperature", getFluorometerEmitorTemperature);
 
     /**
+     * @brief Request self-calibration of fluorometer.
+     */
+    ENDPOINT_INFO(calibrateFluorometer) {
+        info->summary = "Calibrate fluorometer";
+        info->description = 
+            "Request self-calibration of fluorometer.\n"
+            "For calibration cuvette should be empty or filled with clean medium.\n"
+            "No algae or other particles should be present in cuvette.\n"
+            "Calibration is preserved in persistent memory of module.\n"
+            "And will be loaded during next power up.\n"
+            "Body of request must be empty, but it is required to be present for future calibration extensions.";
+        info->addTag("Sensor module");
+        
+        auto exampleRequest = SpectroCalibrateDto::createShared();
+        exampleRequest->calibrationMode=nullptr;
+        
+        info->addConsumes<Object<SpectroCalibrateDto>>("application/json")
+            .addExample("application/json", exampleRequest);
+        info->addResponse<Object<MessageDto>>(Status::CODE_200, "application/json", "Calibration started")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Calibration started"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to start calibration")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to start calibration"}}));
+
+    }
+    ADD_CORS(calibrateFluorometer)
+    ENDPOINT("POST", "/sensor/fluorometer/calibrate", calibrateFluorometer, BODY_STRING(String, requestBody));
+
+    /**
      * @brief Reads number of channels available on spectrophotometer.
      */
     ENDPOINT_INFO(getSpectrophotometerChannels) {
@@ -1610,7 +1638,7 @@ public:
     ENDPOINT("GET", "/sensor/spectrophotometer/emitor_temperature", getSpectrophotometerEmitorTemperature);
 
 
-/**
+    /**
      * @brief Request self-calibration of spectrophotometer.
      */
     ENDPOINT_INFO(calibrateSpectrophotometer) {
@@ -1619,8 +1647,9 @@ public:
             "Request self-calibration of spectrophotometer.\n"
             "For calibration cuvette should be empty or filled with clean medium.\n"
             "No algae or other particles should be present in cuvette.\n"
-            "Calibration is preserved in persistent memory of spectrophotometer.\n"
-            "And will be loaded during next power up.";
+            "Calibration is preserved in persistent memory of module.\n"
+            "And will be loaded during next power up.\n"
+            "Body of request must be empty, but it is required to be present for future calibration extensions.";
         info->addTag("Sensor module");
         
         auto exampleRequest = SpectroCalibrateDto::createShared();

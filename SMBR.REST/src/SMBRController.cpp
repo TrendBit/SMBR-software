@@ -460,9 +460,9 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getIntensity(const oatpp::Enum<dto::ChannelEnum>::AsString& channel) {
 
     return process(__FUNCTION__, [&](){
-        auto intensity = waitFor(systemModule->controlModule()->getIntensity(getChannel(channel)));
+        auto response = waitFor(systemModule->controlModule()->getIntensity(getChannel(channel)));
         auto intensityResponseDto = IntensityDto::createShared();
-        intensityResponseDto->intensity = intensity;
+        intensityResponseDto->intensity = response.intensity;
         return createDtoResponse(Status::CODE_200, intensityResponseDto);
     });
 }

@@ -174,7 +174,7 @@ class BaseModule {
             auto promise = std::make_shared<std::promise<Result>>();
             
             Request rawRequest(channelNumber);
-            CanID requestId = BaseModule::createId(rawRequest.Type(), Codes::Module::Sensor_module, Codes::Instance::Exclusive, false);
+            auto requestId = createRequestId(rawRequest.Type(), Codes::Instance::Exclusive, false);
             
             RequestData requestData(requestId, rawRequest.Export_data());
             ResponseInfo responseInfo;

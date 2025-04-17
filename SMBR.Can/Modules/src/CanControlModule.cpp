@@ -54,9 +54,9 @@ ModuleID CanControlModule::id() const {
     return base.id();
 }
 
-std::future <bool> CanControlModule::setIntensity(float intensity, int channel) {
+std::future <bool> CanControlModule::setIntensity(float intensity, int8_t channelNumber) {
     
-    App_messages::LED_panel::Set_intensity r((uint8_t)channel, (float)intensity);
+    App_messages::LED_panel::Set_intensity r((uint8_t)channelNumber, (float)intensity);
     return base.set(r);
 }
 
@@ -96,16 +96,17 @@ std::future <bool> CanControlModule::setIntensities(float i0, float i1, float i2
     return promise->get_future();
 }
 
-std::future <float> CanControlModule::getIntensity(int channel) {
-
-    App_messages::LED_panel::Get_intensity_request r((uint8_t)channel);
-    return base.get<
-        App_messages::LED_panel::Get_intensity_request, 
-        App_messages::LED_panel::Get_intensity_response, 
-        float
-    >(r, [](App_messages::LED_panel::Get_intensity_response response){
-        return response.intensity;
-    }, 2000);
+std::future <IControlModule::LedIntensityMeasurement> CanControlModule::getIntensity(int8_t channelNumber) {
+    return base.getByChannel<
+        App_messages::LED_panel::Get_intensity_request,
+        App_messages::LED_panel::Get_intensity_response,
+        IControlModule::LedIntensityMeasurement
+    >(channelNumber, 2000, [channelNumber](const App_messages::LED_panel::Get_intensity_response& response) {
+        IControlModule::LedIntensityMeasurement result;
+        result.channel = response.channel;
+        result.intensity = response.intensity;
+        return result;
+    });
 }
 
 std::future <float> CanControlModule::getLedTemperature() {

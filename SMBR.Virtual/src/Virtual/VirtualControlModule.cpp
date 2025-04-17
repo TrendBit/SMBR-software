@@ -3,8 +3,8 @@
 #include <future>         // std::async, std::future
 #include "Random.hpp"
 
-std::future <bool> VirtualControlModule::setIntensity(float intensity, int channel){
-    return std::async(std::launch::async, [intensity, channel]() {
+std::future <bool> VirtualControlModule::setIntensity(float intensity, int8_t channelNumber){
+    return std::async(std::launch::async, [intensity, channelNumber]() {
         Random::randomDelay(100);
         return true;
     });
@@ -17,10 +17,13 @@ std::future <bool> VirtualControlModule::setIntensities(float i0, float i1, floa
     });
 }
 
-std::future <float> VirtualControlModule::getIntensity(int channel){
-    return std::async(std::launch::async, [channel]() {
+std::future <IControlModule::LedIntensityMeasurement> VirtualControlModule::getIntensity(int8_t channelNumber){
+    return std::async(std::launch::async, [channelNumber]() {
         Random::randomDelay(100);
-        return Random::nextFloat(0.0, 1.0);
+        return IControlModule::LedIntensityMeasurement {
+            .channel = 1,
+            .intensity = 0.1
+        };
     });
 }
 

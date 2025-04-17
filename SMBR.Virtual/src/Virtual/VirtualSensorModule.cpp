@@ -143,6 +143,13 @@ std::future <float> VirtualSensorModule::getFluorometerEmitorTemperature() {
     });
 }
 
+std::future <bool> VirtualSensorModule::calibrateFluorometer() {
+    return std::async(std::launch::async, []() {
+        Random::randomDelay();
+        return true;
+    });
+}
+
 std::future <int8_t> VirtualSensorModule::getSpectrophotometerChannels() {
     return std::async(std::launch::async, []() -> int8_t {
         Random::randomDelay();

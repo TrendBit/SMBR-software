@@ -1085,6 +1085,17 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     });
 }
 
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::calibrateFluorometer(const oatpp::String& body)  {
+    if (body != "{}") {
+        auto dto = MessageDto::createShared();
+        dto->message = "Invalid input";
+        return createDtoResponse(Status::CODE_500, dto);
+    }
+    return processBool(__FUNCTION__, [&](){
+        return waitFor(systemModule->sensorModule()->calibrateFluorometer());
+    });
+}
+
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getSpectrophotometerChannels() {
     return process(__FUNCTION__, [&](){
         auto channels = waitFor(systemModule->sensorModule()->getSpectrophotometerChannels());

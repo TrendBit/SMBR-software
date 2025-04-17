@@ -27,6 +27,7 @@
 #include "codes/messages/fluorometer/emitor_info_response.hpp"
 #include "codes/messages/fluorometer/emitor_temperature_request.hpp"
 #include "codes/messages/fluorometer/emitor_temperature_response.hpp"
+#include "codes/messages/fluorometer/calibration_request.hpp"
 #include "codes/messages/spectrophotometer/channel_count_request.hpp"
 #include "codes/messages/spectrophotometer/channel_count_response.hpp"
 #include "codes/messages/spectrophotometer/channel_info_request.hpp"
@@ -601,6 +602,11 @@ std::future<float> CanSensorModule::getFluorometerEmitorTemperature() {
     >([](App_messages::Fluorometer::Emitor_temperature_response response){
         return response.temperature;
     }, 2000);
+}
+
+std::future<bool> CanSensorModule::calibrateFluorometer() {
+    App_messages::Fluorometer::Calibration_request r;
+    return base.set(r);
 }
 
 std::future<int8_t> CanSensorModule::getSpectrophotometerChannels() {

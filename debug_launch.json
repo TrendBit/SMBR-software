@@ -1,0 +1,29 @@
+// gdbserver cannot be used on smpbr image, so gdb is tunneled via ssh
+// for debug Native Debug extension must be installed in codium/vscode (https://github.com/WebFreak001/code-debug)
+// some modifications may be required:
+//    - change file mappinf in order to step throught files, local location hsould lead to smpbr toolchain
+//    - change hostname (alternatively use ip address) of target machine
+{
+    "version": "0.2.0",
+    "configurations": [
+    {
+        "type": "gdb",
+        "request": "launch",
+        "name": "Remote GDB - smpbr-02",
+        "target": "reactor-api-server",
+        "cwd": "${workspaceRoot}",
+        "ssh": {
+            "host": "smpbr-02.local",
+            "cwd": "/home/reactor",
+            "user": "root",
+            "password": "reactor",
+            "port": 22,
+            "useAgent": false,
+            "forwardX11": false
+            "sourceFileMap": {
+                "/usr/src/debug": "/usr/local/smbr-kas/sysroots/cortexa72-poky-linux/usr/src/debug",
+            }
+        }
+    }
+    ]
+}

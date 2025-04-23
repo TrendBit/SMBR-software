@@ -20,6 +20,6 @@ rm -rf install/filesystem
 # Run build commands
 #set toolchain
 #source /usr/local/smbr-kas/environment-setup-cortexa72-poky-linux
-cmake -DCMAKE_INSTALL_PREFIX=install -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=/usr/local/smbr-kas/sysroots/x86_64-pokysdk-linux/usr/share/cmake/cortexa72-poky-linux-toolchain.cmake ../.. && \
+cmake -DCMAKE_INSTALL_PREFIX=install -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=/usr/local/smbr-kas/sysroots/x86_64-pokysdk-linux/usr/share/cmake/cortexa72-poky-linux-toolchain.cmake ../.. && \
 make -j 8  && \
 make install

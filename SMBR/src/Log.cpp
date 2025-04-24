@@ -51,6 +51,11 @@ namespace SMBR {
 #include <Poco/Channel.h>
 #include <Poco/Message.h>
 #include <Poco/SplitterChannel.h>
+#include <Poco/AutoPtr.h>
+#include <Poco/PatternFormatter.h>
+#include <Poco/FormattingChannel.h>
+#include <Poco/ConsoleChannel.h>
+
 #include <iostream>
 
 
@@ -106,5 +111,23 @@ namespace SMBR {
 
 				}
 
+	void initConsoleLogs(int level){
+
+		Poco::AutoPtr<Poco::ColorConsoleChannel> pChannel(new Poco::ColorConsoleChannel());
+
+		//set pattern to console channel
+		Poco::AutoPtr<Poco::PatternFormatter> pFormatter(new Poco::PatternFormatter("%Y-%m-%d %H:%M:%S.%i %s: %t"));
+		pFormatter->setProperty("pattern", "%Y-%m-%d %H:%M:%S.%i %s: %t");
+
+		Poco::AutoPtr<Poco::FormattingChannel> pFC(new Poco::FormattingChannel(pFormatter, pChannel));
+				
+		auto & ch = Poco::Logger::get("");
+		ch.setLevel(level);
+		
+		ch.setChannel(pFC);
+
+		
+
+	}
 
 }

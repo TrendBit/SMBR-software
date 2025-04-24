@@ -15,7 +15,7 @@ namespace Scripting {
                 input = Impl().parse(block->line);
             }
             void run(RunContext::Ptr rctx) override {
-                LTRACE("Scheduler") << "run " << name() << LE;
+                LTRACE("Scheduler") << "Sch run " << name() << LE;
                 rctx->stack->updateTop(lineNumber);
                 if (rctx->module == nullptr){
                     throw std::runtime_error("Module is null");
@@ -159,15 +159,7 @@ namespace Scripting {
                 return input;
             }
             std::future <bool> run(DisplayInput input, ISystemModule::Ptr m){
-                if (input.message.empty()){
-                    return m->sensorModule()->clearCustomText();
-                } else {
-                    // Clear display before printing otherwise is text appended
-                    return std::async(std::launch::async, [m, input] {
-                        m->sensorModule()->clearCustomText();
-                        return m->sensorModule()->printCustomText(input.message).get();
-                    });
-                }
+                return m->sensorModule()->printCustomText(input.message);
             }
     };
 
@@ -196,6 +188,8 @@ namespace Scripting {
             }
 
             std::future <bool> run(ISensorModule::FluorometerInput input, ISystemModule::Ptr m){
+                LINFO("Thread") << "Fluorometer new thread started" << LE;
+
                 return std::async(std::launch::async, [input, m]() {
                     auto ojip_data = m->sensorModule()->captureFluorometerOjip(input).get();
                     std::cout << "OJIP measurement is missing: " << ojip_data.missing_samples <<" samples" << std::endl;

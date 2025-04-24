@@ -2,8 +2,11 @@
 
 #include "codes/codes.hpp"
 #include "SMBR/SMBR.hpp"
+#include "SMBR/Log.hpp"
 #include "can/CanChannel.hpp"
 #include <iostream>
+#include <deque>
+#include <future>
 
 typedef uint32_t MessageID;
 
@@ -30,6 +33,8 @@ class BaseModule {
             return get<Request, Response, Result>(rawRequest, interpret, timeoutMs);    
         }
 
+        static std::string requestLogStr(CanID reqId);
+
         template <class Request, class Response, class Result>
         std::future <Result> get(Request rawRequest, std::function <Result(Response)> interpret, int timeoutMs){     
             Response rt;
@@ -40,26 +45,39 @@ class BaseModule {
             ResponseInfo responseInfo(responseId, timeoutMs);
             CanRequest canRequest(requestData, responseInfo);
         
+            std::string logStr = requestLogStr(requestId);
+
             std::shared_ptr <std::promise <Result>> promise = std::make_shared<std::promise <Result>>();
-            channel->send(canRequest, [&, promise, interpret](ICanChannel::Response response){
-                
-                if (response.status == CanRequestStatus::Success) {
-                    Response resp;
-                    auto dataCopy = response.responseData.at(0).data;
-                    if (resp.Interpret_data(dataCopy)) {
-                        if (interpret){
-                            auto val = interpret(resp);
-                            promise->set_value(val);
+            channel->send(canRequest, [&, promise, interpret, logStr](ICanChannel::Response response){
+                try {
+                    LTRACE("Module") << logStr << " send" << LE;
+                    if (response.status == CanRequestStatus::Success) {
+                        Response resp;
+                        auto dataCopy = response.responseData.at(0).data;
+                        if (resp.Interpret_data(dataCopy)) {
+                            if (interpret){
+                                auto val = interpret(resp);
+                                promise->set_value(val);
+                                LTRACE("Module") << logStr << " end [success]" << LE;
+                            } else {
+                                LTRACE("Module") << logStr << " end [no interpret]" << LE;
+                                promise->set_exception(std::make_exception_ptr(std::runtime_error("No interpret call")));
+                            }    
                         } else {
-                            promise->set_exception(std::make_exception_ptr(std::runtime_error("No interpret call")));
-                        }    
+                            LTRACE("Module") << logStr << " end [interpret failure]" << LE;
+                            promise->set_exception(std::make_exception_ptr(std::runtime_error("Failed to interpret response")));
+                        }
+                    } else if (response.status == CanRequestStatus::Timeout) {
+                        LTRACE("Module") << logStr << " end [timeout]" << LE;
+                        promise->set_exception(std::make_exception_ptr(std::runtime_error("Timeout")));
                     } else {
-                        promise->set_exception(std::make_exception_ptr(std::runtime_error("Failed to interpret response")));
+                        LTRACE("Module") << logStr << " end [send failure]" << LE;
+                        promise->set_exception(std::make_exception_ptr(std::runtime_error("Failed to send request")));
                     }
-                } else if (response.status == CanRequestStatus::Timeout) {
-                    promise->set_exception(std::make_exception_ptr(std::runtime_error("Timeout")));
-                } else {
-                    promise->set_exception(std::make_exception_ptr(std::runtime_error("Failed to send request")));
+                } catch (std::exception & e){
+                    LERROR("Module") << logStr << " end [TODO] " << e.what() << LE;
+                } catch (...){
+                    LERROR("Module") << logStr << " end [TODO] ??? " << LE;
                 }
             });
             return promise->get_future();
@@ -110,24 +128,39 @@ class BaseModule {
             return promise->get_future();
         }
 
-        template <class Request>
-        std::future <bool> set(Request rawRequest){     
+        void setMultiple(std::shared_ptr <std::promise <bool>> promise, std::deque <CanRequest> requests){
+            if (requests.empty()){
+                promise->set_value(true);
+                return;
+            }
+            auto request = requests.front();
+            requests.pop_front();
             
-            auto requestId = createRequestId(rawRequest.Type(), Codes::Instance::Exclusive, false);
-            
-            RequestData requestData(requestId, rawRequest.Export_data());
-            CanRequest canRequest(requestData);
-        
-            std::shared_ptr <std::promise <bool>> promise = std::make_shared<std::promise <bool>>();
-            channel->send(canRequest, [&, promise](ICanChannel::Response response){
+            channel->send(request, [&, promise, requests](ICanChannel::Response response) {
                 if (response.status == CanRequestStatus::Success) {
-                    promise->set_value(true);
+                    setMultiple(promise, requests);
                 } else if (response.status == CanRequestStatus::Timeout) {
                     promise->set_exception(std::make_exception_ptr(std::runtime_error("Timeout")));
                 } else {
                     promise->set_exception(std::make_exception_ptr(std::runtime_error("Failed to send request")));
                 }
             });
+        }
+
+        template <class Request>
+        CanRequest createRequest(Request rawRequest){
+            auto requestId = createRequestId(rawRequest.Type(), Codes::Instance::Exclusive, false);
+            RequestData requestData(requestId, rawRequest.Export_data());
+            CanRequest canRequest(requestData);
+            return canRequest;
+        }
+
+        template <class Request>
+        std::future <bool> set(Request rawRequest){     
+            std::shared_ptr <std::promise <bool>> promise = std::make_shared<std::promise <bool>>();
+            CanRequest canRequest = createRequest<Request>(rawRequest);
+           
+            setMultiple(promise, {canRequest});
             return promise->get_future();
         }
 

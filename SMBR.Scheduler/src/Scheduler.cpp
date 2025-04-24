@@ -155,7 +155,7 @@ void Scheduler::run(){
                     info.finishMessage = "";
                     info.startTime.update();
                     info.stack.clear();
-                    std::cout << "BG [START] " << info << std::endl;
+                    LNOTICE("Scheduler") << "Sch [BG] script started: " << info << LE;
                 }
 
                 auto stack = std::make_shared<Stack>([&](const Stack::Data & data) {
@@ -168,7 +168,7 @@ void Scheduler::run(){
                 
                 rctx->stopCb = [&](){
                     if (!bgScriptStarted || bgScriptStopped){
-                        std::cout << "BG [CONDITION] " << "bgScriptStarted " << bgScriptStarted << " bgScriptStopped " << bgScriptStopped << std::endl;
+                        LNOTICE("Scheduler") << "Sch [BG] script stopped: " << "started " << bgScriptStarted << " stopped " << bgScriptStopped  << LE;
                         return true;
                     }
                     return false;
@@ -193,7 +193,7 @@ void Scheduler::run(){
                     std::scoped_lock lock(infoMutex);
                     info.stopped = true;
                     info.finishMessage = "Successfully finished";
-                    std::cout << "BG [SUCCESS] " << info << std::endl;
+                    LNOTICE("Scheduler") << "Sch [BG] script finished: " << info << LE;
                 }
 
             } catch (std::exception & e) {
@@ -201,7 +201,8 @@ void Scheduler::run(){
                 info.stopped = true;
                 std::string emsg = e.what();
                 info.finishMessage = "Failed: " + emsg;
-                std::cout << "BG [ERROR] " << info << std::endl;
+                LWARNING("Scheduler") << "Sch [BG] script failed: " << info << LE;
+                
             }
 
             try {

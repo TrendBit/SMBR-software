@@ -122,20 +122,23 @@ std::future <bool> CanSensorModule::clearCustomText() {
 }
 
 std::future <bool> CanSensorModule::printCustomText(std::string text) {
-    std::vector<std::future<bool>> results;
+
+    std::deque <CanRequest> tasks;
+
+    {
+        App_messages::Mini_OLED::Clear_custom_text r;
+        tasks.push_back(base.createRequest(r));
+    }
 
     for (size_t i = 0; i < text.length(); i += App_messages::Mini_OLED::Print_custom_text::max_length) {
         std::string chunk = text.substr(i, App_messages::Mini_OLED::Print_custom_text::max_length);
         App_messages::Mini_OLED::Print_custom_text r(chunk);
-        results.push_back(base.set(r));
+        tasks.push_back(base.createRequest(r));
     }
 
-    return std::async(std::launch::async, [results = std::move(results)]() mutable {
-        for (auto& res : results) {
-            if (!res.get()) return false;
-        }
-        return true;
-    });
+    std::shared_ptr <std::promise <bool>> promise = std::make_shared<std::promise <bool>>();
+    base.setMultiple(promise, tasks);
+    return promise->get_future();
 }
 
 uint8_t CanSensorModule::CalculateMeasurementID(uint32_t api_id) {
@@ -523,6 +526,8 @@ std::future<ISensorModule::FluorometerOjipData> CanSensorModule::retrieveLastFlu
     auto sampleTimeoutMs = 2 * last_required_samples;
     auto threadPromise = std::make_shared<std::promise<ISensorModule::FluorometerOjipData>>();
     auto future = threadPromise->get_future();
+
+    LINFO("Thread") << "retrieveLastFluorometerOjipData new thread to be started" << LE;
 
     std::thread([this, threadPromise, sampleTimeoutMs]() {
             try {

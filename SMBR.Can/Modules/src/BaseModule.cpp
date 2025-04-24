@@ -1,6 +1,8 @@
 #include "BaseModule.hpp"
 #include <iomanip>
 #include <sstream>
+#include <Poco/Mutex.h>
+#include <Poco/NumberFormatter.h>
 
 static Codes::Module module2raw(Modules module){
     switch (module) {
@@ -44,6 +46,20 @@ ModuleID BaseModule::id() const {
 
 CanID BaseModule::createRequestId(Codes::Message_type messageType, Codes::Instance instance, bool emergencyFlag){
     return BaseModule::createId(messageType, module(), instance, emergencyFlag);
+}
+
+std::string BaseModule::requestLogStr(CanID reqId){
+    static Poco::Int64 seqShared = 0;
+    Poco::Int64 seq = 0;
+    static Poco::Mutex m;
+    {
+        Poco::Mutex::ScopedLock l(m);
+        seq = seqShared++;
+    }
+    
+    std::stringstream s;
+    s << "[" << Poco::NumberFormatter::format0(seq, 10) << " " << reqId << "]";
+    return s.str();
 }
         
  

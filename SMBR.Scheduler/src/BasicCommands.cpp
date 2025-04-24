@@ -23,14 +23,14 @@ void NestedBlockCommand::run(RunContext::Ptr rctx){
 
     int cmds = commands.size();   
     int counter = 0;
-    LTRACE("Scheduler") << "run " << name() << LE;
+    LTRACE("Scheduler") << "Sch run " << name() << LE;
     for (auto & cmd : commands) {
         rctx->checkRunning();
-        LTRACE("Scheduler") << "run " << name() << " " << "cmd " << ++counter << "/" << cmds << LE;
+        LTRACE("Scheduler") << "Sch run " << name() << " " << "cmd " << ++counter << "/" << cmds << LE;
         cmd->run(rctx);
-        LTRACE("Scheduler") << "run " << name() << " " << "cmd " << counter << "/" << cmds << LE;
+        LTRACE("Scheduler") << "Sch run " << name() << " " << "cmd " << counter << "/" << cmds << LE;
     }
-    LTRACE("Scheduler") << "run " << name() << " done" << LE;
+    LTRACE("Scheduler") << "Sch run " << name() << " done" << LE;
     rctx->stack->pop();
 }
 
@@ -43,7 +43,7 @@ LoopCommand::LoopCommand(Block::Ptr loopBlock, ParseContext::Ptr pctx){
     nested = std::make_shared<NestedBlockCommand>(loopBlock, pctx);
 }
 void LoopCommand::run(RunContext::Ptr rctx) {
-    LTRACE("Scheduler") << "run " << name() << LE;
+    LTRACE("Scheduler") << "Sch run " << name() << LE;
     rctx->stack->push(line);
 
     if (infinity){
@@ -53,10 +53,10 @@ void LoopCommand::run(RunContext::Ptr rctx) {
         }
     } else {
         for (int i = 0; i < repeat; i++) {
-            LTRACE("Scheduler") << "run " << name() << " " << "iteration " << i+1 << "/" << repeat << LE;
+            LTRACE("Scheduler") << "Sch run " << name() << " " << "iteration " << i+1 << "/" << repeat << LE;
             rctx->checkRunning();
             nested->run(rctx);
-            LTRACE("Scheduler") << "run " << name() << " " << "iteration " << i+1 << "/" << repeat << " done" << LE;
+            LTRACE("Scheduler") << "Sch run " << name() << " " << "iteration " << i+1 << "/" << repeat << " done" << LE;
         }
     }
 
@@ -69,7 +69,7 @@ NamedBlockCommand::NamedBlockCommand(std::string name, ParseContext::Ptr pctx) :
     nested = std::make_shared<NestedBlockCommand>(block, pctx);
 }
 void NamedBlockCommand::run(RunContext::Ptr rctx) {
-    LTRACE("Scheduler") << "run " << name() << LE;
+    LTRACE("Scheduler") << "Sch run " << name() << LE;
     rctx->stack->push(line);
     nested->run(rctx);
     rctx->stack->pop();
@@ -82,7 +82,7 @@ WaitCommand::WaitCommand(Block::Ptr block, ParseContext::Ptr pctx){
 }
 
 void WaitCommand::run(RunContext::Ptr rctx){
-    LTRACE("Scheduler") << "run " << name() << LE;
+    LTRACE("Scheduler") << "Sch run " << name() << LE;
     rctx->stack->updateTop(line);
 
     long remainingSleep = timeMs;
@@ -103,7 +103,7 @@ PrintCommand::PrintCommand(Block::Ptr block, ParseContext::Ptr pctx){
 }
 
 void PrintCommand::run(RunContext::Ptr rctx){
-    LTRACE("Scheduler") << "run " << name() << LE;
+    LTRACE("Scheduler") << "Sch run " << name() << LE;
     rctx->stack->updateTop(line);
     std::cout << "PRINT: " << content << std::endl;
     if (rctx->printCb) {

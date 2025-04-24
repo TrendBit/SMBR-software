@@ -6,6 +6,10 @@
 #include "SMBR/Scheduler.hpp"
 #include "SMBR/Log.hpp"
 
+#include <chrono>
+
+using namespace std::chrono_literals;
+
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::process(
     std::string name,
     std::function<std::shared_ptr<oatpp::web::protocol::http::outgoing::Response>()> body
@@ -69,9 +73,17 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 }
 
 template <class T>
-T wait(std::future<T> future){
-    future.wait();
-    return future.get();
+T waitFor(std::future<T> future, unsigned int timeoutMs = 2000){
+    auto status = future.wait_for(std::chrono::milliseconds(timeoutMs));
+    if (status == std::future_status::ready){
+        return future.get();
+    } else if (status == std::future_status::timeout) {
+        throw TimeoutException("Timeout waiting for future");
+    } else if (status == std::future_status::deferred) {
+        throw TimeoutException("Deferred future");
+    } else {
+        throw std::runtime_error("Unknown future status after wait");
+    }
 }
 
 SMBRController::SMBRController(const std::shared_ptr<oatpp::web::mime::ContentMappers>& apiContentMappers,
@@ -88,6 +100,7 @@ SMBRController::SMBRController(const std::shared_ptr<oatpp::web::mime::ContentMa
 
             {
                 std::unique_lock<std::mutex> lock(queueMutex);
+                //TODO timeout
                 captureQueueCondition.wait(lock, [this]() { return stopCaptureWorker || !captureQueue.empty(); });
 
                 if (stopCaptureWorker && captureQueue.empty()) break;
@@ -127,10 +140,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     LDEBUG("API") << "Api getSystemModules begin" << LE;
     auto dtoList = oatpp::List<oatpp::Object<ModuleInfoDto>>::createShared();
 
-    auto future = systemModule->getAvailableModules();
-
-    future.wait();
-    auto result = future.get();
+    auto result = waitFor(systemModule->getAvailableModules(), 500);
 
     for (auto m : result){
         auto moduleInfoDto = ModuleInfoDto::createShared();
@@ -194,7 +204,7 @@ std::shared_ptr<ICommonModule> SMBRController::getModule(const oatpp::Enum<dto::
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::ping(const oatpp::Enum<dto::ModuleEnum>::AsString& module) {
 
     return process(__FUNCTION__, [&](){
-        float responseTime = wait(getModule(module)->ping());
+        float responseTime = waitFor(getModule(module)->ping());
         auto pingResponseDto = PingResponseDto::createShared();
         pingResponseDto->time_ms = responseTime;
         return createDtoResponse(Status::CODE_200, pingResponseDto);
@@ -203,7 +213,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getCoreLoad(const oatpp::Enum<dto::ModuleEnum>::AsString& module) {
     return process(__FUNCTION__, [&](){
-        float load = wait(getModule(module)->getCoreLoad());
+        float load = waitFor(getModule(module)->getCoreLoad());
         auto loadResponseDto = LoadResponseDto::createShared();
         loadResponseDto->load = load;
         return createDtoResponse(Status::CODE_200, loadResponseDto);
@@ -212,7 +222,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getCoreTemp(const oatpp::Enum<dto::ModuleEnum>::AsString& module) {
     return process(__FUNCTION__, [&](){
-        float temperature = wait(getModule(module)->getCoreTemp());
+        float temperature = waitFor(getModule(module)->getCoreTemp());
         auto tempResponseDto = TempDto::createShared();
         tempResponseDto->temperature = temperature;
         return createDtoResponse(Status::CODE_200, tempResponseDto);
@@ -221,7 +231,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getBoardTemp(const oatpp::Enum<dto::ModuleEnum>::AsString& module) {
     return process(__FUNCTION__, [&](){
-        float temperature = wait(getModule(module)->getBoardTemp());
+        float temperature = waitFor(getModule(module)->getBoardTemp());
         auto tempResponseDto = TempDto::createShared();
         tempResponseDto->temperature = temperature;
         return createDtoResponse(Status::CODE_200, tempResponseDto);
@@ -253,7 +263,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
     return processBool(__FUNCTION__, [&](){
         auto m = byUID(systemModule, module, body);
-        return wait(m->restartModule());
+        return waitFor(m->restartModule());
     });
 }
 
@@ -263,7 +273,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
     return processBool(__FUNCTION__, [&](){
         auto m = byUID(systemModule, module, body);
-        return wait(m->rebootModuleUsbBootloader());
+        return waitFor(m->rebootModuleUsbBootloader());
     });
 }
 
@@ -273,7 +283,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
     return processBool(__FUNCTION__, [&](){
         auto m = byUID(systemModule, module, body);
-        return wait(m->rebootModuleCanBootloader());
+        return waitFor(m->rebootModuleCanBootloader());
     });
 }
 
@@ -284,7 +294,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getShortID() {
 
     return process(__FUNCTION__, [&](){
-        auto sid = wait(systemModule->coreModule()->getShortID());
+        auto sid = waitFor(systemModule->coreModule()->getShortID());
         auto sidResponseDto = SIDDto::createShared();
         sidResponseDto->sid = sid;
         return createDtoResponse(Status::CODE_200, sidResponseDto);
@@ -294,7 +304,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getIpAddress() {
 
     return process(__FUNCTION__, [&](){
-        auto ipAddress = wait(systemModule->coreModule()->getIpAddress());
+        auto ipAddress = waitFor(systemModule->coreModule()->getIpAddress());
         auto ipResponseDto = IpDto::createShared();
         ipResponseDto->ipAddress = ipAddress;
         return createDtoResponse(Status::CODE_200, ipResponseDto);
@@ -305,7 +315,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getHostname() {
 
     return process(__FUNCTION__, [&](){
-        auto hostname = wait(systemModule->coreModule()->getHostname());
+        auto hostname = waitFor(systemModule->coreModule()->getHostname());
         auto hostnameResponseDto = HostnameDto::createShared();
         hostnameResponseDto->hostname = hostname;
         return createDtoResponse(Status::CODE_200, hostnameResponseDto);
@@ -315,7 +325,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getSerialNumber() {
 
     return process(__FUNCTION__, [&](){
-        auto serial = wait(systemModule->coreModule()->getSerialNumber());
+        auto serial = waitFor(systemModule->coreModule()->getSerialNumber());
         auto serialResponseDto = SerialDto::createShared();
         serialResponseDto->serial = serial;
         return createDtoResponse(Status::CODE_200, serialResponseDto);
@@ -325,7 +335,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getPowerSupplyType() {
 
     return process(__FUNCTION__, [&](){
-        auto res = wait(systemModule->coreModule()->getPowerSupplyType());
+        auto res = waitFor(systemModule->coreModule()->getPowerSupplyType());
 
         auto supplyTypeResponseDto = SupplyTypeDto::createShared();
         supplyTypeResponseDto->vin = res.isVIN;
@@ -339,7 +349,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getVoltage5V() {
 
     return process(__FUNCTION__, [&](){
-        auto voltage = wait(systemModule->coreModule()->getVoltage5V());
+        auto voltage = waitFor(systemModule->coreModule()->getVoltage5V());
         auto voltageResponseDto = VoltageDto::createShared();
         voltageResponseDto->voltage = voltage;
         return createDtoResponse(Status::CODE_200, voltageResponseDto);
@@ -349,7 +359,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getVoltageVIN() {
 
     return process(__FUNCTION__, [&](){
-        auto voltage = wait(systemModule->coreModule()->getVoltageVIN());
+        auto voltage = waitFor(systemModule->coreModule()->getVoltageVIN());
         auto voltageResponseDto = VoltageDto::createShared();
         voltageResponseDto->voltage = voltage;
         return createDtoResponse(Status::CODE_200, voltageResponseDto);
@@ -359,7 +369,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getPoEVoltage() {
 
     return process(__FUNCTION__, [&](){
-        auto voltage = wait(systemModule->coreModule()->getVoltagePoE());
+        auto voltage = waitFor(systemModule->coreModule()->getVoltagePoE());
         auto voltageResponseDto = VoltageDto::createShared();
         voltageResponseDto->voltage = voltage;
         return createDtoResponse(Status::CODE_200, voltageResponseDto);
@@ -369,7 +379,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getCurrentConsumption() {
 
     return process(__FUNCTION__, [&](){
-        auto current = wait(systemModule->coreModule()->getCurrentConsumption());
+        auto current = waitFor(systemModule->coreModule()->getCurrentConsumption());
         auto currentResponseDto = CurrentDto::createShared();
         currentResponseDto->current = current;
         return createDtoResponse(Status::CODE_200, currentResponseDto);
@@ -379,7 +389,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getPowerDraw() {
 
     return process(__FUNCTION__, [&](){
-        auto powerDraw = wait(systemModule->coreModule()->getPowerDraw());
+        auto powerDraw = waitFor(systemModule->coreModule()->getPowerDraw());
         auto powerDrawResponseDto = PowerDrawDto::createShared();
         powerDrawResponseDto->power_draw = powerDraw;
         return createDtoResponse(Status::CODE_200, powerDrawResponseDto);
@@ -413,39 +423,8 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         processIntensity(ii2, body->intensity->at(2));
         processIntensity(ii3, body->intensity->at(3));
 
-        return wait(systemModule->controlModule()->setIntensities(ii0, ii1, ii2, ii3));
+        return waitFor(systemModule->controlModule()->setIntensities(ii0, ii1, ii2, ii3));
     });
-/*
-    return process(__FUNCTION__, [&](){
-        if (!body || !body->intensity || body->intensity->size() != 4) {
-            return createResponse(Status::CODE_400, "Invalid intensity array. Must contain exactly 4 values.");
-        }
-
-        //add futures into vector
-        std::vector < std::shared_future <bool>> futures;
-
-        for (size_t i = 0; i < body->intensity->size(); i++) {
-            auto intensity = body->intensity->at(i);
-            if (!intensity){
-                continue;
-            }
-
-            if (*intensity < 0.0f || *intensity > 1.0f) {
-                return createResponse(Status::CODE_400, "Invalid intensity value. Must be between 0.0 and 1.0.");
-            }
-
-            futures.push_back(systemModule->controlModule()->setIntensity(*intensity, i));
-        }
-
-        for (auto f : futures){
-            f.wait();
-            if (!f.get()){
-                 return createResponse(Status::CODE_500, "Cannot set intensity");
-            }
-        }
-
-        return createResponse(Status::CODE_200, "Intensities set successfully.");
-    });*/
 }
 
 int SMBRController::getChannel(const dto::ChannelEnum& channel) {
@@ -474,14 +453,14 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
             throw ArgumentException("Invalid intensity. Must be between 0 and 1.");
         }
 
-        return wait(systemModule->controlModule()->setIntensity(body->intensity, getChannel(channel)));
+        return waitFor(systemModule->controlModule()->setIntensity(body->intensity, getChannel(channel)));
     });
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getIntensity(const oatpp::Enum<dto::ChannelEnum>::AsString& channel) {
 
     return process(__FUNCTION__, [&](){
-        auto intensity = wait(systemModule->controlModule()->getIntensity(getChannel(channel)));
+        auto intensity = waitFor(systemModule->controlModule()->getIntensity(getChannel(channel)));
         auto intensityResponseDto = IntensityDto::createShared();
         intensityResponseDto->intensity = intensity;
         return createDtoResponse(Status::CODE_200, intensityResponseDto);
@@ -491,7 +470,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getLedTemperature() {
 
     return process(__FUNCTION__, [&](){
-        auto temperature = wait(systemModule->controlModule()->getLedTemperature());
+        auto temperature = waitFor(systemModule->controlModule()->getLedTemperature());
         auto tempResponseDto = TempDto::createShared();
         tempResponseDto->temperature = temperature;
         return createDtoResponse(Status::CODE_200, tempResponseDto);
@@ -506,14 +485,14 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
             throw ArgumentException("Invalid intensity value. Must be between -1.0 and 1.0.");
         }
 
-        return wait(systemModule->controlModule()->setHeaterIntensity(body->intensity));
+        return waitFor(systemModule->controlModule()->setHeaterIntensity(body->intensity));
     });
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getHeaterIntensity() {
 
     return process(__FUNCTION__, [&](){
-        auto intensity = wait(systemModule->controlModule()->getHeaterIntensity());
+        auto intensity = waitFor(systemModule->controlModule()->getHeaterIntensity());
         auto intensityResponseDto = IntensityDto::createShared();
         intensityResponseDto->intensity = intensity;
         return createDtoResponse(Status::CODE_200, intensityResponseDto);
@@ -527,13 +506,13 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
             throw ArgumentException("Invalid target temperature. Must be a positive value.");
         }
 
-        return wait(systemModule->controlModule()->setHeaterTargetTemperature(body->temperature));
+        return waitFor(systemModule->controlModule()->setHeaterTargetTemperature(body->temperature));
     });
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getHeaterTargetTemperature() {
     return process(__FUNCTION__, [&](){
-        auto temperature = wait(systemModule->controlModule()->getHeaterTargetTemperature());
+        auto temperature = waitFor(systemModule->controlModule()->getHeaterTargetTemperature());
 
         auto tempResponseDto = TempDto::createShared();
 
@@ -552,7 +531,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getHeaterPlateTemperature() {
 
     return process(__FUNCTION__, [&](){
-        auto plateTemperature = wait(systemModule->controlModule()->getHeaterPlateTemperature());
+        auto plateTemperature = waitFor(systemModule->controlModule()->getHeaterPlateTemperature());
         auto plateTempResponseDto = TempDto::createShared();
         plateTempResponseDto->temperature = plateTemperature;
         return createDtoResponse(Status::CODE_200, plateTempResponseDto);
@@ -563,7 +542,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::turnOffHeater() {
 
     return processBool(__FUNCTION__, [&](){
-        return wait(systemModule->controlModule()->turnOffHeater());
+        return waitFor(systemModule->controlModule()->turnOffHeater());
     });
 }
 
@@ -574,14 +553,14 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
             throw ArgumentException("Invalid speed value. Must be between -1.0 and 1.0.");
         }
 
-        return wait(systemModule->controlModule()->setCuvettePumpSpeed(body->speed));
+        return waitFor(systemModule->controlModule()->setCuvettePumpSpeed(body->speed));
     });
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getCuvettePumpSpeed() {
 
     return process(__FUNCTION__, [&](){
-        auto speed = wait(systemModule->controlModule()->getCuvettePumpSpeed());
+        auto speed = waitFor(systemModule->controlModule()->getCuvettePumpSpeed());
         auto speedResponseDto = SpeedDto::createShared();
         speedResponseDto->speed = speed;
         return createDtoResponse(Status::CODE_200, speedResponseDto);
@@ -595,14 +574,14 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
             throw ArgumentException("Invalid flowrate value. Must be between -1000.0 and 1000.0.");
         }
 
-        return wait(systemModule->controlModule()->setCuvettePumpFlowrate(body->flowrate));
+        return waitFor(systemModule->controlModule()->setCuvettePumpFlowrate(body->flowrate));
     });
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getCuvettePumpFlowrate() {
 
     return process(__FUNCTION__, [&](){
-        auto flowrate = wait(systemModule->controlModule()->getCuvettePumpFlowrate());
+        auto flowrate = waitFor(systemModule->controlModule()->getCuvettePumpFlowrate());
         auto flowrateResponseDto = FlowrateDto::createShared();
         flowrateResponseDto->flowrate = flowrate;
         return createDtoResponse(Status::CODE_200, flowrateResponseDto);
@@ -618,28 +597,28 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         if (!body || body->flowrate < -1000.0f || body->flowrate > 1000.0f) {
             throw ArgumentException("Invalid flowrate value. Must be between -1000.0 and 1000.0.");
         }
-        return wait(systemModule->controlModule()->moveCuvettePump(body->volume, body->flowrate));
+        return waitFor(systemModule->controlModule()->moveCuvettePump(body->volume, body->flowrate));
     });
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::primeCuvettePump() {
 
     return processBool(__FUNCTION__, [&](){
-        return wait(systemModule->controlModule()->primeCuvettePump());
+        return waitFor(systemModule->controlModule()->primeCuvettePump());
     });
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::purgeCuvettePump() {
 
     return processBool(__FUNCTION__, [&](){
-        return wait(systemModule->controlModule()->purgeCuvettePump());
+        return waitFor(systemModule->controlModule()->purgeCuvettePump());
     });
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::stopCuvettePump() {
 
     return processBool(__FUNCTION__, [&](){
-        return wait(systemModule->controlModule()->stopCuvettePump());
+        return waitFor(systemModule->controlModule()->stopCuvettePump());
     });
 }
 
@@ -650,14 +629,14 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
             throw ArgumentException("Invalid speed value. Must be between 0.0 and 1.0.");
         }
 
-        return wait(systemModule->controlModule()->setAeratorSpeed(body->speed));
+        return waitFor(systemModule->controlModule()->setAeratorSpeed(body->speed));
     });
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getAeratorSpeed() {
 
     return process(__FUNCTION__, [&](){
-        auto speed = wait(systemModule->controlModule()->getAeratorSpeed());
+        auto speed = waitFor(systemModule->controlModule()->getAeratorSpeed());
         auto speedResponseDto = SpeedDto::createShared();
         speedResponseDto->speed = speed;
         return createDtoResponse(Status::CODE_200, speedResponseDto);
@@ -671,14 +650,14 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
             throw ArgumentException("Invalid flowrate value. Must be between 10.0 and 5000.0 ml/min.");
         }
 
-        return wait(systemModule->controlModule()->setAeratorFlowrate(body->flowrate));
+        return waitFor(systemModule->controlModule()->setAeratorFlowrate(body->flowrate));
     });
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getAeratorFlowrate() {
 
     return process(__FUNCTION__, [&](){
-        auto flowrate = wait(systemModule->controlModule()->getAeratorFlowrate());
+        auto flowrate = waitFor(systemModule->controlModule()->getAeratorFlowrate());
         auto flowrateResponseDto = FlowrateDto::createShared();
         flowrateResponseDto->flowrate = flowrate;
         return createDtoResponse(Status::CODE_200, flowrateResponseDto);
@@ -695,14 +674,14 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
             throw ArgumentException("Invalid flowrate value. Must be between 10.0 and 5000.0 ml/min.");
         }
 
-        return wait(systemModule->controlModule()->moveAerator(body->volume, body->flowrate));
+        return waitFor(systemModule->controlModule()->moveAerator(body->volume, body->flowrate));
     });
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::stopAerator() {
 
     return processBool(__FUNCTION__, [&](){
-        return wait(systemModule->controlModule()->stopAerator());
+        return waitFor(systemModule->controlModule()->stopAerator());
     });
 }
 
@@ -713,14 +692,14 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
             throw ArgumentException("Invalid speed value. Must be between 0.0 and 1.0.");
         }
 
-        return wait(systemModule->controlModule()->setMixerSpeed(body->speed));
+        return waitFor(systemModule->controlModule()->setMixerSpeed(body->speed));
     });
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getMixerSpeed() {
 
     return process(__FUNCTION__, [&](){
-        auto speed = wait(systemModule->controlModule()->getMixerSpeed());
+        auto speed = waitFor(systemModule->controlModule()->getMixerSpeed());
         auto speedResponseDto = SpeedDto::createShared();
         speedResponseDto->speed = speed;
         return createDtoResponse(Status::CODE_200, speedResponseDto);
@@ -734,14 +713,14 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
             throw ArgumentException("Invalid RPM value. Must be between 0 and 10000.");
         }
 
-        return wait(systemModule->controlModule()->setMixerRpm(body->rpm));
+        return waitFor(systemModule->controlModule()->setMixerRpm(body->rpm));
     });
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getMixerRpm() {
 
     return process(__FUNCTION__, [&](){
-        auto rpm = wait(systemModule->controlModule()->getMixerRpm());
+        auto rpm = waitFor(systemModule->controlModule()->getMixerRpm());
         auto rpmResponseDto = RpmDto::createShared();
         rpmResponseDto->rpm = rpm;
         return createDtoResponse(Status::CODE_200, rpmResponseDto);
@@ -755,14 +734,14 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
             throw ArgumentException("Invalid RPM or time value. RPM must be between 0 and 10000, and time must be between 0 and 3600 seconds.");
         }
 
-        return wait(systemModule->controlModule()->stirMixer(body->rpm, body->time));
+        return waitFor(systemModule->controlModule()->stirMixer(body->rpm, body->time));
     });
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::stopMixer() {
 
     return processBool(__FUNCTION__, [&](){
-        return wait(systemModule->controlModule()->stopMixer());
+        return waitFor(systemModule->controlModule()->stopMixer());
     });
 }
 
@@ -773,7 +752,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getBottleTemperature() {
 
     return process(__FUNCTION__, [&](){
-        auto temperature = wait(systemModule->sensorModule()->getBottleTemperature());
+        auto temperature = waitFor(systemModule->sensorModule()->getBottleTemperature());
         auto tempResponseDto = TempDto::createShared();
         tempResponseDto->temperature = temperature;
         return createDtoResponse(Status::CODE_200, tempResponseDto);
@@ -783,7 +762,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getTopMeasuredTemperature() {
 
     return process(__FUNCTION__, [&](){
-        auto temperature = wait(systemModule->sensorModule()->getTopMeasuredTemperature());
+        auto temperature = waitFor(systemModule->sensorModule()->getTopMeasuredTemperature());
         auto tempResponseDto = TempDto::createShared();
         tempResponseDto->temperature = temperature;
         return createDtoResponse(Status::CODE_200, tempResponseDto);
@@ -793,7 +772,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getBottomMeasuredTemperature() {
 
     return process(__FUNCTION__, [&](){
-        auto temperature = wait(systemModule->sensorModule()->getBottomMeasuredTemperature());
+        auto temperature = waitFor(systemModule->sensorModule()->getBottomMeasuredTemperature());
         auto tempResponseDto = TempDto::createShared();
         tempResponseDto->temperature = temperature;
         return createDtoResponse(Status::CODE_200, tempResponseDto);
@@ -803,7 +782,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getTopSensorTemperature() {
 
     return process(__FUNCTION__, [&](){
-        auto temperature = wait(systemModule->sensorModule()->getTopSensorTemperature());
+        auto temperature = waitFor(systemModule->sensorModule()->getTopSensorTemperature());
         auto tempResponseDto = TempDto::createShared();
         tempResponseDto->temperature = temperature;
         return createDtoResponse(Status::CODE_200, tempResponseDto);
@@ -813,7 +792,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getBottomSensorTemperature() {
 
     return process(__FUNCTION__, [&](){
-        auto temperature = wait(systemModule->sensorModule()->getBottomSensorTemperature());
+        auto temperature = waitFor(systemModule->sensorModule()->getBottomSensorTemperature());
         auto tempResponseDto = TempDto::createShared();
         tempResponseDto->temperature = temperature;
         return createDtoResponse(Status::CODE_200, tempResponseDto);
@@ -822,13 +801,13 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::clearCustomText() {
     return processBool(__FUNCTION__, [&](){
-        return wait(systemModule->sensorModule()->clearCustomText());
+        return waitFor(systemModule->sensorModule()->clearCustomText());
     });
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::printCustomText(const oatpp::Object<TextDto>& body) {
     return processBool(__FUNCTION__, [&](){
-        return wait(systemModule->sensorModule()->printCustomText(body->text));
+        return waitFor(systemModule->sensorModule()->printCustomText(body->text));
     });
 }
 
@@ -869,7 +848,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
         Fluorometer_config::Gain detector_gain = getGain(gain);
 
-        auto sample = wait(systemModule->sensorModule()->takeFluorometerSingleSample(detector_gain, body->emitor_intensity));
+        auto sample = waitFor(systemModule->sensorModule()->takeFluorometerSingleSample(detector_gain, body->emitor_intensity));
 
         auto responseDto = FluorometerSingleSampleResponseDto::createShared();
         responseDto->raw_value = sample.raw_value;
@@ -919,6 +898,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
     {
         std::unique_lock<std::mutex> lock(retrieveMutex);
+        //TODO timeout
         retrieveCondition.wait(lock, [this]() {
             return !retrievingInProgress;
         });
@@ -948,7 +928,8 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
                     .sample_count = finalSampleCount
                 };
 
-                auto fluorometerData = wait(systemModule->sensorModule()->captureFluorometerOjip(input));
+                //TODO specify timeout
+                auto fluorometerData = waitFor(systemModule->sensorModule()->captureFluorometerOjip(input), finalLengthMs + 30000);
 
                 auto ojipDataDto = FluorometerMeasurementDto::createShared();
                 ojipDataDto->measurement_id = fluorometerData.measurement_id;
@@ -991,7 +972,8 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::checkFluorometerOjipCaptureComplete() {
     return process(__FUNCTION__, [&](){
-        auto captureComplete = wait(systemModule->sensorModule()->isFluorometerOjipCaptureComplete());
+        //TODO specify timeout
+        auto captureComplete = waitFor(systemModule->sensorModule()->isFluorometerOjipCaptureComplete(), 30000);
         auto captureStatusDto = FluorometerCaptureStatusDto::createShared();
         captureStatusDto->capture_complete = captureComplete;
         return createDtoResponse(Status::CODE_200, captureStatusDto);
@@ -1014,6 +996,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     std::unique_lock<std::mutex> lock(retrieveMutex);
 
     if (retrievingInProgress) {
+        //TODO timeout
         retrieveCondition.wait(lock, [this]() {
             return !retrievingInProgress;
         });
@@ -1026,7 +1009,8 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     lock.unlock();
 
     auto response = process(__FUNCTION__, [&]() {
-        auto fluorometerData = wait(systemModule->sensorModule()->retrieveLastFluorometerOjipData());
+        //TODO timeout
+        auto fluorometerData = waitFor(systemModule->sensorModule()->retrieveLastFluorometerOjipData(), 30000);
 
         auto dto = FluorometerMeasurementDto::createShared();
         dto->measurement_id = fluorometerData.measurement_id;
@@ -1063,7 +1047,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getFluorometerDetectorInfo() {
     return process(__FUNCTION__, [&](){
-        auto info = wait(systemModule->sensorModule()->getFluorometerDetectorInfo());
+        auto info = waitFor(systemModule->sensorModule()->getFluorometerDetectorInfo());
         auto infoDto = FluorometerDetectorInfoDto::createShared();
         std::cout<<info.peak_wavelength<<" "<<info.sensitivity<<" "<<info.sampling_rate<<std::endl;
         infoDto->peak_wavelength = info.peak_wavelength;
@@ -1075,7 +1059,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getFluorometerDetectorTemperature() {
     return process(__FUNCTION__, [&](){
-        auto temperature = wait(systemModule->sensorModule()->getFluorometerDetectorTemperature());
+        auto temperature = waitFor(systemModule->sensorModule()->getFluorometerDetectorTemperature());
         auto tempResponseDto = TempDto::createShared();
         tempResponseDto->temperature = temperature;
         return createDtoResponse(Status::CODE_200, tempResponseDto);
@@ -1084,7 +1068,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getFluorometerEmitorInfo() {
     return process(__FUNCTION__, [&](){
-        auto info = wait(systemModule->sensorModule()->getFluorometerEmitorInfo());
+        auto info = waitFor(systemModule->sensorModule()->getFluorometerEmitorInfo());
         auto infoDto = FluorometerEmitorInfoDto::createShared();
         infoDto->peak_wavelength = info.peak_wavelength;
         infoDto->power_output = info.power_output;
@@ -1094,7 +1078,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getFluorometerEmitorTemperature() {
     return process(__FUNCTION__, [&](){
-        auto temperature = wait(systemModule->sensorModule()->getFluorometerEmitorTemperature());
+        auto temperature = waitFor(systemModule->sensorModule()->getFluorometerEmitorTemperature());
         auto tempResponseDto = TempDto::createShared();
         tempResponseDto->temperature = temperature;
         return createDtoResponse(Status::CODE_200, tempResponseDto);
@@ -1103,7 +1087,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getSpectrophotometerChannels() {
     return process(__FUNCTION__, [&](){
-        auto channels = wait(systemModule->sensorModule()->getSpectrophotometerChannels());
+        auto channels = waitFor(systemModule->sensorModule()->getSpectrophotometerChannels());
         auto responseDto = SpectroChannelsDto::createShared();
         responseDto->channels = channels;
         return createDtoResponse(Status::CODE_200, responseDto);
@@ -1112,7 +1096,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getSpectrophotometerChannelInfo(const oatpp::UInt8& channel) {
     return process(__FUNCTION__, [&](){
-        auto channelInfo = wait(systemModule->sensorModule()->getSpectrophotometerChannelInfo(channel));
+        auto channelInfo = waitFor(systemModule->sensorModule()->getSpectrophotometerChannelInfo(channel));
         auto responseDto = SpectroChannelInfoDto::createShared();
         responseDto->channel = channelInfo.channel;
         responseDto->peak_wavelength = channelInfo.peak_wavelength;
@@ -1123,13 +1107,13 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::measureAllSpectrophotometerChannels() {
     return process(__FUNCTION__, [&](){
-        auto channelCount = wait(systemModule->sensorModule()->getSpectrophotometerChannels());
+        auto channelCount = waitFor(systemModule->sensorModule()->getSpectrophotometerChannels());
 
         auto measurementsDto = SpectroMeasurementsDto::createShared();
         measurementsDto->measurements = oatpp::Vector<oatpp::Object<SingleChannelMeasurementDto>>::createShared();
 
         for (int8_t channel = 0; channel < channelCount; channel++) {
-            auto measurement = wait(systemModule->sensorModule()->measureSpectrophotometerChannel(channel));
+            auto measurement = waitFor(systemModule->sensorModule()->measureSpectrophotometerChannel(channel));
             auto channelMeasurement = SingleChannelMeasurementDto::createShared();
             channelMeasurement->channel = measurement.channel;
             channelMeasurement->relative_value = measurement.relative_value;
@@ -1142,7 +1126,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::measureSingleSpectrophotometerChannel(const Int8& channel) {
     return process(__FUNCTION__, [&](){
-        auto measurement = wait(systemModule->sensorModule()->measureSpectrophotometerChannel(channel));
+        auto measurement = waitFor(systemModule->sensorModule()->measureSpectrophotometerChannel(channel));
         auto responseDto = SingleChannelMeasurementDto::createShared();
         responseDto->channel = measurement.channel;
         responseDto->relative_value = measurement.relative_value;
@@ -1152,7 +1136,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getSpectrophotometerEmitorTemperature() {
     return process(__FUNCTION__, [&](){
-        auto temperature = wait(systemModule->sensorModule()->getSpectrophotometerEmitorTemperature());
+        auto temperature = waitFor(systemModule->sensorModule()->getSpectrophotometerEmitorTemperature());
         auto tempResponseDto = TempDto::createShared();
         tempResponseDto->temperature = temperature;
         return createDtoResponse(Status::CODE_200, tempResponseDto);
@@ -1166,7 +1150,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         return createDtoResponse(Status::CODE_500, dto);
     }
     return processBool(__FUNCTION__, [&](){
-        return wait(systemModule->sensorModule()->calibrateSpectrophotometer());
+        return waitFor(systemModule->sensorModule()->calibrateSpectrophotometer());
     });
 }
 
@@ -1176,13 +1160,16 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getRecipeList() {
     try {
+        LDEBUG("API") << "Api getRecipeList begin" << LE;
         auto sc = recipes_->getRecipeNames();
         auto dtoList = oatpp::List<oatpp::String>::createShared();
         for (auto s : sc){
             dtoList->push_back(s);
         }
+        LDEBUG("API") << "Api getRecipeList end (success)" << LE;
         return createDtoResponse(Status::CODE_200, dtoList);
     } catch (std::exception & e){
+        LWARNING("API") << "Api getRecipeList end (failure: " << e.what() << ")" << LE;
         return createResponse(Status::CODE_500, "Failed to retrieve recipe list: " + std::string(e.what()));
     }
 }
@@ -1198,18 +1185,22 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getRecipeContent(const oatpp::String& name) {
     try {
+        LDEBUG("API") << "Api getRecipeContent begin" << LE;
         auto s = recipes_->getRecipeContent(name);
         auto scriptResponseDto = ScriptDto::createShared();
         scriptResponseDto->name = s.name;
         scriptResponseDto->content = s.content;
+        LDEBUG("API") << "Api getRecipeContent end (success)" << LE;
         return createDtoResponse(Status::CODE_200, scriptResponseDto);
     } catch (std::exception & e){
+        LWARNING("API") << "Api getRecipeContent end (failure: " << e.what() << ")" << LE;
         return createResponse(Status::CODE_500, "Failed to retrieve recipe: " + std::string(e.what()));
     }
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::updateRecipe(const oatpp::String& name, const oatpp::Object<ScriptDto>& body) {
     try {
+        LDEBUG("API") << "Api updateRecipe begin" << LE;
         if (!body || !body->name || !body->content) {
             throw ArgumentException("Invalid script. Must contain a name and content.");
         }
@@ -1217,17 +1208,22 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         s.name = *body->name;
         s.content = *body->content;
         recipes_->replaceRecipe(s);
+        LDEBUG("API") << "Api updateRecipe end (success)" << LE;
         return createResponse(Status::CODE_200, "Recipe updated successfully.");
     } catch (std::exception & e){
+        LWARNING("API") << "Api updateRecipe end (failure: " << e.what() << ")" << LE;
         return createResponse(Status::CODE_500, "Failed to update recipe: " + std::string(e.what()));
     }
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::deleteRecipe(const oatpp::String& name) {
     try {
+        LDEBUG("API") << "Api deleteRecipe begin" << LE;
         recipes_->deleteRecipe(name);
+        LDEBUG("API") << "Api deleteRecipe end (success)" << LE;
         return createResponse(Status::CODE_200, "Recipe deleted successfully.");
     } catch (std::exception & e){
+        LWARNING("API") << "Api deleteRecipe end (failure: " << e.what() << ")" << LE;
         return createResponse(Status::CODE_500, "Failed to delete recipe: " + std::string(e.what()));
     }
 }
@@ -1236,70 +1232,63 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 // ==========================================
 // Scheduler
 // ==========================================
-/*
-std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::uploadScript(const oatpp::Object<ScriptDto>& body) {
-
-    try {
-        if (!body || !body->name || !body->content) {
-            throw ArgumentException("Invalid script. Must contain a name and content.");
-        }
-        ScriptInfo s;
-        s.name = *body->name;
-        s.content = *body->content;
-        scheduler_->setScriptFromString(s);
-        return createResponse(Status::CODE_200, "Script uploaded successfully.");
-    } catch (std::exception & e){
-        return createResponse(Status::CODE_500, "Failed to upload script: " + std::string(e.what()));
-    }
-}*/
-
-
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::selectRecipe(const oatpp::String& name) {
     try {
+        LDEBUG("API") << "Api selectRecipe begin" << LE;
         auto sc = recipes_->getRecipeContent(name);
         scheduler_->setScriptFromString(sc);
+        LDEBUG("API") << "Api selectRecipe end (success)" << LE;
         return createResponse(Status::CODE_200, "Recipe " + name + " selected.");
     } catch (std::exception & e){
+        LWARNING("API") << "Api selectRecipe end (failure: " << e.what() << ")" << LE;
         return createResponse(Status::CODE_500, "Failed to select script: " + std::string(e.what()));
     }
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getRecipe() {
     try {
+        LDEBUG("API") << "Api getRecipe begin" << LE;
         auto s = scheduler_->getScript();
         auto scriptResponseDto = ScriptDto::createShared();
         scriptResponseDto->name = s.name;
         scriptResponseDto->content = s.content;
+        LDEBUG("API") << "Api getRecipe end (success)" << LE;
         return createDtoResponse(Status::CODE_200, scriptResponseDto);
     } catch (std::exception & e){
+        LWARNING("API") << "Api getRecipe end (failure: " << e.what() << ")" << LE;
         return createResponse(Status::CODE_500, "Failed to retrieve recipe: " + std::string(e.what()));
     }
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::startScheduler() {
     try {
-        std::cout << "start called from API" << std::endl;
+        LDEBUG("API") << "Api startScheduler begin" << LE;
         auto processId = scheduler_->start();
         auto scriptProcessIdDto = ScriptProcessIdDto::createShared();
         scriptProcessIdDto->processId = processId;
+        LDEBUG("API") << "Api startScheduler end (success)" << LE;
         return createDtoResponse(Status::CODE_200, scriptProcessIdDto);
     } catch (std::exception & e){
+        LWARNING("API") << "Api startScheduler end (failure: " << e.what() << ")" << LE;
         return createResponse(Status::CODE_500, "Failed to start script: " + std::string(e.what()));
     }
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::stopScheduler() {
     try {
-        std::cout << "stop called from API" << std::endl;
+        LDEBUG("API") << "Api stopScheduler begin" << LE;
         scheduler_->stop();
+        LDEBUG("API") << "Api stopScheduler end (success)" << LE;
         return createResponse(Status::CODE_200, "Script stopped successfully.");
     } catch (std::exception & e){
+        LWARNING("API") << "Api stopScheduler end (failure: " << e.what() << ")" << LE;
         return createResponse(Status::CODE_500, "Failed to stop script: " + std::string(e.what()));
     }
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getSchedulerInfo() {
     try {
+        LDEBUG("API") << "Api getSchedulerInfo begin" << LE;
         RuntimeInfo info = scheduler_->getRuntimeInfo();
         auto infoResponseDto = ScriptRuntimeInfoDto::createShared();
 
@@ -1321,9 +1310,11 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
         infoResponseDto->startedAt = Poco::DateTimeFormatter::format(info.startTime, "%Y-%m-%d %H:%M:%S");;
 
+        LDEBUG("API") << "Api getSchedulerInfo end" << LE;
         return createDtoResponse(Status::CODE_200, infoResponseDto);
 
     } catch (std::exception & e){
+        LWARNING("API") << "Api getSchedulerInfo end (failure: " << e.what() << ")" << LE;
         return createResponse(Status::CODE_500, "Failed to retrieve scheduler status: " + std::string(e.what()));
     }
 }

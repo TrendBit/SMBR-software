@@ -29,5 +29,7 @@ namespace SMBR {
 
    
     void dumpBacktrace(std::string name, std::string logname = "SMBR", int level = 4);
+
+    void initConsoleLogs(int level = Poco::Message::PRIO_TRACE);
 }
 

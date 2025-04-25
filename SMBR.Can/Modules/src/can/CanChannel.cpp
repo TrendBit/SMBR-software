@@ -112,9 +112,9 @@ void CanChannel::runWrite(){
                 sendRequest(s);
             }
         } catch (std::exception &e) {
-            std::cerr << "Failed to send CAN message (" << e.what() << ")" << std::endl;
+            LERROR("CAN") << "Failed to send CAN message (" << e.what() << ")" << LE;
         } catch (...) {
-            std::cerr << "Failed to send CAN message (unknown error)" << std::endl;
+            LERROR("CAN") << "Failed to send CAN message (unknown error)" << LE;
         }
     }
 }
@@ -185,9 +185,9 @@ void CanChannel::runRead() {
                 }
             }
         } catch (std::exception &e) {
-            std::cerr << "Failed to receive CAN message (" << e.what() << ")" << std::endl;
+            LERROR("CAN") << "Failed to receive CAN message (" << e.what() << ")" << LE;
         } catch (...) {
-            std::cerr << "Failed to receive CAN message (unknown error)" << std::endl;
+            LERROR("CAN") << "Failed to receive CAN message (unknown error)" << LE;
         }
     }
 }

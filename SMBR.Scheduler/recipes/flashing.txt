@@ -7,7 +7,7 @@ main:
     wait 10
 
     loop
-        display "on"
+        display "on with much longer text to test it"
         illumination 0.05 0.05 0.05 0.05
         wait 0.25
         display "off"

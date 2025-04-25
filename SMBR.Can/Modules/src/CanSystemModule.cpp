@@ -53,9 +53,9 @@ void CanSystemModule::refresh(){
         common[mm] = std::make_shared<CanCommonModule>(mm, channel);
     }
 
-    std::cout << "DETECTED MODULES: " << common.size() << std::endl;
+    LNOTICE("Module") << "Detected CAN modules: " << LE;
     for (const auto& mm : common) {
-        std::cout << "MODULE: " << mm.first << std::endl;
+        LNOTICE("Module") << " - " << mm.first << LE;
     }
 }
 

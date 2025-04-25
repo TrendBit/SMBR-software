@@ -131,7 +131,13 @@ std::future <bool> CanSensorModule::printCustomText(std::string text) {
     }
 
     for (size_t i = 0; i < text.length(); i += App_messages::Mini_OLED::Print_custom_text::max_length) {
-        std::string chunk = text.substr(i, App_messages::Mini_OLED::Print_custom_text::max_length);
+        int remaining = text.length() - i;
+        std::string chunk = "";
+        if (remaining < App_messages::Mini_OLED::Print_custom_text::max_length) {
+            chunk = text.substr(i, remaining);
+        } else {
+            chunk = text.substr(i, App_messages::Mini_OLED::Print_custom_text::max_length);
+        }
         App_messages::Mini_OLED::Print_custom_text r(chunk);
         tasks.push_back(base.createRequest(r));
     }

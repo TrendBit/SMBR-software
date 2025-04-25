@@ -89,7 +89,7 @@ unsigned long long Scheduler::start(){
         throw std::runtime_error("No script uploaded");
     } 
 
-    std::cout << "start called" << std::endl;
+    LNOTICE("Scheduler") << "Sch [FG] start called" << LE;
     bgScriptStopped = false;
 
     pendingScript.script = uploadedScript;
@@ -98,7 +98,7 @@ unsigned long long Scheduler::start(){
     return pendingScript.processId;
 }
 void Scheduler::stop(){
-    std::cout << "stopped called" << std::endl;
+    LNOTICE("Scheduler") << "Sch [FG] stop called" << LE;
     
     bgScriptStopped = true;
 }

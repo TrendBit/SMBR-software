@@ -320,78 +320,82 @@ void CanSensorModule::sendCanRequest(uint32_t timeoutMs, std::shared_ptr<std::pr
     ResponseInfo responseInfo;
     responseInfo.timeoutMs = timeoutMs;
 
-    auto result = std::make_shared<ISensorModule::FluorometerOjipData>();
-    auto receivedSamples = std::make_shared<int>(0);
-    auto metadataLoaded = std::make_shared<bool>(false);
-    auto isSaturated = std::make_shared<bool>(false);
+    struct ProcessingContext {
+        ISensorModule::FluorometerOjipData result;
+        std::vector<ResponseData> responses;
+        bool processed = false;
+        int receivedSamples = 0;
+        bool metadataLoaded = false;
+        bool isSaturated = false;
+    };
+    
+    auto context = std::make_shared<ProcessingContext>();
 
     responseInfo.acceptFunction = [](const ResponseData& response) {
         App_messages::Fluorometer::Data_sample rawResponse;
         return response.id.messageType() == static_cast<uint16_t>(rawResponse.Type());
     };
 
-    responseInfo.isDoneFunction = [this, result, receivedSamples, metadataLoaded, isSaturated](const std::vector<ResponseData>& responses) {
-        result->samples.clear();
-        *receivedSamples = 0;
-        *metadataLoaded = false;
-        *isSaturated = false;
-
-        for (const auto& rr : responses) {
-            auto dataCopy = rr.data;
-            App_messages::Fluorometer::Data_sample sampleResponse;
-            if (sampleResponse.Interpret_data(dataCopy) && sampleResponse.Measurement_id() == CalculateMeasurementID(last_api_id)) {
-                (*receivedSamples)++;
-
-                if (!*metadataLoaded) {
-                    result->detector_gain = sampleResponse.gain;
-                    result->emitor_intensity = sampleResponse.Emitor_intensity();
-                    *metadataLoaded = true;
-                }
-
-                ISensorModule::FluorometerSample sample;
-                sample.time_ms = sampleResponse.Time_ms();
-                sample.raw_value = sampleResponse.sample_value;
-                sample.relative_value = sampleResponse.Relative_value();
-                sample.absolute_value = sampleResponse.Absolute_value();
-                result->samples.push_back(sample);
-                result->measurement_id = last_api_id;
-
-                if (sample.raw_value > 4000) {
-                    *isSaturated = true;
-                }
-            }
-        }
-
-        return *receivedSamples >= last_required_samples;
+    responseInfo.isDoneFunction = [this, context](const std::vector<ResponseData>& responses) {
+        context->responses = responses;
+        return responses.size() >= static_cast<size_t>(last_required_samples);
     };
 
     responseInfo.successOnTimeout = true;
 
     CanRequest canRequest(requestData, responseInfo);
 
-    channel->send(canRequest, [this, promise, result, receivedSamples, isSaturated](ICanChannel::Response response) {
+    channel->send(canRequest, [this, promise, context](ICanChannel::Response response) {
+        if (!context->processed) {
+            for (const auto& rr : context->responses) {
+                auto dataCopy = rr.data;
+                App_messages::Fluorometer::Data_sample sampleResponse;
+                if (sampleResponse.Interpret_data(dataCopy) && sampleResponse.Measurement_id() == CalculateMeasurementID(last_api_id)) {
+                    context->receivedSamples++;
+                    if (!context->metadataLoaded) {
+                        context->result.detector_gain = sampleResponse.gain;
+                        context->result.emitor_intensity = sampleResponse.Emitor_intensity();
+                        context->metadataLoaded = true;
+                    }
+
+                    ISensorModule::FluorometerSample sample;
+                    sample.time_ms = sampleResponse.Time_ms();
+                    sample.raw_value = sampleResponse.sample_value;
+                    sample.relative_value = sampleResponse.Relative_value();
+                    sample.absolute_value = sampleResponse.Absolute_value();
+                    context->result.samples.push_back(sample);
+                    context->result.measurement_id = last_api_id;
+
+                    if (sample.raw_value > 4000) {
+                        context->isSaturated = true;
+                    }
+                }
+            }
+            context->processed = true;
+        }
+
         if (response.status == CanRequestStatus::Success || response.status == CanRequestStatus::Timeout) {
-            if (result->samples.empty()) {
+            if (context->result.samples.empty()) {
                 promise->set_exception(std::make_exception_ptr(
                     std::runtime_error("No measurement data available on the device")));
                 return;
             }
 
-            std::sort(result->samples.begin(), result->samples.end(), [](const FluorometerSample& a, const FluorometerSample& b) {
-                return a.time_ms < b.time_ms;
-            });
+            std::sort(context->result.samples.begin(), context->result.samples.end(), 
+                [](const FluorometerSample& a, const FluorometerSample& b) {
+                    return a.time_ms < b.time_ms;
+                });
 
-            result->timebase = last_timebase;
-            result->length_ms = last_length_ms;
-            result->required_samples = last_required_samples;
-            result->captured_samples = static_cast<int16_t>(result->samples.size());
-            result->missing_samples = result->required_samples - result->captured_samples;
-            result->read = isRead;
-            result->saturated = *isSaturated;
+            context->result.timebase = last_timebase;
+            context->result.length_ms = last_length_ms;
+            context->result.required_samples = last_required_samples;
+            context->result.captured_samples = static_cast<int16_t>(context->result.samples.size());
+            context->result.missing_samples = context->result.required_samples - context->result.captured_samples;
+            context->result.read = isRead;
+            context->result.saturated = context->isSaturated;
 
-            last_measurement_data = *result;
-
-            promise->set_value(*result);
+            last_measurement_data = context->result;
+            promise->set_value(context->result);
         } else {
             promise->set_exception(std::make_exception_ptr(std::runtime_error("Failed to send request")));
         }

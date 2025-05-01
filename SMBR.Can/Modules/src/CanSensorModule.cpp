@@ -1,4 +1,5 @@
 #include "CanSensorModule.hpp"
+#include "SMBR/Log.hpp"
 #include "codes/messages/bottle_temperature/temperature_request.hpp"
 #include "codes/messages/bottle_temperature/temperature_response.hpp"
 #include "codes/messages/bottle_temperature/top_measured_temperature_request.hpp"
@@ -51,6 +52,9 @@
 #include <Poco/Path.h>
 #include <fstream>
 #include <memory>
+#include <chrono>
+#include <iomanip>
+#include <ctime>
 
 static const std::string PARAMS_FILE_PATH = "/data/api-server/fluorometer/measurement_params.json";
 
@@ -312,6 +316,16 @@ bool CanSensorModule::writeMeasurementParams(const std::string& filePath, const 
     return false;
 }
 
+static std::string formatTime(const std::chrono::system_clock::time_point& time) {
+    auto time_t = std::chrono::system_clock::to_time_t(time);
+    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+                time.time_since_epoch()) % 1000;
+    std::stringstream ss;
+    ss << std::put_time(std::localtime(&time_t), "%Y-%m-%d %H:%M:%S")
+       << "." << std::setfill('0') << std::setw(3) << ms.count();
+    return ss.str();
+}
+
 void CanSensorModule::sendCanRequest(uint32_t timeoutMs, std::shared_ptr<std::promise<ISensorModule::FluorometerOjipData>> promise) {
     App_messages::Fluorometer::OJIP_retrieve_request rawRequest;
     CanID requestId = BaseModule::createId(rawRequest.Type(), Codes::Module::Sensor_module, Codes::Instance::Exclusive, false);
@@ -327,9 +341,18 @@ void CanSensorModule::sendCanRequest(uint32_t timeoutMs, std::shared_ptr<std::pr
         int receivedSamples = 0;
         bool metadataLoaded = false;
         bool isSaturated = false;
+        std::chrono::steady_clock::time_point firstSampleTime;
+        std::chrono::steady_clock::time_point lastSampleTime;
+        bool firstSampleLogged = false;
+        std::chrono::steady_clock::time_point startTime;
     };
     
     auto context = std::make_shared<ProcessingContext>();
+    context->startTime = std::chrono::steady_clock::now();
+    auto startSystemTime = std::chrono::system_clock::now();
+
+    LNOTICE("ojipRetrieving") << "[" << formatTime(startSystemTime) << "] Starting OJIP measurement retrieval, timeout: " 
+                             << timeoutMs << "ms" << LE;
 
     responseInfo.acceptFunction = [](const ResponseData& response) {
         App_messages::Fluorometer::Data_sample rawResponse;
@@ -338,6 +361,22 @@ void CanSensorModule::sendCanRequest(uint32_t timeoutMs, std::shared_ptr<std::pr
 
     responseInfo.isDoneFunction = [this, context](const std::vector<ResponseData>& responses) {
         context->responses = responses;
+        
+        if (!responses.empty() && !context->firstSampleLogged) {
+            context->firstSampleTime = std::chrono::steady_clock::now();
+            auto firstSampleSystemTime = std::chrono::system_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+                context->firstSampleTime - context->startTime).count();
+            
+            LNOTICE("ojipRetrieving") << "[" << formatTime(firstSampleSystemTime) << "] First sample received after " 
+                                     << duration << "ms" << LE;
+            context->firstSampleLogged = true;
+        }
+        
+        if (!responses.empty()) {
+            context->lastSampleTime = std::chrono::steady_clock::now();
+        }
+        
         return responses.size() >= static_cast<size_t>(last_required_samples);
     };
 
@@ -345,13 +384,14 @@ void CanSensorModule::sendCanRequest(uint32_t timeoutMs, std::shared_ptr<std::pr
 
     CanRequest canRequest(requestData, responseInfo);
 
-    channel->send(canRequest, [this, promise, context](ICanChannel::Response response) {
+    channel->send(canRequest, [this, promise, context, startSystemTime](ICanChannel::Response response) {
         if (!context->processed) {
             for (const auto& rr : context->responses) {
                 auto dataCopy = rr.data;
                 App_messages::Fluorometer::Data_sample sampleResponse;
                 if (sampleResponse.Interpret_data(dataCopy) && sampleResponse.Measurement_id() == CalculateMeasurementID(last_api_id)) {
                     context->receivedSamples++;
+
                     if (!context->metadataLoaded) {
                         context->result.detector_gain = sampleResponse.gain;
                         context->result.emitor_intensity = sampleResponse.Emitor_intensity();
@@ -372,6 +412,17 @@ void CanSensorModule::sendCanRequest(uint32_t timeoutMs, std::shared_ptr<std::pr
                 }
             }
             context->processed = true;
+        }
+
+        auto endSystemTime = std::chrono::system_clock::now();
+        auto endTime = std::chrono::steady_clock::now();
+        
+        if (!context->responses.empty()) {
+            auto samplesDuration = std::chrono::duration_cast<std::chrono::milliseconds>(
+                context->lastSampleTime - context->firstSampleTime).count();
+                
+            LNOTICE("ojipRetrieving") << "[" << formatTime(endSystemTime) << "] Last sample received, total samples: " 
+                                     << context->receivedSamples << ", collection duration: " << samplesDuration << "ms"<< LE;
         }
 
         if (response.status == CanRequestStatus::Success || response.status == CanRequestStatus::Timeout) {
@@ -437,6 +488,9 @@ void CanSensorModule::checkMeasurementCompletion(uint32_t timeoutMs, std::shared
 std::future<ISensorModule::FluorometerOjipData> CanSensorModule::captureFluorometerOjip(const ISensorModule::FluorometerInput& input) {
     uint32_t api_id;
     uint8_t measurement_id;
+    auto startTime = std::chrono::system_clock::now();
+    LNOTICE("ojipCapture") << "[" << formatTime(startTime) 
+                         << "] Starting OJIP capture process" << LE;
 
     MeasurementParams params;
     if (readMeasurementParams(PARAMS_FILE_PATH, params)) {
@@ -477,13 +531,16 @@ std::future<ISensorModule::FluorometerOjipData> CanSensorModule::captureFluorome
         input.sample_count
     };
 
+    LNOTICE("ojipCapture") << "[" << formatTime(std::chrono::system_clock::now()) 
+                        << "] Sending capture request" << LE;
+
     auto succes = base.set(r);
     if (succes.get()) {
         auto promise = std::make_shared<std::promise<ISensorModule::FluorometerOjipData>>();
 
-        std::thread([this, promise, sampleTimeoutMs]() {
+        std::thread([this, promise, timeoutMs, sampleTimeoutMs]() {
             try {
-                std::this_thread::sleep_for(std::chrono::milliseconds(sampleTimeoutMs));
+                std::this_thread::sleep_for(std::chrono::milliseconds(timeoutMs));
                 checkMeasurementCompletion(sampleTimeoutMs, promise);
             } catch (const std::exception& e) {
                 promise->set_exception(std::make_exception_ptr(e));

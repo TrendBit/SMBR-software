@@ -1242,7 +1242,9 @@ public:
             "But this can also lead to saturation of the detector and loss of data.\n"
             "Emitter intensity is not strictly linear, so it is better to use the gain of the detector to change the range.\n"
             "Absolute value is calculated based on the gain of the detector and emitter intensity. And relates to the detector's max range.\n"
-            "More info about the returned data can be found in the read_last endpoint description.";
+            "More info about the returned data can be found in the read_last endpoint description.\n"
+            "Expected timeout can be estimated as:\n"
+            "timeout_ms ≈ length_ms + 2 × required_samples (in milliseconds).\n";
         info->addTag("Sensor module");
 
         auto example = FluorometerMeasurementDto::createShared();
@@ -1334,7 +1336,10 @@ public:
             "Samples have 3 types of values:\n"
             " - raw_value: raw ADC value from the detector (generally 12-bit, see detector info)\n"
             " - relative_value: value normalized to a 0-1 range\n"
-            " - absolute_value: value normalized to a 0-1 range and corrected for the gain of the detector and emitter intensity";
+            " - absolute_value: value normalized to a 0-1 range and corrected for the gain of the detector and emitter intensity\n"
+            "\n"
+            "Expected timeout can be estimated as:\n"
+            "timeout_ms ≈ 2 × required_samples (in milliseconds).\n";
         info->addTag("Sensor module");
         auto example = FluorometerMeasurementDto::createShared();
         example->measurement_id = 1235;

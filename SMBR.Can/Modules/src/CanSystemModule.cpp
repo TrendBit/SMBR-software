@@ -85,7 +85,7 @@ std::future <ISystemModule::AvailableModules> CanSystemModule::getAvailableModul
     auto promise = std::make_shared<std::promise <ISystemModule::AvailableModules>>();
 
 
-    channel->send(canRequest, [&, promise](ICanChannel::Response response){
+    channel->send("available", canRequest, [&, promise](ICanChannel::Response response){
             if (response.status == CanRequestStatus::Success) {
 
                 ISystemModule::AvailableModules result;

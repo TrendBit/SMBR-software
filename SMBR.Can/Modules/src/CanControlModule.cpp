@@ -77,7 +77,7 @@ std::future <bool> CanControlModule::setIntensities(float i0, float i1, float i2
         auto requestId = base.createRequestId(request.Type(), Codes::Instance::Exclusive, false);
         RequestData requestData(requestId, request.Export_data());
         CanRequest canRequest(requestData);
-        base.ch()->send(canRequest, [&, promise, counters](ICanChannel::Response response){
+        base.ch()->send("setIntensities", canRequest, [&, promise, counters](ICanChannel::Response response){
             if (response.status == CanRequestStatus::Success) {
                 counters->first++;
             } else {

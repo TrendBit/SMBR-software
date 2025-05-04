@@ -77,6 +77,7 @@ bool CanBus::send(const CanMessage& message) {
 
 CanMessage CanBus::receive(int timeoutMs) {
     //wait up to timout, until socket is readable
+    //LTRACE("CAN.Recv") << "   - Bus before select" << LE;
     fd_set readSet;
     FD_ZERO(&readSet);
     FD_SET(socketFd, &readSet);
@@ -86,12 +87,14 @@ CanMessage CanBus::receive(int timeoutMs) {
     tv.tv_usec = (timeoutMs % 1000) * 1000;
 
     int ret = select(socketFd + 1, &readSet, nullptr, nullptr, &tv);
+    //LTRACE("CAN.Recv") << "   - Bus after select" << LE;
     if (ret < 0) {
-        perror("Select");
+        LNOTICE("CAN.Recv") << "   - Bus after select: Failed to wait for CAN message" << LE;
         throw std::runtime_error("Failed to wait for CAN message");
     }
 
     if (ret == 0) {
+        //LTRACE("CAN.Recv") << "   - Bus after select: timeout for CAN message" << LE;
         throw std::range_error("Timeout waiting for CAN message");
     }
 
@@ -99,14 +102,14 @@ CanMessage CanBus::receive(int timeoutMs) {
 
     int bytes = ::read(socketFd, frame.get(), sizeof(*frame));
 
-    
-
     if (bytes != sizeof(*frame)) {
+        LNOTICE("CAN.Recv") << "   - Bus after select: too less bytes: " << bytes << LE;
         //std::cout << "RECV: err " << bytes << " sizeof = " << sizeof(*frame) << std::endl;
         throw std::runtime_error("Failed to receive CAN message");
     } else {
         //std::cout << "RECV: " << formatMessageId(frame->can_id) << std::endl;
     }
+
 
     std::vector<uint8_t> data(frame->data, frame->data + frame->can_dlc);
     return CanMessage(frame->can_id & CAN_EFF_MASK, data);

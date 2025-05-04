@@ -22,7 +22,7 @@ int nextUID() {
 CanChannel::ActiveRequest::ActiveRequest(const CanRequest &request) : uid(nextUID()), request(request), response(request) {
 }
 
-CanChannel::CanChannel() : bgThreadRead("can.bg.read"), bgThreadWrite("can.bg.write") {
+CanChannel::CanChannel() : bgThreadRead("can.bg.read"), bgThreadWrite("can.bg.writ") {
     bgThreadRead.startFunc([this]() {
         SMBR::threadDebug();
         runRead();
@@ -40,8 +40,9 @@ CanChannel::~CanChannel() {
     bgThreadWrite.join();
 }
 
-void CanChannel::send(const CanRequest &canRequest, std::function<void(Response)> callback) {
+void CanChannel::send(const std::string & name, const CanRequest &canRequest, std::function<void(Response)> callback) {
     auto newRequest = std::make_shared<ActiveRequest>(canRequest);
+    newRequest->name = name;
     newRequest->startedAt = Poco::Clock();
     newRequest->dueAt = newRequest->startedAt + Poco::Clock::ClockDiff(canRequest.responseInfo().timeoutMs * 1000LL);
     newRequest->callback = callback;
@@ -60,6 +61,7 @@ static void dump(bool isWrite, std::string message, std::shared_ptr<CanChannel::
     if (isWrite){
        LLEVEL("CAN.Send", priority) 
               << "Can >> "
+              << " " << r->name
               << " " << Poco::NumberFormatter::format0(r->uid, 5)
               << " " << r->request.request().id
               << " " << message
@@ -67,6 +69,7 @@ static void dump(bool isWrite, std::string message, std::shared_ptr<CanChannel::
     } else {
          LLEVEL("CAN.Recv", priority) 
               << "Can << "
+              << " " << r->name
               << " " << Poco::NumberFormatter::format0(r->uid, 5)
               << " " << r->request.request().id
               << " " << r->response.status
@@ -130,7 +133,7 @@ void CanChannel::runRead() {
 
                 bool accepted = false;
                 std::scoped_lock lock(activeRequestsMutex);
-                for (auto a : activeRequests) {
+                for (auto a : activeRequests){
                     // response info
                     const ResponseInfo &responseInfo = a->request.responseInfo();
 
@@ -155,7 +158,7 @@ void CanChannel::runRead() {
             }
 
             Poco::Clock now;
-
+            std::scoped_lock lock(activeRequestsMutex);
             for (auto it = activeRequests.begin(); it != activeRequests.end();) {
                 auto a = *it;
 

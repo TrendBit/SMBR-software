@@ -18,7 +18,7 @@ public:
     CanChannel();
     virtual ~CanChannel();
 
-    void send(const CanRequest & canRequest, std::function <void(Response)>) override;
+    void send(const std::string & name, const CanRequest & canRequest, std::function <void(Response)>) override;
 private:
     
     void runRead();
@@ -27,6 +27,7 @@ private:
 public:
 
     struct ActiveRequest {
+        std::string name;
         int uid;
         CanRequest request;
         Response response;

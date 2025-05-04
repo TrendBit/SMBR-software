@@ -23,7 +23,7 @@ public:
 
     };
 
-    virtual void send(const CanRequest & canRequest, std::function <void(Response)>) = 0;
+    virtual void send(const std::string & name, const CanRequest & canRequest, std::function <void(Response)>) = 0;
 };
 
 std::ostream & operator<<(std::ostream & os, const ICanChannel::Response & r);

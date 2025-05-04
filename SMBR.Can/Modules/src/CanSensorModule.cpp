@@ -371,7 +371,7 @@ void CanSensorModule::sendCanRequest(uint32_t timeoutMs, std::shared_ptr<std::pr
 
     CanRequest canRequest(requestData, responseInfo);
 
-    channel->send(canRequest, [this, promise, context, startSystemTime](ICanChannel::Response response) {
+    channel->send("ojip", canRequest, [this, promise, context, startSystemTime](ICanChannel::Response response) {
         if (!context->processed) {
             for (const auto& rr : context->responses) {
                 auto dataCopy = rr.data;

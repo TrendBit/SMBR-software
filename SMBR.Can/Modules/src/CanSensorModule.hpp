@@ -77,9 +77,9 @@ private:
 
     void sendCanRequest(uint32_t timeoutMs, std::shared_ptr<std::promise<ISensorModule::FluorometerOjipData>> promise);
     void checkMeasurementCompletion(uint32_t timeoutMs, std::shared_ptr<std::promise<ISensorModule::FluorometerOjipData>> promise);
-    bool readMeasurementParams(const std::string& filePath, MeasurementParams& params);
-    bool writeMeasurementParams(const std::string& filePath, const MeasurementParams& params);
-    bool ensureDirectoryExists(const std::string& filePath);
+    std::pair<bool, std::string> readMeasurementParams(const std::string& filePath, MeasurementParams& params);
+    std::pair<bool, std::string> writeMeasurementParams(const std::string& filePath, const MeasurementParams& params);
+    std::pair<bool, std::string> ensureDirectoryExists(const std::string& filePath);
 
     
 };

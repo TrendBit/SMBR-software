@@ -62,6 +62,19 @@ private:
         bool isRead;
     };
 
+    struct ProcessingContext {
+        ISensorModule::FluorometerOjipData result;
+        std::vector<ResponseData> responses;
+        bool processed = false;
+        int receivedSamples = 0;
+        bool metadataLoaded = false;
+        bool isSaturated = false;
+        std::chrono::steady_clock::time_point firstSampleTime;
+        std::chrono::steady_clock::time_point lastSampleTime;
+        bool firstSampleLogged = false;
+        std::chrono::steady_clock::time_point startTime;
+    };
+
     void sendCanRequest(uint32_t timeoutMs, std::shared_ptr<std::promise<ISensorModule::FluorometerOjipData>> promise);
     void checkMeasurementCompletion(uint32_t timeoutMs, std::shared_ptr<std::promise<ISensorModule::FluorometerOjipData>> promise);
     bool readMeasurementParams(const std::string& filePath, MeasurementParams& params);

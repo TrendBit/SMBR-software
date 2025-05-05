@@ -333,19 +333,6 @@ void CanSensorModule::sendCanRequest(uint32_t timeoutMs, std::shared_ptr<std::pr
     RequestData requestData(requestId, rawRequest.Export_data());
     ResponseInfo responseInfo;
     responseInfo.timeoutMs = timeoutMs;
-
-    struct ProcessingContext {
-        ISensorModule::FluorometerOjipData result;
-        std::vector<ResponseData> responses;
-        bool processed = false;
-        int receivedSamples = 0;
-        bool metadataLoaded = false;
-        bool isSaturated = false;
-        std::chrono::steady_clock::time_point firstSampleTime;
-        std::chrono::steady_clock::time_point lastSampleTime;
-        bool firstSampleLogged = false;
-        std::chrono::steady_clock::time_point startTime;
-    };
     
     auto context = std::make_shared<ProcessingContext>();
     context->startTime = std::chrono::steady_clock::now();

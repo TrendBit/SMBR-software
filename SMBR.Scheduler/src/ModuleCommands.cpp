@@ -119,4 +119,16 @@ void registerModuleBlocks(CommandFactory & f){
             return std::make_shared<Scripting::FluorometerCommand>(block, ctx);
         });
     }
+
+    {
+        CommandInfo info(
+            "fluorometer_calibrate",
+            {
+            },
+            "Starts fluorometer calibration, which can take around 4 seconds"
+        );
+        f.registerCommand(info, [](Block::Ptr block, ParseContext::Ptr ctx) {
+            return std::make_shared<Scripting::FluorometerCalibrateCommand>(block, ctx);
+        });
+    }
 }

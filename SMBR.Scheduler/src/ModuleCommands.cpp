@@ -40,6 +40,18 @@ void registerModuleBlocks(CommandFactory & f){
 
     {
         CommandInfo info(
+            "heater_off",
+            {
+            },
+            "Disables Heating/Cooling"
+        );
+        f.registerCommand(info, [](Block::Ptr block, ParseContext::Ptr ctx) {
+            return std::make_shared<Scripting::HeaterOffCommand>(block, ctx);
+        });
+    }
+
+    {
+        CommandInfo info(
             "mix",
             {
                 {"time", "Time to mix"},

@@ -43,6 +43,9 @@ namespace Scripting {
             Input input;
     };
 
+    struct EmptyInput {
+    };
+
 
     struct IlluminationInput {
         double i1 = 0.0;
@@ -83,6 +86,16 @@ namespace Scripting {
             }
     };
 
+    class HeaterOff {
+        public:
+            EmptyInput parse(ScriptLine l){
+                EmptyInput input;
+                return input;
+            }
+            std::future <bool> run(EmptyInput input, ISystemModule::Ptr m){
+                return m->controlModule()->turnOffHeater();
+            }
+    };
 
     struct MixerInput {
         double length = 0.0;
@@ -205,6 +218,7 @@ namespace Scripting {
     typedef ModuleCommand <Aerator, AeratorInput> AeratorCommand;
     typedef ModuleCommand <Display, DisplayInput> DisplayCommand;
     typedef ModuleCommand <Fluorometer, ISensorModule::FluorometerInput> FluorometerCommand;
+    typedef ModuleCommand <HeaterOff, EmptyInput> HeaterOffCommand;
 }
 
 

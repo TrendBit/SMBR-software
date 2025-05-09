@@ -131,4 +131,16 @@ void registerModuleBlocks(CommandFactory & f){
             return std::make_shared<Scripting::FluorometerCalibrateCommand>(block, ctx);
         });
     }
+
+    {
+        CommandInfo info(
+            "spectrophotometer_calibrate",
+            {
+            },
+            "Starts spectrophotometer calibration, which can take around 2 seconds"
+        );
+        f.registerCommand(info, [](Block::Ptr block, ParseContext::Ptr ctx) {
+            return std::make_shared<Scripting::SpectrophotometerCalibrateCommand>(block, ctx);
+        });
+    }
 }

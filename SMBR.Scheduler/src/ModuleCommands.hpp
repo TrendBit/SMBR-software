@@ -222,6 +222,17 @@ namespace Scripting {
             }
     };
 
+    class SpectrophotometerCalibrate {
+        public:
+            EmptyInput parse(ScriptLine l){
+                EmptyInput input;
+                return input;
+            }
+            std::future <bool> run(EmptyInput input, ISystemModule::Ptr m){
+                return m->sensorModule()->calibrateSpectrophotometer();
+            }
+    };
+
     typedef ModuleCommand <Heater, HeaterInput> HeaterCommand;
     typedef ModuleCommand <Illumination, IlluminationInput> IlluminationCommand;
     typedef ModuleCommand <Mixer, MixerInput> MixerCommand;
@@ -231,8 +242,8 @@ namespace Scripting {
     typedef ModuleCommand <Fluorometer, ISensorModule::FluorometerInput> FluorometerCommand;
     typedef ModuleCommand <HeaterOff, EmptyInput> HeaterOffCommand;
     typedef ModuleCommand <FluorometerCalibrate, EmptyInput> FluorometerCalibrateCommand;
+    typedef ModuleCommand <SpectrophotometerCalibrate, EmptyInput> SpectrophotometerCalibrateCommand;
 }
-
 
 void registerModuleBlocks(CommandFactory & f);
 

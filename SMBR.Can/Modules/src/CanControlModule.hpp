@@ -1,4 +1,4 @@
-#pragma once    
+#pragma once
 
 #include <SMBR/IControlModule.hpp>
 #include "can/CanChannel.hpp"
@@ -6,6 +6,8 @@
 
 class CanControlModule : public IControlModule {
 public:
+    const unsigned int default_timeout_ms = 2000;
+
     CanControlModule(std::string uidHex, ICanChannel::Ptr channel);
 
     ModuleID id() const override;
@@ -43,6 +45,6 @@ public:
 
 private:
     BaseModule base;
-   
+
 };
 

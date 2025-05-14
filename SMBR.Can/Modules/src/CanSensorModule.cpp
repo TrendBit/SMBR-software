@@ -74,7 +74,7 @@ std::future <float> CanSensorModule::getBottleTemperature() {
         float
     >([](App_messages::Bottle_temperature::Temperature_response response){
         return response.temperature;
-    }, 2000);
+    }, default_timeout_ms);
 }
 
 std::future <float> CanSensorModule::getTopMeasuredTemperature() {
@@ -85,7 +85,7 @@ std::future <float> CanSensorModule::getTopMeasuredTemperature() {
         float
     >([](App_messages::Bottle_temperature::Top_measured_temperature_response response){
         return response.temperature;
-    }, 2000);
+    }, default_timeout_ms);
 }
 
 std::future <float> CanSensorModule::getBottomMeasuredTemperature() {
@@ -96,7 +96,7 @@ std::future <float> CanSensorModule::getBottomMeasuredTemperature() {
         float
     >([](App_messages::Bottle_temperature::Bottom_measured_temperature_response response){
         return response.temperature;
-    }, 2000);
+    }, default_timeout_ms);
 }
 
 std::future <float> CanSensorModule::getTopSensorTemperature() {
@@ -107,7 +107,7 @@ std::future <float> CanSensorModule::getTopSensorTemperature() {
         float
     >([](App_messages::Bottle_temperature::Top_sensor_temperature_response response){
         return response.temperature;
-    }, 2000);
+    }, default_timeout_ms);
 }
 
 std::future <float> CanSensorModule::getBottomSensorTemperature() {
@@ -118,7 +118,7 @@ std::future <float> CanSensorModule::getBottomSensorTemperature() {
         float
     >([](App_messages::Bottle_temperature::Bottom_sensor_temperature_response response){
         return response.temperature;
-    }, 2000);
+    }, default_timeout_ms);
 }
 
 std::future <bool> CanSensorModule::clearCustomText() {
@@ -174,7 +174,7 @@ std::future<ISensorModule::FluorometerSample> CanSensorModule::takeFluorometerSi
             result.absolute_value = response.Absolute_value();
             return result;
         },
-        2000
+        default_timeout_ms
     );
 }
 
@@ -185,7 +185,7 @@ std::future<bool> CanSensorModule::isFluorometerOjipCaptureComplete() {
         bool
     >([](App_messages::Fluorometer::OJIP_completed_response response){
         return response.completed;
-    }, 2000);
+    }, default_timeout_ms);
 }
 
 std::pair<bool, std::string> CanSensorModule::ensureDirectoryExists(const std::string& filePath) {
@@ -329,12 +329,12 @@ void CanSensorModule::sendCanRequest(uint32_t timeoutMs, std::shared_ptr<std::pr
     RequestData requestData(requestId, rawRequest.Export_data());
     ResponseInfo responseInfo;
     responseInfo.timeoutMs = timeoutMs;
-    
+
     auto context = std::make_shared<ProcessingContext>();
     context->startTime = std::chrono::steady_clock::now();
     auto startSystemTime = std::chrono::system_clock::now();
 
-    LNOTICE("ojipRetrieving") << "[" << formatTime(startSystemTime) << "] Starting OJIP measurement retrieval, timeout: " 
+    LNOTICE("ojipRetrieving") << "[" << formatTime(startSystemTime) << "] Starting OJIP measurement retrieval, timeout: "
                              << timeoutMs << "ms" << LE;
 
     responseInfo.acceptFunction = [](const ResponseData& response) {
@@ -344,22 +344,22 @@ void CanSensorModule::sendCanRequest(uint32_t timeoutMs, std::shared_ptr<std::pr
 
     responseInfo.isDoneFunction = [this, context](const std::vector<ResponseData>& responses) {
         context->responses = responses;
-        
+
         if (!responses.empty() && !context->firstSampleLogged) {
             context->firstSampleTime = std::chrono::steady_clock::now();
             auto firstSampleSystemTime = std::chrono::system_clock::now();
             auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
                 context->firstSampleTime - context->startTime).count();
-            
-            LNOTICE("ojipRetrieving") << "[" << formatTime(firstSampleSystemTime) << "] First sample received after " 
+
+            LNOTICE("ojipRetrieving") << "[" << formatTime(firstSampleSystemTime) << "] First sample received after "
                                      << duration << "ms" << LE;
             context->firstSampleLogged = true;
         }
-        
+
         if (!responses.empty()) {
             context->lastSampleTime = std::chrono::steady_clock::now();
         }
-        
+
         return responses.size() >= static_cast<size_t>(last_required_samples);
     };
 
@@ -399,12 +399,12 @@ void CanSensorModule::sendCanRequest(uint32_t timeoutMs, std::shared_ptr<std::pr
 
         auto endSystemTime = std::chrono::system_clock::now();
         auto endTime = std::chrono::steady_clock::now();
-        
+
         if (!context->responses.empty()) {
             auto samplesDuration = std::chrono::duration_cast<std::chrono::milliseconds>(
                 context->lastSampleTime - context->firstSampleTime).count();
-                
-            LNOTICE("ojipRetrieving") << "[" << formatTime(endSystemTime) << "] Last sample received, total samples: " 
+
+            LNOTICE("ojipRetrieving") << "[" << formatTime(endSystemTime) << "] Last sample received, total samples: "
                                      << context->receivedSamples << ", collection duration: " << samplesDuration << "ms"<< LE;
         }
 
@@ -415,7 +415,7 @@ void CanSensorModule::sendCanRequest(uint32_t timeoutMs, std::shared_ptr<std::pr
                 return;
             }
 
-            std::sort(context->result.samples.begin(), context->result.samples.end(), 
+            std::sort(context->result.samples.begin(), context->result.samples.end(),
                 [](const FluorometerSample& a, const FluorometerSample& b) {
                     return a.time_ms < b.time_ms;
                 });
@@ -472,7 +472,7 @@ std::future<ISensorModule::FluorometerOjipData> CanSensorModule::captureFluorome
     uint32_t api_id;
     uint8_t measurement_id;
     auto startTime = std::chrono::system_clock::now();
-    LNOTICE("ojipCapture") << "[" << formatTime(startTime) 
+    LNOTICE("ojipCapture") << "[" << formatTime(startTime)
                          << "] Starting OJIP capture process" << LE;
 
     MeasurementParams params;
@@ -503,7 +503,7 @@ std::future<ISensorModule::FluorometerOjipData> CanSensorModule::captureFluorome
     }
 
     auto timeoutMs = input.length_ms;
-    auto sampleTimeoutMs = 2 * input.sample_count;
+    auto sampleTimeoutMs = 1000 + (5 * input.sample_count);
     last_required_samples = input.sample_count;
     last_length_ms = input.length_ms;
 
@@ -516,7 +516,7 @@ std::future<ISensorModule::FluorometerOjipData> CanSensorModule::captureFluorome
         input.sample_count
     };
 
-    LNOTICE("ojipCapture") << "[" << formatTime(std::chrono::system_clock::now()) 
+    LNOTICE("ojipCapture") << "[" << formatTime(std::chrono::system_clock::now())
                         << "] Sending capture request" << LE;
 
     auto succes = base.set(r);
@@ -616,7 +616,7 @@ std::future<ISensorModule::FluorometerDetectorInfo> CanSensorModule::getFluorome
             .sensitivity = response.sensitivity,
             .sampling_rate = response.sampling_rate
         };
-    }, 2000);
+    }, default_timeout_ms);
 }
 
 std::future<float> CanSensorModule::getFluorometerDetectorTemperature() {
@@ -626,7 +626,7 @@ std::future<float> CanSensorModule::getFluorometerDetectorTemperature() {
         float
     >([](App_messages::Fluorometer::Detector_temperature_response response){
         return response.temperature;
-    }, 2000);
+    }, default_timeout_ms);
 }
 
 std::future<ISensorModule::FluorometerEmitorInfo> CanSensorModule::getFluorometerEmitorInfo() {
@@ -639,7 +639,7 @@ std::future<ISensorModule::FluorometerEmitorInfo> CanSensorModule::getFluoromete
             .peak_wavelength = response.wavelength,
             .power_output = response.power_output
         };
-    }, 2000);
+    }, default_timeout_ms);
 }
 
 std::future<float> CanSensorModule::getFluorometerEmitorTemperature() {
@@ -649,7 +649,7 @@ std::future<float> CanSensorModule::getFluorometerEmitorTemperature() {
         float
     >([](App_messages::Fluorometer::Emitor_temperature_response response){
         return response.temperature;
-    }, 2000);
+    }, default_timeout_ms);
 }
 
 std::future<bool> CanSensorModule::calibrateFluorometer() {
@@ -664,7 +664,7 @@ std::future<int8_t> CanSensorModule::getSpectrophotometerChannels() {
         int8_t
     >([](App_messages::Spectrophotometer::Channel_count_response response){
         return response.channel_count;
-    }, 2000);
+    }, default_timeout_ms);
 }
 
 std::future<ISensorModule::SpectroChannelInfo> CanSensorModule::getSpectrophotometerChannelInfo(int8_t channelNumber) {
@@ -672,7 +672,7 @@ std::future<ISensorModule::SpectroChannelInfo> CanSensorModule::getSpectrophotom
         App_messages::Spectrophotometer::Channel_info_request,
         App_messages::Spectrophotometer::Channel_info_response,
         ISensorModule::SpectroChannelInfo
-    >(channelNumber, 2000, [channelNumber](const App_messages::Spectrophotometer::Channel_info_response& response) {
+    >(channelNumber, default_timeout_ms, [channelNumber](const App_messages::Spectrophotometer::Channel_info_response& response) {
         ISensorModule::SpectroChannelInfo result;
         result.channel = response.channel;
         result.peak_wavelength = response.central_wavelength;
@@ -686,7 +686,7 @@ std::future<ISensorModule::SpectroChannelMeasurement> CanSensorModule::measureSp
         App_messages::Spectrophotometer::Measurement_request,
         App_messages::Spectrophotometer::Measurement_response,
         ISensorModule::SpectroChannelMeasurement
-    >(channelNumber, 2500, [channelNumber](const App_messages::Spectrophotometer::Measurement_response& response) {
+    >(channelNumber, default_timeout_ms, [channelNumber](const App_messages::Spectrophotometer::Measurement_response& response) {
         ISensorModule::SpectroChannelMeasurement result;
         result.channel = response.channel;
         result.relative_value = response.relative_value;
@@ -702,7 +702,7 @@ std::future<float> CanSensorModule::getSpectrophotometerEmitorTemperature() {
         float
     >([](App_messages::Spectrophotometer::Temperature_response response){
         return response.temperature;
-    }, 2000);
+    }, default_timeout_ms);
 }
 
 std::future<bool> CanSensorModule::calibrateSpectrophotometer() {

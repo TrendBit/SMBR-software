@@ -1,4 +1,4 @@
-#pragma once    
+#pragma once
 
 #include <SMBR/ISensorModule.hpp>
 #include "can/CanChannel.hpp"
@@ -15,6 +15,8 @@
 
 class CanSensorModule : public ISensorModule {
 public:
+    const unsigned int default_timeout_ms = 4000;
+
     CanSensorModule(std::string uidHex, ICanChannel::Ptr channel);
 
     ModuleID id() const override;
@@ -23,7 +25,7 @@ public:
     std::future <float> getTopMeasuredTemperature() override;
     std::future <float> getBottomMeasuredTemperature() override;
     std::future <float> getTopSensorTemperature() override;
-    std::future <float> getBottomSensorTemperature() override;   
+    std::future <float> getBottomSensorTemperature() override;
     std::future <bool> clearCustomText() override;
     std::future <bool> printCustomText(std::string text) override;
     std::future <FluorometerSample> takeFluorometerSingleSample(Fluorometer_config::Gain gain, float intensity) override;
@@ -40,17 +42,16 @@ public:
     std::future <SpectroChannelMeasurement> measureSpectrophotometerChannel(int8_t channelNumber) override;
     std::future <float> getSpectrophotometerEmitorTemperature() override;
     std::future <bool> calibrateSpectrophotometer() override;
-    
 
 private:
     BaseModule base;
     ICanChannel::Ptr channel;
     uint8_t CalculateMeasurementID(uint32_t api_id);
-    std::atomic<uint32_t> last_api_id{0}; 
-    std::atomic<uint32_t> sample_id{0}; 
+    std::atomic<uint32_t> last_api_id{0};
+    std::atomic<uint32_t> sample_id{0};
     bool isRead = false;
-    ISensorModule::FluorometerOjipData last_measurement_data; 
-    Fluorometer_config::Timing last_timebase = Fluorometer_config::Timing::Logarithmic; 
+    ISensorModule::FluorometerOjipData last_measurement_data;
+    Fluorometer_config::Timing last_timebase = Fluorometer_config::Timing::Logarithmic;
     uint16_t last_required_samples;
     uint16_t last_length_ms;
 
@@ -81,6 +82,6 @@ private:
     std::pair<bool, std::string> writeMeasurementParams(const std::string& filePath, const MeasurementParams& params);
     std::pair<bool, std::string> ensureDirectoryExists(const std::string& filePath);
 
-    
+
 };
 

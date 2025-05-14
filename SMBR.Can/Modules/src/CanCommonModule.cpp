@@ -28,51 +28,51 @@ ModuleID CanCommonModule::id() const {
 }
 
 std::future<float> CanCommonModule::ping() {
-    static std::atomic<uint8_t> sequenceNumber{0}; 
+    static std::atomic<uint8_t> sequenceNumber{0};
 
     Poco::Clock now;
-    uint8_t currentSequenceNumber = sequenceNumber++; 
+    uint8_t currentSequenceNumber = sequenceNumber++;
 
     App_messages::Common::Ping_request pingRequest(currentSequenceNumber);
 
     return base.getWithSeq<
-        App_messages::Common::Ping_request, 
-        App_messages::Common::Ping_response, 
+        App_messages::Common::Ping_request,
+        App_messages::Common::Ping_response,
         float
     >(pingRequest, [now](App_messages::Common::Ping_response response) {
         float elapsed = now.elapsed() / 1000.0;
         return elapsed;
-    }, 1000, currentSequenceNumber);
+    }, default_timeout_ms, currentSequenceNumber);
 }
 
 std::future <float> CanCommonModule::getCoreLoad() {
     return base.get<
-        App_messages::Common::Core_load_request, 
-        App_messages::Common::Core_load_response, 
+        App_messages::Common::Core_load_request,
+        App_messages::Common::Core_load_response,
         float
     >([](App_messages::Common::Core_load_response response){
         return response.load;
-    }, 1000);
+    }, default_timeout_ms);
 }
 
 std::future <float> CanCommonModule::getCoreTemp() {
     return base.get<
-        App_messages::Common::Core_temp_request, 
-        App_messages::Common::Core_temp_response, 
+        App_messages::Common::Core_temp_request,
+        App_messages::Common::Core_temp_response,
         float
     >([](App_messages::Common::Core_temp_response response){
         return response.temperature;
-    }, 1000);
+    }, default_timeout_ms);
 }
 
 std::future <float> CanCommonModule::getBoardTemp() {
     return base.get<
-        App_messages::Common::Board_temp_request, 
-        App_messages::Common::Board_temp_response, 
+        App_messages::Common::Board_temp_request,
+        App_messages::Common::Board_temp_response,
         float
     >([](App_messages::Common::Board_temp_response response){
         return response.temperature;
-    }, 1000);
+    }, default_timeout_ms);
 }
 
 std::future <bool> CanCommonModule::restartModule() {

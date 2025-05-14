@@ -55,19 +55,19 @@ ModuleID CanControlModule::id() const {
 }
 
 std::future <bool> CanControlModule::setIntensity(float intensity, int8_t channelNumber) {
-    
+
     App_messages::LED_panel::Set_intensity r((uint8_t)channelNumber, (float)intensity);
     return base.set(r);
 }
 
 std::future <bool> CanControlModule::setIntensities(float i0, float i1, float i2, float i3) {
-    
+
     std::vector <App_messages::LED_panel::Set_intensity> requests;
     requests.push_back(App_messages::LED_panel::Set_intensity(0, i0));
     requests.push_back(App_messages::LED_panel::Set_intensity(1, i1));
     requests.push_back(App_messages::LED_panel::Set_intensity(2, i2));
     requests.push_back(App_messages::LED_panel::Set_intensity(3, i3));
-        
+
     std::shared_ptr <std::promise <bool>> promise = std::make_shared<std::promise <bool>>();
     int successCount = 0;
     int failCount = 0;
@@ -92,7 +92,7 @@ std::future <bool> CanControlModule::setIntensities(float i0, float i1, float i2
             }
         });
     }
-    
+
     return promise->get_future();
 }
 
@@ -101,7 +101,7 @@ std::future <IControlModule::LedIntensityMeasurement> CanControlModule::getInten
         App_messages::LED_panel::Get_intensity_request,
         App_messages::LED_panel::Get_intensity_response,
         IControlModule::LedIntensityMeasurement
-    >(channelNumber, 2000, [channelNumber](const App_messages::LED_panel::Get_intensity_response& response) {
+    >(channelNumber, default_timeout_ms, [channelNumber](const App_messages::LED_panel::Get_intensity_response& response) {
         IControlModule::LedIntensityMeasurement result;
         result.channel = response.channel;
         result.intensity = response.intensity;
@@ -113,12 +113,12 @@ std::future <float> CanControlModule::getLedTemperature() {
     App_messages::LED_panel::Temperature_request req;
 
     return base.get<
-        App_messages::LED_panel::Temperature_request, 
-        App_messages::LED_panel::Temperature_response, 
+        App_messages::LED_panel::Temperature_request,
+        App_messages::LED_panel::Temperature_response,
         float
     >(req, [](App_messages::LED_panel::Temperature_response response){
         return response.temperature;
-    }, 2000);
+    }, default_timeout_ms);
 }
 
 std::future <bool> CanControlModule::setHeaterIntensity(float intensity) {
@@ -129,12 +129,12 @@ std::future <bool> CanControlModule::setHeaterIntensity(float intensity) {
 
 std::future <float> CanControlModule::getHeaterIntensity() {
     return base.get<
-        App_messages::Heater::Get_intensity_request, 
-        App_messages::Heater::Get_intensity_response, 
+        App_messages::Heater::Get_intensity_request,
+        App_messages::Heater::Get_intensity_response,
         float
     >([](App_messages::Heater::Get_intensity_response response){
         return response.intensity;
-    }, 2000);
+    }, default_timeout_ms);
 }
 
 std::future <bool> CanControlModule::setHeaterTargetTemperature(float targetTemperature) {
@@ -145,22 +145,22 @@ std::future <bool> CanControlModule::setHeaterTargetTemperature(float targetTemp
 
 std::future <float> CanControlModule::getHeaterTargetTemperature() {
     return base.get<
-        App_messages::Heater::Get_target_temperature_request, 
-        App_messages::Heater::Get_target_temperature_response, 
+        App_messages::Heater::Get_target_temperature_request,
+        App_messages::Heater::Get_target_temperature_response,
         float
     >([](App_messages::Heater::Get_target_temperature_response response){
         return response.temperature;
-    }, 2000);
+    }, default_timeout_ms);
 }
 
 std::future <float> CanControlModule::getHeaterPlateTemperature() {
     return base.get<
-        App_messages::Heater::Get_plate_temperature_request, 
-        App_messages::Heater::Get_plate_temperature_response, 
+        App_messages::Heater::Get_plate_temperature_request,
+        App_messages::Heater::Get_plate_temperature_response,
         float
     >([](App_messages::Heater::Get_plate_temperature_response response){
         return response.temperature;
-    }, 2000);
+    }, default_timeout_ms);
 }
 
 std::future <bool> CanControlModule::turnOffHeater() {
@@ -177,12 +177,12 @@ std::future <bool> CanControlModule::setCuvettePumpSpeed(float speed) {
 
 std::future <float> CanControlModule::getCuvettePumpSpeed() {
     return base.get<
-        App_messages::Cuvette_pump::Get_speed_request, 
-        App_messages::Cuvette_pump::Get_speed_response, 
+        App_messages::Cuvette_pump::Get_speed_request,
+        App_messages::Cuvette_pump::Get_speed_response,
         float
     >([](App_messages::Cuvette_pump::Get_speed_response response){
         return response.speed;
-    }, 2000);
+    }, default_timeout_ms);
 }
 
 std::future <bool> CanControlModule::setCuvettePumpFlowrate(float flowrate) {
@@ -193,12 +193,12 @@ std::future <bool> CanControlModule::setCuvettePumpFlowrate(float flowrate) {
 
 std::future <float> CanControlModule::getCuvettePumpFlowrate() {
     return base.get<
-        App_messages::Cuvette_pump::Get_flowrate_request, 
-        App_messages::Cuvette_pump::Get_flowrate_response, 
+        App_messages::Cuvette_pump::Get_flowrate_request,
+        App_messages::Cuvette_pump::Get_flowrate_response,
         float
     >([](App_messages::Cuvette_pump::Get_flowrate_response response){
         return response.flowrate;
-    }, 2000);
+    }, default_timeout_ms);
 }
 
 std::future <bool> CanControlModule::moveCuvettePump(float volume, float flowrate) {
@@ -233,12 +233,12 @@ std::future <bool> CanControlModule::setAeratorSpeed(float speed) {
 
 std::future <float> CanControlModule::getAeratorSpeed() {
     return base.get<
-        App_messages::Aerator::Get_speed_request, 
-        App_messages::Aerator::Get_speed_response, 
+        App_messages::Aerator::Get_speed_request,
+        App_messages::Aerator::Get_speed_response,
         float
     >([](App_messages::Aerator::Get_speed_response response){
         return response.speed;
-    }, 2000);
+    }, default_timeout_ms);
 }
 
 std::future <bool> CanControlModule::setAeratorFlowrate(float flowrate) {
@@ -249,12 +249,12 @@ std::future <bool> CanControlModule::setAeratorFlowrate(float flowrate) {
 
 std::future <float> CanControlModule::getAeratorFlowrate() {
     return base.get<
-        App_messages::Aerator::Get_flowrate_request, 
-        App_messages::Aerator::Get_flowrate_response, 
+        App_messages::Aerator::Get_flowrate_request,
+        App_messages::Aerator::Get_flowrate_response,
         float
     >([](App_messages::Aerator::Get_flowrate_response response){
         return response.flowrate;
-    }, 2000);
+    }, default_timeout_ms);
 }
 
 std::future <bool> CanControlModule::moveAerator(float volume, float flowrate) {
@@ -277,12 +277,12 @@ std::future <bool> CanControlModule::setMixerSpeed(float speed) {
 
 std::future <float> CanControlModule::getMixerSpeed() {
     return base.get<
-        App_messages::Mixer::Get_speed_request, 
-        App_messages::Mixer::Get_speed_response, 
+        App_messages::Mixer::Get_speed_request,
+        App_messages::Mixer::Get_speed_response,
         float
     >([](App_messages::Mixer::Get_speed_response response){
         return response.speed;
-    }, 2000);
+    }, default_timeout_ms);
 }
 
 std::future <bool> CanControlModule::setMixerRpm(float rpm) {
@@ -293,12 +293,12 @@ std::future <bool> CanControlModule::setMixerRpm(float rpm) {
 
 std::future <float> CanControlModule::getMixerRpm() {
     return base.get<
-        App_messages::Mixer::Get_rpm_request, 
-        App_messages::Mixer::Get_rpm_response, 
+        App_messages::Mixer::Get_rpm_request,
+        App_messages::Mixer::Get_rpm_response,
         float
     >([](App_messages::Mixer::Get_rpm_response response){
         return response.rpm;
-    }, 2000);
+    }, default_timeout_ms);
 }
 
 std::future <bool> CanControlModule::stirMixer(float rpm, float time) {

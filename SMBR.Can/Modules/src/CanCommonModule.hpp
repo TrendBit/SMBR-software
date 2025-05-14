@@ -1,4 +1,4 @@
-#pragma once    
+#pragma once
 
 #include <SMBR/ICommonModule.hpp>
 #include "can/CanChannel.hpp"
@@ -6,6 +6,8 @@
 
 class CanCommonModule : public ICommonModule {
 public:
+    const unsigned int default_timeout_ms = 4000;
+
     CanCommonModule(ModuleID id, ICanChannel::Ptr channel);
 
     ModuleID id() const override;
@@ -17,9 +19,8 @@ public:
     std::future <bool> restartModule() override;
     std::future <bool> rebootModuleUsbBootloader() override;
     std::future <bool> rebootModuleCanBootloader() override;
-   
+
 private:
     BaseModule base;
-   
 };
 

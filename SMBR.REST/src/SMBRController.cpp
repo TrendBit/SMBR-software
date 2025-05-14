@@ -73,7 +73,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 }
 
 template <class T>
-T waitFor(std::future<T> future, unsigned int timeoutMs = 2000){
+T waitFor(std::future<T> future, unsigned int timeoutMs = 5000){
     auto status = future.wait_for(std::chrono::milliseconds(timeoutMs));
     if (status == std::future_status::ready){
         return future.get();
@@ -1138,7 +1138,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::measureSingleSpectrophotometerChannel(const Int8& channel) {
     return process(__FUNCTION__, [&](){
-        auto measurement = waitFor(systemModule->sensorModule()->measureSpectrophotometerChannel(channel));
+        auto measurement = waitFor(systemModule->sensorModule()->measureSpectrophotometerChannel(channel), 10000);
         auto responseDto = SingleChannelMeasurementDto::createShared();
         responseDto->channel = measurement.channel;
         responseDto->relative_value = measurement.relative_value;

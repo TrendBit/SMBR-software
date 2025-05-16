@@ -5,6 +5,11 @@
 #include <iostream>
 
 NestedBlockCommand::NestedBlockCommand(Block::Ptr block, ParseContext::Ptr pctx){
+    pctx->stackDepth++;
+
+    if (pctx->stackDepth > 100) {
+        throw std::runtime_error("Command '" + block->line.command() + "' - stack overflow (infinite recursion?)");
+    }
 
     for (auto & nestedBlock : block->nestedBlocks) {
         commands.push_back(Interpreter::build(nestedBlock, pctx));
@@ -12,6 +17,7 @@ NestedBlockCommand::NestedBlockCommand(Block::Ptr block, ParseContext::Ptr pctx)
     if (!block->nestedBlocks.empty()) {
         firstLine = block->nestedBlocks.front()->line.lineNumber();
     }
+    pctx->stackDepth--;
 }
 
 void NestedBlockCommand::run(RunContext::Ptr rctx){
@@ -40,6 +46,7 @@ LoopCommand::LoopCommand(Block::Ptr loopBlock, ParseContext::Ptr pctx){
     if (!infinity){
         repeat = loopBlock->line.argAsInt(0, 0, 1000000);
     }
+    
     nested = std::make_shared<NestedBlockCommand>(loopBlock, pctx);
 }
 void LoopCommand::run(RunContext::Ptr rctx) {

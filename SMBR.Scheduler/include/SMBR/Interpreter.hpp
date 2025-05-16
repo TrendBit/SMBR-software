@@ -37,7 +37,7 @@ class ParseContext {
     public:
         typedef std::shared_ptr<ParseContext> Ptr;
         const Script & script;
-        
+        int stackDepth = 0;
     public:
         ParseContext(Script & script) : script(script){
             

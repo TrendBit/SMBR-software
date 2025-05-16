@@ -13,12 +13,18 @@
 #include <thread>
 
 #include <SMBR/Scheduler.hpp>
-
+#include "SMBR/Log.hpp"
 #include "SMBR/VirtualModulesFactory.hpp"
 #include "SMBR/CanModulesFactory.hpp"
 
+#include <Poco/Logger.h>
+#include <Poco/ConsoleChannel.h>
+
 
 int main(int argc, char* argv[]) {
+/*
+
+  */  
     try {
         if (argc < 2) {
             std::cerr << "Usage: " << argv[0] << " <script_file> [--debug] [--virtual]\n";
@@ -37,6 +43,14 @@ int main(int argc, char* argv[]) {
             }
         }
 
+        if (debugMode){
+            //init poco logger to ConsoleLogger
+            Poco::Logger & logger = Poco::Logger::get("");
+            logger.setLevel(Poco::Message::PRIO_TRACE);
+            Poco::AutoPtr<Poco::ColorConsoleChannel> pChannel(new Poco::ColorConsoleChannel());
+            logger.setChannel(pChannel);
+        }
+
         std::shared_ptr<ISystemModule> systemModule = nullptr;
 
 
@@ -51,9 +65,16 @@ int main(int argc, char* argv[]) {
 
         Scheduler scheduler(systemModule);
 
+        LINFO("Scheduler") << "Scheduler created" << LE;
+
         scheduler.setScriptFromFile(argv[1]);
 
+        LINFO("Scheduler") << "Script assigned: " << argv[1] << LE;
+
         scheduler.start();
+
+
+        LINFO("Scheduler") << "Script started: " << argv[1] << LE;
 
         while (true){
             auto info = scheduler.getRuntimeInfo();

@@ -1851,6 +1851,7 @@ private:
     std::condition_variable captureQueueCondition;
     std::atomic<bool> stopCaptureWorker = false;
     std::queue<std::function<void()>> captureQueue;
+    static constexpr size_t MAX_QUEUE_SIZE = 4;
     std::mutex queueMutex;
 
     std::shared_ptr<std::shared_future<std::shared_ptr<oatpp::web::protocol::http::outgoing::Response>>> activeCaptureFuture;

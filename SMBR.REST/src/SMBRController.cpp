@@ -900,16 +900,6 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         return createDtoResponse(Status::CODE_500, dto);
     }
 
-    {
-        std::unique_lock<std::mutex> lock(retrieveMutex);
-        //TODO timeout
-        retrieveCondition.wait(lock, [this]() {
-            return !retrievingInProgress;
-        });
-    }
-
-    std::unique_lock<std::mutex> captureLock(captureMutex);
-
     auto promise = std::make_shared<std::promise<std::shared_ptr<oatpp::web::protocol::http::outgoing::Response>>>();
     auto future = std::make_shared<std::shared_future<std::shared_ptr<oatpp::web::protocol::http::outgoing::Response>>>(promise->get_future().share());
 
@@ -917,13 +907,25 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         std::lock_guard<std::mutex> lock(activeCaptureMutex);
         activeCaptureFuture = future;
     }
-
     {
         std::lock_guard<std::mutex> lock(queueMutex);
 
+        if (captureQueue.size() >= MAX_QUEUE_SIZE) {
+            auto dto = MessageDto::createShared();
+            dto->message = "Capture queue is full, try again later.";
+            return createDtoResponse(Status::CODE_429, dto); 
+        }
         captureQueue.push([this, promise, gain, timing, finalLengthMs, finalSampleCount, body]() {
-
             try {
+                {
+                    std::unique_lock<std::mutex> retrieveLock(retrieveMutex);
+                    //TODO timeout
+                    retrieveCondition.wait(retrieveLock, [this]() {
+                        return !retrievingInProgress;
+                    });
+                }
+                std::unique_lock<std::mutex> captureLock(captureMutex);
+
                 ISensorModule::FluorometerInput input{
                     .detector_gain = getGain(gain),
                     .sample_timing = getTiming(timing),
@@ -965,8 +967,10 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
                 promise->set_value(createDtoResponse(Status::CODE_504, dto));
             }
 
-            std::lock_guard<std::mutex> lock(activeCaptureMutex);
-            activeCaptureFuture.reset();
+            {
+                std::lock_guard<std::mutex> lock(activeCaptureMutex);
+                activeCaptureFuture.reset();
+            }
         });
     }
 

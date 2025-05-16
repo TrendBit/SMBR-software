@@ -73,7 +73,11 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 }
 
 template <class T>
-T waitFor(std::future<T> future, unsigned int timeoutMs = 5000){
+T waitFor(std::future<T> future){
+    future.wait();
+    return future.get();
+    //timeout is removed, since it is not needed - CAN messages itself should have better timeout handling
+    /*
     auto status = future.wait_for(std::chrono::milliseconds(timeoutMs));
     if (status == std::future_status::ready){
         return future.get();
@@ -83,7 +87,7 @@ T waitFor(std::future<T> future, unsigned int timeoutMs = 5000){
         throw TimeoutException("Deferred future");
     } else {
         throw std::runtime_error("Unknown future status after wait");
-    }
+    }*/
 }
 
 SMBRController::SMBRController(const std::shared_ptr<oatpp::web::mime::ContentMappers>& apiContentMappers,
@@ -140,7 +144,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     LDEBUG("API") << "Api getSystemModules begin" << LE;
     auto dtoList = oatpp::List<oatpp::Object<ModuleInfoDto>>::createShared();
 
-    auto result = waitFor(systemModule->getAvailableModules(), 500);
+    auto result = waitFor(systemModule->getAvailableModules());
 
     for (auto m : result){
         auto moduleInfoDto = ModuleInfoDto::createShared();
@@ -929,7 +933,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
                 };
 
                 //TODO specify timeout
-                auto fluorometerData = waitFor(systemModule->sensorModule()->captureFluorometerOjip(input), finalLengthMs + 30000);
+                auto fluorometerData = waitFor(systemModule->sensorModule()->captureFluorometerOjip(input));
 
                 auto ojipDataDto = FluorometerMeasurementDto::createShared();
                 ojipDataDto->measurement_id = fluorometerData.measurement_id;
@@ -973,7 +977,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::checkFluorometerOjipCaptureComplete() {
     return process(__FUNCTION__, [&](){
         //TODO specify timeout
-        auto captureComplete = waitFor(systemModule->sensorModule()->isFluorometerOjipCaptureComplete(), 30000);
+        auto captureComplete = waitFor(systemModule->sensorModule()->isFluorometerOjipCaptureComplete());
         auto captureStatusDto = FluorometerCaptureStatusDto::createShared();
         captureStatusDto->capture_complete = captureComplete;
         return createDtoResponse(Status::CODE_200, captureStatusDto);
@@ -1010,7 +1014,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
     auto response = process(__FUNCTION__, [&]() {
         //TODO timeout
-        auto fluorometerData = waitFor(systemModule->sensorModule()->retrieveLastFluorometerOjipData(), 30000);
+        auto fluorometerData = waitFor(systemModule->sensorModule()->retrieveLastFluorometerOjipData());
 
         auto dto = FluorometerMeasurementDto::createShared();
         dto->measurement_id = fluorometerData.measurement_id;
@@ -1138,7 +1142,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::measureSingleSpectrophotometerChannel(const Int8& channel) {
     return process(__FUNCTION__, [&](){
-        auto measurement = waitFor(systemModule->sensorModule()->measureSpectrophotometerChannel(channel), 10000);
+        auto measurement = waitFor(systemModule->sensorModule()->measureSpectrophotometerChannel(channel));
         auto responseDto = SingleChannelMeasurementDto::createShared();
         responseDto->channel = measurement.channel;
         responseDto->relative_value = measurement.relative_value;

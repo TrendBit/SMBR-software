@@ -176,7 +176,7 @@ std::future<bool> CanSensorModule::isFluorometerOjipCaptureComplete() {
         bool
     >([](App_messages::Fluorometer::OJIP_completed_response response){
         return response.completed;
-    }, default_timeout_ms);
+    }, 1000);
 }
 
 static std::string formatTime(const std::chrono::system_clock::time_point& time) {

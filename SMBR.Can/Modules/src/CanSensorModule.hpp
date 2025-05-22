@@ -3,6 +3,7 @@
 #include <SMBR/ISensorModule.hpp>
 #include "can/CanChannel.hpp"
 #include "BaseModule.hpp"
+#include "OjipMeasurementStorage.hpp"
 
 #include "codes/messages/fluorometer/ojip_capture_request.hpp"
 #include "codes/messages/fluorometer/ojip_completed_request.hpp"
@@ -46,7 +47,6 @@ public:
 private:
     BaseModule base;
     ICanChannel::Ptr channel;
-    uint8_t CalculateMeasurementID(uint32_t api_id);
     std::atomic<uint32_t> last_api_id{0};
     std::atomic<uint32_t> sample_id{0};
     bool isRead = false;
@@ -54,14 +54,6 @@ private:
     Fluorometer_config::Timing last_timebase = Fluorometer_config::Timing::Logarithmic;
     uint16_t last_required_samples;
     uint16_t last_length_ms;
-
-    struct MeasurementParams {
-        uint32_t api_id;
-        uint16_t samples;
-        uint16_t length_ms;
-        int timebase;
-        bool isRead;
-    };
 
     struct ProcessingContext {
         ISensorModule::FluorometerOjipData result;
@@ -78,10 +70,5 @@ private:
 
     void sendCanRequest(uint32_t timeoutMs, std::shared_ptr<std::promise<ISensorModule::FluorometerOjipData>> promise);
     void checkMeasurementCompletion(uint32_t timeoutMs, std::shared_ptr<std::promise<ISensorModule::FluorometerOjipData>> promise);
-    std::pair<bool, std::string> readMeasurementParams(const std::string& filePath, MeasurementParams& params);
-    std::pair<bool, std::string> writeMeasurementParams(const std::string& filePath, const MeasurementParams& params);
-    std::pair<bool, std::string> ensureDirectoryExists(const std::string& filePath);
-
-
 };
 

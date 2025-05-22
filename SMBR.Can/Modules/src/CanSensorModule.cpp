@@ -45,12 +45,7 @@
 #include <sys/stat.h>     // for mkdir
 #include <unistd.h>       // for access
 #include <iostream>
-#include <thread>         // std::this_thread::sleep_for
-#include <Poco/JSON/Parser.h>
-#include <Poco/JSON/Object.h>
-#include <Poco/File.h>
-#include <Poco/Path.h>
-#include <fstream>
+#include <thread>         // std::this_thread::sleep_fo
 #include <memory>
 #include <chrono>
 #include <iomanip>
@@ -152,10 +147,6 @@ std::future <bool> CanSensorModule::printCustomText(std::string text) {
     return promise->get_future();
 }
 
-uint8_t CanSensorModule::CalculateMeasurementID(uint32_t api_id) {
-    return (api_id % 15) + 1;
-}
-
 std::future<ISensorModule::FluorometerSample> CanSensorModule::takeFluorometerSingleSample(
     Fluorometer_config::Gain gain,
     float intensity
@@ -166,7 +157,7 @@ std::future<ISensorModule::FluorometerSample> CanSensorModule::takeFluorometerSi
         App_messages::Fluorometer::Sample_response,
         FluorometerSample
     >(
-        App_messages::Fluorometer::Sample_request(CalculateMeasurementID(sample_id), gain, intensity),
+        App_messages::Fluorometer::Sample_request(OjipMeasurementStorage::CalculateMeasurementID(sample_id), gain, intensity),
         [](App_messages::Fluorometer::Sample_response response) {
             FluorometerSample result;
             result.raw_value = response.sample_value;
@@ -187,130 +178,6 @@ std::future<bool> CanSensorModule::isFluorometerOjipCaptureComplete() {
         return response.completed;
     }, default_timeout_ms);
 }
-
-std::pair<bool, std::string> CanSensorModule::ensureDirectoryExists(const std::string& filePath) {
-    try {
-        Poco::Path path(filePath);
-        if (path.isDirectory()) {
-            return {true, ""};
-        }
-
-        Poco::File dir(path.parent());
-        if (!dir.exists()) {
-            dir.createDirectories();
-        }
-        return {dir.exists(), ""};
-    } catch (const Poco::Exception& e) {
-        std::string error = "Directory error [" + filePath + "]: " + e.displayText();
-        return {false, error};
-    }
-}
-
-std::pair<bool, std::string> CanSensorModule::readMeasurementParams(const std::string& filePath, MeasurementParams& params) {
-    auto [dirSuccess, dirError] = ensureDirectoryExists(filePath);
-    if (!dirSuccess) {
-        return {false, dirError};
-    }
-
-    try {
-        Poco::File file(filePath);
-        if (!file.exists()) {
-            return {false, "File does not exist: " + filePath};
-        }
-        if (file.getSize() == 0) {
-            return {false, "File is empty: " + filePath};
-        }
-
-        std::ifstream input(filePath);
-        if (!input.is_open()) {
-            return {false, "Failed to open file: " + filePath};
-        }
-
-        Poco::JSON::Parser parser;
-        auto result = parser.parse(input);
-        input.close();
-
-        auto object = result.extract<Poco::JSON::Object::Ptr>();
-        if (!object) {
-            return {false, "Invalid JSON structure in file: " + filePath};
-        }
-
-        static const std::vector<std::string> requiredFields = {
-            "api_id", "samples", "length_ms", "timebase", "isRead"
-        };
-
-        for (const auto& field : requiredFields) {
-            if (!object->has(field)) {
-                return {false, "Missing field '" + field + "' in JSON file: " + filePath};
-            }
-        }
-
-        try {
-            params.api_id = object->getValue<int>("api_id");
-            params.samples = object->getValue<int>("samples");
-            params.length_ms = object->getValue<int>("length_ms");
-            params.timebase = object->getValue<int>("timebase");
-            params.isRead = object->getValue<bool>("isRead");
-        } catch (const Poco::Exception& e) {
-            return {false, "Type mismatch in JSON file [" + filePath + "]: " + e.displayText()};
-        }
-
-        return {true, ""};
-    } catch (const Poco::Exception& e) {
-        return {false, "JSON parse error [" + filePath + "]: " + e.displayText()};
-    } catch (const std::exception& e) {
-        return {false, "System error [" + filePath + "]: " + e.what()};
-    } catch (...) {
-        return {false, "Unknown error processing file: " + filePath};
-    }
-}
-
-std::pair<bool, std::string> CanSensorModule::writeMeasurementParams(const std::string& filePath, const MeasurementParams& params) {
-    auto [dirSuccess, dirError] = ensureDirectoryExists(filePath);
-    if (!dirSuccess) {
-        return {false, dirError};
-    }
-
-    const std::string tempPath = filePath + ".tmp";
-    try {
-        {
-            std::ofstream output(tempPath, std::ios::binary);
-            if (!output.is_open()) {
-                return {false, "Failed to create temp file: " + tempPath};
-            }
-
-            Poco::JSON::Object json;
-            json.set("api_id", params.api_id);
-            json.set("samples", params.samples);
-            json.set("length_ms", params.length_ms);
-            json.set("timebase", params.timebase);
-            json.set("isRead", params.isRead);
-
-            Poco::JSON::Stringifier::stringify(json, output);
-            output.close();
-
-            if (output.fail()) {
-                Poco::File(tempPath).remove();
-                return {false, "Write error for temp file: " + tempPath};
-            }
-        }
-
-        Poco::File tempFile(tempPath);
-        tempFile.renameTo(filePath);
-
-        return {true, ""};
-    } catch (const Poco::Exception& e) {
-        Poco::File(tempPath).remove();
-        return {false, "Write operation failed [" + filePath + "]: " + e.displayText()};
-    } catch (const std::exception& e) {
-        Poco::File(tempPath).remove();
-        return {false, "System error [" + filePath + "]: " + e.what()};
-    } catch (...) {
-        Poco::File(tempPath).remove();
-        return {false, "Unknown error writing file: " + filePath};
-    }
-}
-
 
 static std::string formatTime(const std::chrono::system_clock::time_point& time) {
     auto time_t = std::chrono::system_clock::to_time_t(time);
@@ -372,7 +239,7 @@ void CanSensorModule::sendCanRequest(uint32_t timeoutMs, std::shared_ptr<std::pr
             for (const auto& rr : context->responses) {
                 auto dataCopy = rr.data;
                 App_messages::Fluorometer::Data_sample sampleResponse;
-                if (sampleResponse.Interpret_data(dataCopy) && sampleResponse.Measurement_id() == CalculateMeasurementID(last_api_id)) {
+                if (sampleResponse.Interpret_data(dataCopy) && sampleResponse.Measurement_id() == OjipMeasurementStorage::CalculateMeasurementID(last_api_id)) {
                     context->receivedSamples++;
 
                     if (!context->metadataLoaded) {
@@ -475,15 +342,15 @@ std::future<ISensorModule::FluorometerOjipData> CanSensorModule::captureFluorome
     LNOTICE("ojipCapture") << "[" << formatTime(startTime)
                          << "] Starting OJIP capture process" << LE;
 
-    MeasurementParams params;
-    auto [success, error] = readMeasurementParams(PARAMS_FILE_PATH, params);
+    OjipMeasurementStorage::MeasurementParams params;
+    auto [success, error] = OjipMeasurementStorage::readMeasurementParams(PARAMS_FILE_PATH, params);
     if (success) {
         last_api_id = params.api_id;
         api_id = ++last_api_id;
-        measurement_id = CalculateMeasurementID(api_id);
+        measurement_id = OjipMeasurementStorage::CalculateMeasurementID(api_id);
     } else {
         api_id = 1;
-        measurement_id = CalculateMeasurementID(api_id);
+        measurement_id = OjipMeasurementStorage::CalculateMeasurementID(api_id);
         last_api_id = api_id;
     }
 
@@ -497,7 +364,7 @@ std::future<ISensorModule::FluorometerOjipData> CanSensorModule::captureFluorome
     params.timebase = static_cast<int>(input.sample_timing);
     params.isRead = isRead;
 
-    auto [writeSuccess, writeError] = writeMeasurementParams(PARAMS_FILE_PATH, params);
+    auto [writeSuccess, writeError] = OjipMeasurementStorage::writeMeasurementParams(PARAMS_FILE_PATH, params);
     if (!writeSuccess) {
         throw std::runtime_error("Failed to write measurement parameters: " + writeError);
     }
@@ -544,8 +411,8 @@ std::future<ISensorModule::FluorometerOjipData> CanSensorModule::retrieveLastFlu
     auto promise = std::make_shared<std::promise<ISensorModule::FluorometerOjipData>>();
 
     if (last_api_id == 0) {
-        MeasurementParams params;
-        auto [success, error] = readMeasurementParams(PARAMS_FILE_PATH, params);
+        OjipMeasurementStorage::MeasurementParams params;
+        auto [success, error] = OjipMeasurementStorage::readMeasurementParams(PARAMS_FILE_PATH, params);
         if (success) {
             last_api_id = params.api_id;
             last_required_samples = params.samples;
@@ -565,9 +432,9 @@ std::future<ISensorModule::FluorometerOjipData> CanSensorModule::retrieveLastFlu
         } else {
             last_measurement_data.read = true;
         }
-        MeasurementParams params = {last_api_id, last_required_samples, last_length_ms,
+        OjipMeasurementStorage::MeasurementParams params = {last_api_id, last_required_samples, last_length_ms,
                                   static_cast<int>(last_timebase), isRead};
-        auto [writeSuccess, writeError] = writeMeasurementParams(PARAMS_FILE_PATH, params);
+        auto [writeSuccess, writeError] = OjipMeasurementStorage::writeMeasurementParams(PARAMS_FILE_PATH, params);
         if (!writeSuccess) {
             promise->set_exception(std::make_exception_ptr(
                 std::runtime_error("Failed to update measurement parameters file: " + writeError)));
@@ -597,9 +464,9 @@ std::future<ISensorModule::FluorometerOjipData> CanSensorModule::retrieveLastFlu
 
         if (!isRead) {
             isRead = true;
-            MeasurementParams params = {last_api_id, last_required_samples, last_length_ms,
+            OjipMeasurementStorage::MeasurementParams params = {last_api_id, last_required_samples, last_length_ms,
                                   static_cast<int>(last_timebase), isRead};
-            writeMeasurementParams(PARAMS_FILE_PATH, params);
+            OjipMeasurementStorage::writeMeasurementParams(PARAMS_FILE_PATH, params);
         }
         return result;
     });

@@ -53,6 +53,8 @@ class Scheduler : public IScheduler {
             unsigned long long processId = 0;
         };
 
+        void assignNewInfo(ActiveScript::Ptr as);
+
         Poco::Thread t;
         std::atomic_bool stopped;
         

@@ -23,6 +23,7 @@ struct RuntimeInfo {
     bool started = false;
     bool stopped = false;
     std::deque <OutputLine> output;
+    std::deque <OutputLine> errors;
     std::string finishMessage;
     Poco::Timestamp startTime;
     std::vector <int> stack;    

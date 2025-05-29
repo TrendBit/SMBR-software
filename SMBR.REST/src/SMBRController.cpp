@@ -1,6 +1,7 @@
 #include "SMBRController.hpp"
 #include "SMBR/Exceptions.hpp"
 #include <Poco/DateTimeFormatter.h>
+#include <Poco/URI.h>
 
 #include "SMBR/Recipes.hpp"
 #include "SMBR/Scheduler.hpp"
@@ -1204,10 +1205,19 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     }
 }
 
+std::string decodeRecipeName(const oatpp::String& name){
+    std::string inStr = name;
+    std::string outStr;
+    Poco::URI::decode(inStr, outStr);   
+    return outStr;
+}
+
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getRecipeContent(const oatpp::String& name) {
     try {
-        LDEBUG("API") << "Api getRecipeContent begin" << LE;
-        auto s = recipes_->getRecipeContent(name);
+        std::string nn = decodeRecipeName(name);
+        LDEBUG("API") << "Api getRecipeContent " << nn << " begin" << LE;
+        
+        auto s = recipes_->getRecipeContent(nn);
         auto scriptResponseDto = ScriptDto::createShared();
         scriptResponseDto->name = s.name;
         scriptResponseDto->content = s.content;
@@ -1221,6 +1231,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::updateRecipe(const oatpp::String& name, const oatpp::Object<ScriptDto>& body) {
     try {
+
         LDEBUG("API") << "Api updateRecipe begin" << LE;
         if (!body || !body->name || !body->content) {
             throw ArgumentException("Invalid script. Must contain a name and content.");
@@ -1239,8 +1250,10 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::deleteRecipe(const oatpp::String& name) {
     try {
-        LDEBUG("API") << "Api deleteRecipe begin" << LE;
-        recipes_->deleteRecipe(name);
+        std::string nn = decodeRecipeName(name);
+        LDEBUG("API") << "Api deleteRecipe " << nn << " begin" << LE;
+        
+        recipes_->deleteRecipe(nn);
         LDEBUG("API") << "Api deleteRecipe end (success)" << LE;
         return createResponse(Status::CODE_200, "Recipe deleted successfully.");
     } catch (std::exception & e){
@@ -1255,11 +1268,12 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 // ==========================================
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::selectRecipe(const oatpp::String& name) {
     try {
-        LDEBUG("API") << "Api selectRecipe begin" << LE;
-        auto sc = recipes_->getRecipeContent(name);
+        std::string nn = decodeRecipeName(name);
+        LDEBUG("API") << "Api selectRecipe " << nn << " begin" << LE;
+        auto sc = recipes_->getRecipeContent(nn);
         scheduler_->setScriptFromString(sc);
         LDEBUG("API") << "Api selectRecipe end (success)" << LE;
-        return createResponse(Status::CODE_200, "Recipe " + name + " selected.");
+        return createResponse(Status::CODE_200, "Recipe " + nn + " selected.");
     } catch (std::exception & e){
         LWARNING("API") << "Api selectRecipe end (failure: " << e.what() << ")" << LE;
         return createResponse(Status::CODE_500, "Failed to select script: " + std::string(e.what()));
@@ -1328,9 +1342,10 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         }
         infoResponseDto->started = info.started;
         infoResponseDto->stopped = info.stopped;
-
-        infoResponseDto->startedAt = Poco::DateTimeFormatter::format(info.startTime, "%Y-%m-%d %H:%M:%S");;
-
+        if (info.started){
+            infoResponseDto->startedAt = Poco::DateTimeFormatter::format(info.startTime, "%Y-%m-%d %H:%M:%S");
+        }
+        
         LDEBUG("API") << "Api getSchedulerInfo end" << LE;
         return createDtoResponse(Status::CODE_200, infoResponseDto);
 

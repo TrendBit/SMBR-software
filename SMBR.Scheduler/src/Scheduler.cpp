@@ -33,6 +33,18 @@ Scheduler::~Scheduler(){
     t.join();
 }
 
+void Scheduler::assignNewInfo(ActiveScript::Ptr as){
+    if (bgScriptStopped){
+        std::scoped_lock lock(infoMutex);
+        info.name = as->info.name;
+        info.processId = 0;
+        info.started = false;
+        info.stopped = false;
+        info.finishMessage = "";
+        info.startTime.update();
+        info.stack.clear();
+    }
+}
 
 
 void Scheduler::setScriptFromString(const ScriptInfo & s){
@@ -48,6 +60,7 @@ void Scheduler::setScriptFromString(const ScriptInfo & s){
     {
         std::scoped_lock lock(scriptMutex);
         uploadedScript = as;
+        assignNewInfo(as);
     }
 }
 
@@ -65,6 +78,7 @@ void Scheduler::setScriptFromFile(const std::string & filename){
     {
         std::scoped_lock lock(scriptMutex);
         uploadedScript = as;
+        assignNewInfo(as);
     }
 }
 

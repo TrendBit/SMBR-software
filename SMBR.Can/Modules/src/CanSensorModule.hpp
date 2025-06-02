@@ -54,6 +54,7 @@ private:
     Fluorometer_config::Timing last_timebase = Fluorometer_config::Timing::Logarithmic;
     uint16_t last_required_samples;
     uint16_t last_length_ms;
+    std::string last_iso_start_time;
 
     struct ProcessingContext {
         ISensorModule::FluorometerOjipData result;

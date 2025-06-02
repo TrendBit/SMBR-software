@@ -294,6 +294,7 @@ void CanSensorModule::sendCanRequest(uint32_t timeoutMs, std::shared_ptr<std::pr
             context->result.missing_samples = context->result.required_samples - context->result.captured_samples;
             context->result.read = isRead;
             context->result.saturated = context->isSaturated;
+            context->result.iso_start_time = last_iso_start_time;
 
             last_measurement_data = context->result;
             promise->set_value(context->result);
@@ -355,6 +356,8 @@ std::future<ISensorModule::FluorometerOjipData> CanSensorModule::captureFluorome
     }
 
     last_measurement_data = ISensorModule::FluorometerOjipData{};
+    std::string isoTimeString = OjipMeasurementStorage::toIso8601(startTime);
+    last_iso_start_time = isoTimeString;
     isRead = false;
     last_timebase = input.sample_timing;
 

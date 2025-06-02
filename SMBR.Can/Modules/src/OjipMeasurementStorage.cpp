@@ -126,3 +126,15 @@ std::pair<bool, std::string> OjipMeasurementStorage::writeMeasurementParams(cons
         return {false, "Unknown error writing file: " + filePath};
     }
 }
+
+
+std::string OjipMeasurementStorage::toIso8601(const std::chrono::system_clock::time_point& tp) {
+    std::time_t timeT = std::chrono::system_clock::to_time_t(tp);
+    long long ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+        tp.time_since_epoch()).count() % 1000;
+
+    std::ostringstream oss;
+    oss << std::put_time(std::localtime(&timeT), "%Y-%m-%dT%H:%M:%S");
+    oss << '.' << std::setw(3) << std::setfill('0') << ms;
+    return oss.str();
+}

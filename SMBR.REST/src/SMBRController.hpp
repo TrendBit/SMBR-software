@@ -1254,6 +1254,7 @@ public:
         example->detector_gain = dto::GainEnum::x1;
         example->emitor_intensity = 0.5;
         example->timebase = dto::TimingEnum::Logarithmic;
+        example->timestamp = "2025-05-30T12:34:56.789";
         example->length_ms = 1000;
         example->required_samples = 1000;
         example->captured_samples = 998;
@@ -1348,6 +1349,7 @@ public:
         example->detector_gain = dto::GainEnum::x1;
         example->emitor_intensity = 0.5;
         example->timebase = dto::TimingEnum::Logarithmic;
+        example->timestamp = "2025-05-30T12:34:56.789";
         example->length_ms = 1000;
         example->required_samples = 1000;
         example->captured_samples = 998;

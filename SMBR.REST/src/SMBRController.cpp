@@ -949,6 +949,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
                 ojipDataDto->missing_samples = fluorometerData.missing_samples;
                 ojipDataDto->read = fluorometerData.read;
                 ojipDataDto->saturated = fluorometerData.saturated;
+                ojipDataDto->timestamp = fluorometerData.iso_start_time;
 
                 oatpp::Vector<oatpp::Object<FluorometerSampleDto>> samples = oatpp::Vector<oatpp::Object<FluorometerSampleDto>>::createShared();
                 for (const auto& sample : fluorometerData.samples) {
@@ -1032,6 +1033,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         dto->missing_samples = fluorometerData.missing_samples;
         dto->read = fluorometerData.read;
         dto->saturated = fluorometerData.saturated;
+        dto->timestamp = fluorometerData.iso_start_time;
 
         oatpp::Vector<oatpp::Object<FluorometerSampleDto>> samples = oatpp::Vector<oatpp::Object<FluorometerSampleDto>>::createShared();
         for (const auto& sample : fluorometerData.samples) {

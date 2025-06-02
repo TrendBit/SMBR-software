@@ -51,6 +51,7 @@ public:
         uint16_t captured_samples;
         int16_t missing_samples;
         bool saturated;
+        std::string iso_start_time;
     };
 
     /**

@@ -10,7 +10,7 @@ class Recipes : public IRecipes {
     public:    
 
         
-        Recipes(std::string folder);
+        Recipes(std::string folder, std::string referenceFolder);
         
 
         std::vector <std::string> getRecipeNames() const override;

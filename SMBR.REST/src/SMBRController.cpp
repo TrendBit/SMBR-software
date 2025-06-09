@@ -97,7 +97,7 @@ SMBRController::SMBRController(const std::shared_ptr<oatpp::web::mime::ContentMa
     , systemModule(systemModule)
     , activeCapturePromise(nullptr){
         scheduler_ = std::make_shared<Scheduler>(systemModule);
-        recipes_ = std::make_shared<Recipes>("/data/recipes/");
+        recipes_ = std::make_shared<Recipes>("/data/recipes/", "/home/reactor/recipes/");
 
     captureWorker = std::thread([this]() {
         while (true) {

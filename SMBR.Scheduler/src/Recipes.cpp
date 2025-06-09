@@ -4,14 +4,23 @@
 #include <Poco/Glob.h>
 #include <Poco/File.h>
 #include <Poco/String.h>
+#include <Poco/StringTokenizer.h>
 #include <fstream>
 #include <sstream>
 #include <iostream>
 
-Recipes::Recipes(std::string folder) : folder_(folder) {
+
+
+Recipes::Recipes(std::string folder, std::string referenceFolder) : folder_(folder) {
 
     Poco::File path(folder);
     path.createDirectories();
+
+    //copy content of reference folder to folder, overwrite existing files (recursive copy)
+    Poco::File reference(referenceFolder);
+    if (reference.exists() || reference.isDirectory()){
+        system(("cp -r " + referenceFolder + "/* " + folder).c_str());
+    }
     
     refresh();
 }
@@ -38,7 +47,7 @@ void Recipes::reload() {
     refresh();
 }
 
-static std::string checkName(std::string name){
+static void checkName(std::string name){
     //name can contain only letters, numbers, and underscores
 
     if (name.empty()){
@@ -46,11 +55,49 @@ static std::string checkName(std::string name){
     }
 
     for (auto c : name){
-        if (!std::isalnum(c) && c != '_'){
+        if (!std::isalnum(c) && c != '_' && c != '|'){
             throw std::runtime_error("Invalid character in recipe name: " + name);
         }
     }
-    return name;
+}
+
+
+static std::string pathToName(std::string baseFolder, std::string completePath){
+    Poco::Path path(completePath);
+    std::string name = path.getBaseName();
+    if (name.empty()){
+        throw std::runtime_error("Empty recipe name from path: " + completePath);
+    }
+    if (path.getExtension() != "recipe"){
+        throw std::runtime_error("Invalid recipe file extension: " + completePath);
+    }
+    if (completePath.find(baseFolder) != 0){
+        throw std::runtime_error("Recipe file is not in the base folder: " + completePath);
+    }
+
+    std::string prefix = completePath.substr(baseFolder.size());
+    Poco::StringTokenizer tokenizer(prefix, "/");
+    std::string finalName;
+    for (int tok = 0; tok + 1 < tokenizer.count(); tok++){      
+        finalName += tokenizer[tok] + "|";
+    }
+    finalName += name;
+
+    //std::cout << "FROM " << completePath << " base " << baseFolder << " -> " << finalName << std::endl; 
+
+    return finalName;
+}
+
+static std::string nameToPath(std::string baseFolder, std::string name){
+    if (name.empty()){
+        throw std::runtime_error("Empty recipe name");
+    }
+    checkName(name);
+    std::string nameReplaced = baseFolder + Poco::replace(name, "|", "/") + ".recipe";
+    
+    Poco::Path ppath(nameReplaced);
+    Poco::File(ppath.makeParent().toString()).createDirectories();
+    return nameReplaced;
 }
 
 void Recipes::replaceRecipe(const ScriptInfo & script) {
@@ -58,12 +105,14 @@ void Recipes::replaceRecipe(const ScriptInfo & script) {
     std::lock_guard <std::mutex> lock(mutex_);
     
 
-    //save to file
-    Poco::Path path(folder_);
-    path.append(checkName(script.name) + ".recipe");
-    std::ofstream file(path.toString());
+    checkName(script.name);
+    std::string path = nameToPath(folder_, script.name); 
+
+    
+
+    std::ofstream file(path);
     if (!file){
-        throw std::runtime_error("Failed to open file for writing: " + path.toString());
+        throw std::runtime_error("Failed to open file for writing: " + path);
     }
     file << script.content;
 
@@ -77,18 +126,19 @@ void Recipes::deleteRecipe(const std::string & name) {
         throw std::runtime_error("Recipe not found: " + name);
     }
  
-    //delete file
-    Poco::Path path(folder_);
-    path.append(checkName(name) + ".recipe");
-    if (std::remove(path.toString().c_str()) != 0){
-        throw std::runtime_error("Failed to delete file: " + path.toString());
+    checkName(name);
+    std::string path = nameToPath(folder_, name); 
+    
+
+    if (std::remove(path.c_str()) != 0){
+        throw std::runtime_error("Failed to delete file: " + path);
     }
 
-       recipes_.erase(it);
+    recipes_.erase(it);
 }
 
 static void loadRecursive(std::map <std::string, ScriptInfo> & recipes_, std::string baseFolder, std::string currentFolder){
-    std::cout << "LoadRecursive: " << currentFolder << std::endl;
+    //std::cout << "LoadRecursive: " << currentFolder << std::endl;
     Poco::Path path(currentFolder);
     std::set <std::string> files;
     Poco::Glob::glob(path.toString() + "/*", files);
@@ -108,10 +158,9 @@ static void loadRecursive(std::map <std::string, ScriptInfo> & recipes_, std::st
             std::stringstream buffer;
             buffer << f.rdbuf();
             ScriptInfo s;
-            s.name =  Poco::Path(file).getBaseName();
-            if (currentFolder != baseFolder){
-                s.name = Poco::replace(currentFolder.substr(baseFolder.size()), "/", "|") + s.name; 
-            }
+
+            s.name = pathToName(baseFolder, file);
+
             s.content = buffer.str();
             recipes_[s.name] = s;
         }

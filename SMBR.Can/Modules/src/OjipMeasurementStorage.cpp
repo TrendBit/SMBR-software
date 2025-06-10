@@ -135,6 +135,5 @@ std::string OjipMeasurementStorage::toIso8601(const std::chrono::system_clock::t
 
     std::ostringstream oss;
     oss << std::put_time(std::localtime(&timeT), "%Y-%m-%dT%H:%M:%S");
-    oss << '.' << std::setw(3) << std::setfill('0') << ms;
     return oss.str();
 }

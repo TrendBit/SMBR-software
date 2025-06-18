@@ -191,6 +191,16 @@ std::string SMBRController::instanceToString(Instance instance) {
     }
 }
 
+std::string SMBRController::moduleToString(Modules module) {
+    switch (module) {
+        case Modules::Core: return "core";
+        case Modules::Control: return "control";
+        case Modules::Sensor: return "sensor";
+        case Modules::Unknown: return "Unknown";
+        default: return "Invalid";
+    }
+}
+
   // ==========================================
   // Common Endpoints
   // ==========================================
@@ -243,24 +253,38 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     });
 }
 
-static ICommonModule::Ptr byUID(ISystemModule::Ptr s, const oatpp::data::type::EnumObjectWrapper<dto::ModuleEnum, oatpp::data::type::EnumInterpreterAsString<dto::ModuleEnum, false>>& module,
-    const oatpp::Object<ModuleActionRequestDto>& body){
+static ICommonModule::Ptr byUID(ISystemModule::Ptr s, const oatpp::Enum<dto::ModuleEnum>::AsString& module, 
+    const oatpp::Object<ModuleActionRequestDto>& body)
+{
     if (!body || !body->uid) {
         throw NotFoundException("uid expected");
     }
-    ModuleID moduleID;
-    moduleID.uidHex = body->uid->c_str();
 
+    std::string uid = body->uid->c_str();
+    Modules type;
 
     if (module == dto::ModuleEnum::control) {
-        moduleID.type == Modules::Control;
+        type = Modules::Control;
     } else if (module == dto::ModuleEnum::sensor) {
-        moduleID.type == Modules::Sensor;
+        type = Modules::Sensor;
     } else if (module == dto::ModuleEnum::core) {
-        moduleID.type == Modules::Core;
+        type = Modules::Core;
+    } else {
+        throw NotFoundException("Invalid module type");
     }
-    return s->commonModule(moduleID);
+
+    auto existing = s->existing();
+    for (const auto& m : existing) {
+        if (m.type == type && m.uidHex == uid) {
+            return s->commonModule(m);
+        }
+    }
+
+    std::stringstream ss;
+    ss << "Module with uid=" << uid << " and type=" << SMBRController::moduleToString(type) << " not found";
+    throw NotFoundException(ss.str());
 }
+
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::postRestart(
     const oatpp::data::type::EnumObjectWrapper<dto::ModuleEnum, oatpp::data::type::EnumInterpreterAsString<dto::ModuleEnum, false>>& module,

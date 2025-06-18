@@ -1829,6 +1829,7 @@ public:
     ENDPOINT("GET", "/scheduler/runtime", getSchedulerInfo);
 
     ~SMBRController(); 
+    static std::string moduleToString(Modules module);
 
 private:
     

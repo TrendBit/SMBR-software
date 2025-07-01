@@ -1,0 +1,14 @@
+main:
+    display "Cleaning process"
+    print "Cleaning process"
+    heater_off
+    illumination 0.0 0.0 0.0 0.0
+    wait 3
+    display "Pumping IN"
+    pump 80 250
+    wait 60
+    display "Pumping OUT"
+    pump -50 250
+    wait 30
+    display "Cleaning done"
+    print "Cleaning done"

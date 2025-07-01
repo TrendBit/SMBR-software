@@ -1,0 +1,26 @@
+main:
+    print "start"
+    display "Mixing cycle"
+
+    illumination 0.0 0.0 0.1 0.1
+    wait 5
+
+    loop
+        mix 15 6000
+        air 600 2500
+        shake
+
+    print "done"
+    display "done"
+
+
+shake:
+    print "Shaking"
+    display "Shaking"
+    loop 5
+        pump 1 120
+        wait 2
+        pump -1 120
+        wait 2
+    print " --- "
+    display " --- "

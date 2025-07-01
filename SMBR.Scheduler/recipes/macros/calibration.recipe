@@ -1,0 +1,22 @@
+main:
+    display "Starting calibration"
+    print "Starting calibration"
+    heater_off
+    illumination 0.0 0.0 0.0 0.0
+    wait 3
+    display "Pumping IN"
+    pump 40 250
+    wait 30
+    display "OJIP Calibration ..."
+    print "OJIP Calibration ..."
+    fluorometer_calibrate
+    wait 5
+    display "Density calibration ..."
+    print "Density calibration ..."
+    spectrophotometer_calibrate
+    wait 10
+    display "Pumping OUT"
+    pump -50 250
+    wait 30
+    display "Calibration done"
+    print "Calibration done"

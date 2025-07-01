@@ -1,0 +1,5 @@
+main:
+    display "Purging cuvette"
+    print "Purging cuvette"
+    pump -50 250
+    wait 30

@@ -16,17 +16,17 @@ file(GLOB_RECURSE HEADERS
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 
 target_include_directories(${PROJECT_NAME}
-  PRIVATE src
+  PRIVATE src/source
 )
 
-target_link_libraries(${PROJECT_NAME} 
+target_link_libraries(${PROJECT_NAME}
   SMBR.Can.Codes
   PocoFoundation
   PocoCrypto
   systemd
 )
 
-add_dependencies(${PROJECT_NAME} 
+add_dependencies(${PROJECT_NAME}
   SMBR.Can.Codes
 )
 

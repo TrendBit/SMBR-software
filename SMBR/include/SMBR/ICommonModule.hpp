@@ -14,6 +14,15 @@ public:
 
     virtual ~ICommonModule() = default;
 
+    /**
+     * @brief Represents firmware version information.
+     */
+    struct FwVersion {
+        std::string version;
+        std::string hash;
+        bool dirty;
+    };
+
     virtual ModuleID id() const = 0;
     /**
      * @brief Sends a ping request
@@ -49,6 +58,11 @@ public:
      * @brief Sends a request to reboot into CAN bootloader mode.
      */
     virtual std::future <bool> rebootModuleCanBootloader() = 0;
+
+    /**
+     * @brief Retrieves firmware informations.
+     */
+    virtual std::future <FwVersion> getFwVersion() = 0;
 
 };
 

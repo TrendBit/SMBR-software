@@ -6,6 +6,7 @@
 #include "dto/ChannelEnum.hpp"
 #include "dto/PingResponseDto.hpp"
 #include "dto/TempDto.hpp"
+#include "dto/FwVersionDto.hpp"
 #include "dto/TempNullDto.hpp"
 #include "dto/ModuleInfoDto.hpp"
 #include "dto/LoadResponseDto.hpp"
@@ -253,6 +254,39 @@ public:
     ENDPOINT("POST", "/{module}/can_bootloader", postCanBootloader,
         PATH(oatpp::Enum<dto::ModuleEnum>::AsString, module),
         BODY_DTO(Object<ModuleActionRequestDto>, body));
+
+    /**
+     * @brief Retrieves firmware informations.
+     */
+    ENDPOINT_INFO(getFwVersion) {
+        info->summary = "Get module firmware version";
+        info->addTag("Common");
+        info->description = "Gets the current firmware version flashed on the module.\n" 
+        "This is the version of the main application firmware running on the module.\n" 
+        "Version is in format X.Y.Z, where X is major version and Y is minor version.\n" 
+        "Z is Patch version, which is incremented with commit above major.minor version.\n" 
+        "Hash is the git commit hash on which was this version built. Hash is 7-16 characters long.\n" 
+        "And is generaly formatted as {:07x}, this means that longer hashes then 7 character does not have leading zeroes.\n" 
+        "Dirty flag is set to true if the firmware was built from a dirty git repository (uncommitted changes).\n" 
+        "Different version of firmware are compatible. Core module version numbering can be vastly different from other modules, but still follows the same pattern.\n" 
+        "This is because Core module is only virtual and running on SBC (Rpi).";
+        auto example = FwVersionDto::createShared();
+        example->version = "1.3.5";
+        example->hash = "ca123fe";
+        example->dirty = false;
+        info->addResponse<Object<FwVersionDto>>(Status::CODE_200, "application/json")
+            .addExample("application/json", example);
+        info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Module not found")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Module not found"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve firmware version")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve firmware version"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_504, "application/json", "Request timed out")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
+    }
+    ADD_CORS(getFwVersion)
+    ENDPOINT("GET", "/{module}/fw_version", getFwVersion,
+            PATH(oatpp::Enum<dto::ModuleEnum>::AsString, module));
+
 
 // ==========================================
 // Core module

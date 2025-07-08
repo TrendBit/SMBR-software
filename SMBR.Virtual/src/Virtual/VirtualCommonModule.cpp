@@ -51,3 +51,14 @@ std::future <bool> VirtualCommonModule::rebootModuleCanBootloader(){
         return true;
     });
 }
+
+std::future <ICommonModule::FwVersion> VirtualCommonModule::getFwVersion() {
+    return std::async(std::launch::async, []() {
+        Random::randomDelay();
+        return ICommonModule::FwVersion {
+            .version = "1.3.5",
+            .hash = "ca123fe",
+            .dirty = false
+        };
+    });
+}

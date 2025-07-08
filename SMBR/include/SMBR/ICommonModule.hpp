@@ -64,5 +64,10 @@ public:
      */
     virtual std::future <FwVersion> getFwVersion() = 0;
 
+    /**
+     * @brief Retrieves hardware version.
+     */
+    virtual std::future<std::string> getHwVersion() = 0;
+
 };
 

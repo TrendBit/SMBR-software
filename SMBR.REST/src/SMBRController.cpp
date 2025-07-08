@@ -319,11 +319,20 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getFwVersion(const oatpp::Enum<dto::ModuleEnum>::AsString& module) {
     return process(__FUNCTION__, [&]() {
         auto fw = waitFor(getModule(module)->getFwVersion());
-
         auto dto = FwVersionDto::createShared();
         dto->version = fw.version.c_str();
         dto->hash = fw.hash.c_str();
         dto->dirty = fw.dirty;
+
+        return createDtoResponse(Status::CODE_200, dto);
+    });
+}
+
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getHwVersion(const oatpp::Enum<dto::ModuleEnum>::AsString& module) {
+    return process(__FUNCTION__, [&]() {
+        auto version = waitFor(getModule(module)->getHwVersion());
+        auto dto = HwVersionDto::createShared();
+        dto->version = version;
 
         return createDtoResponse(Status::CODE_200, dto);
     });

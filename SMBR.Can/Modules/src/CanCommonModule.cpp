@@ -21,6 +21,8 @@
 #include "codes/messages/common/fw_hash_response.hpp"
 #include "codes/messages/common/fw_dirty_request.hpp"
 #include "codes/messages/common/fw_dirty_response.hpp"
+#include "codes/messages/common/hw_version_request.hpp"
+#include "codes/messages/common/hw_version_response.hpp"
 
 #include <Poco/Clock.h>
 #include <iostream>
@@ -151,5 +153,17 @@ std::future<ICommonModule::FwVersion> CanCommonModule::getFwVersion()
     );
 }
 
-
-
+std::future<std::string> CanCommonModule::getHwVersion()
+{
+    return base.get<
+        App_messages::Common::HW_version_request,
+        App_messages::Common::HW_version_response,
+        std::string
+    >(
+        App_messages::Common::HW_version_request{},
+        [](const App_messages::Common::HW_version_response &res) -> std::string {
+            return std::to_string(res.major) + "." + std::to_string(res.minor);
+        },
+        default_timeout_ms
+    );
+}

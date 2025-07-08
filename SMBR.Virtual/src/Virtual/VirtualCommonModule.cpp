@@ -62,3 +62,10 @@ std::future <ICommonModule::FwVersion> VirtualCommonModule::getFwVersion() {
         };
     });
 }
+
+std::future<std::string> VirtualCommonModule::getHwVersion() {
+    return std::async(std::launch::async, []() -> std::string {
+        Random::randomDelay();
+        return "1.2";
+    });
+}

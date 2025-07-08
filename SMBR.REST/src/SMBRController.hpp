@@ -7,6 +7,7 @@
 #include "dto/PingResponseDto.hpp"
 #include "dto/TempDto.hpp"
 #include "dto/FwVersionDto.hpp"
+#include "dto/HwVersionDto.hpp"
 #include "dto/TempNullDto.hpp"
 #include "dto/ModuleInfoDto.hpp"
 #include "dto/LoadResponseDto.hpp"
@@ -285,6 +286,31 @@ public:
     }
     ADD_CORS(getFwVersion)
     ENDPOINT("GET", "/{module}/fw_version", getFwVersion,
+            PATH(oatpp::Enum<dto::ModuleEnum>::AsString, module));
+
+    /**
+     * @brief Retrieves hardware version information.
+     */
+    ENDPOINT_INFO(getHwVersion) {
+        info->summary = "Get module hardware version";
+        info->addTag("Common");
+        info->description = "Gets the current hardware version of the module.\n"
+        "This is the revision of hardware, read directly from pcb.\n"
+        "Version is in format X.Y, where X is major version and Y is minor version.\n"
+        "Different hardware versions are compatible with each other and can be used in one device.";
+        auto example = HwVersionDto::createShared();
+        example->version = "1.2";
+        info->addResponse<Object<HwVersionDto>>(Status::CODE_200, "application/json")
+            .addExample("application/json", example);
+        info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Module not found")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Module not found"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve hardware version")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve hardware version"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_504, "application/json", "Request timed out")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
+    }
+    ADD_CORS(getHwVersion)
+    ENDPOINT("GET", "/{module}/hw_version", getHwVersion,
             PATH(oatpp::Enum<dto::ModuleEnum>::AsString, module));
 
 

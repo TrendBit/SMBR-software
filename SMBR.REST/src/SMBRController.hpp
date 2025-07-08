@@ -778,7 +778,7 @@ public:
     /**
      * @brief Primes the cuvette pump.
      */
-    ENDPOINT_INFO(primeCuvettePump) {
+    /*ENDPOINT_INFO(primeCuvettePump) {
         info->summary = "Prime cuvette pump";
         info->description = "Primes the cuvette pump by pumping liquid into the cuvette. This is used to fill the cuvette with liquid and remove air from the system.";
         info->addTag("Control module");
@@ -787,13 +787,13 @@ public:
         info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to start cuvette pump priming")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to start cuvette pump priming"}}));
     }
-    ADD_CORS(primeCuvettePump)
+    ADD_CORS(primeCuvettePump)*/
     ENDPOINT("POST", "/control/cuvette_pump/prime", primeCuvettePump);
 
     /**
      * @brief Purges the cuvette pump.
      */
-    ENDPOINT_INFO(purgeCuvettePump) {
+    /*ENDPOINT_INFO(purgeCuvettePump) {
         info->summary = "Purge cuvette pump";
         info->description = "Purges the cuvette pump by pumping liquid out of the cuvette. This is used to remove liquid from the cuvette and clean the system.";
         info->addTag("Control module");
@@ -802,7 +802,7 @@ public:
         info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to start cuvette pump purging")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to start cuvette pump purging"}}));
     }
-    ADD_CORS(purgeCuvettePump)
+    ADD_CORS(purgeCuvettePump)*/
     ENDPOINT("POST", "/control/cuvette_pump/purge", purgeCuvettePump);
 
     /**

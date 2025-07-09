@@ -16,6 +16,7 @@
 #include "dto/IntensityDto.hpp"
 #include "dto/SpeedDto.hpp"
 #include "dto/FlowrateDto.hpp"
+#include "dto/CuvettePumpInfoDto.hpp"
 #include "dto/MoveDto.hpp"
 #include "dto/RpmDto.hpp"
 #include "dto/StirDto.hpp"
@@ -733,6 +734,30 @@ public:
     ENDPOINT("GET", "/control/heater/turn_off", turnOffHeater);
 
     /**
+     * @brief Retrieves information about the cuvette pump.
+     */
+    ENDPOINT_INFO(getCuvettePumpInfo) {
+        info->summary = "Retrieves information about the cuvette pump";
+        info->description = "Units: ml/min. Retrieves information about the cuvette pump capabilities.\n"  
+        "This includes maximum and minimum flowrate of the cuvette pump at nominal conditions.\n"  
+        "Cuvette pump maximal and minimal flowrates can be different based on used tubing.";
+        info->addTag("Control module");
+        auto example = CuvettePumpInfoDto::createShared();
+        example->max_flowrate = 200.0f;
+        example->min_flowrate = 10.0f;
+        info->addResponse<Object<CuvettePumpInfoDto>>(Status::CODE_200, "application/json")
+            .addExample("application/json", example);
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve pump info")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve pump info"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_504, "application/json", "Request timed out")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
+    }
+    ADD_CORS(getCuvettePumpInfo)
+    ENDPOINT("GET", "/control/cuvette_pump/info", getCuvettePumpInfo);
+
+
+
+    /**
      * @brief Sets the speed of the cuvette pump.
      */
     ENDPOINT_INFO(setCuvettePumpSpeed) {
@@ -847,8 +872,8 @@ public:
         info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to start cuvette pump priming")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to start cuvette pump priming"}}));
     }
-    ADD_CORS(primeCuvettePump)*/
-    ENDPOINT("POST", "/control/cuvette_pump/prime", primeCuvettePump);
+    ADD_CORS(primeCuvettePump)
+    ENDPOINT("POST", "/control/cuvette_pump/prime", primeCuvettePump);*/
 
     /**
      * @brief Purges the cuvette pump.
@@ -862,8 +887,8 @@ public:
         info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to start cuvette pump purging")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to start cuvette pump purging"}}));
     }
-    ADD_CORS(purgeCuvettePump)*/
-    ENDPOINT("POST", "/control/cuvette_pump/purge", purgeCuvettePump);
+    ADD_CORS(purgeCuvettePump)
+    ENDPOINT("POST", "/control/cuvette_pump/purge", purgeCuvettePump);*/
 
     /**
      * @brief Stops the cuvette pump.

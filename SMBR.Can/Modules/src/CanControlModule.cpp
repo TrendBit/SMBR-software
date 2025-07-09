@@ -18,6 +18,8 @@
 #include "codes/messages/heater/set_intensity.hpp"
 #include "codes/messages/heater/set_target_temperature.hpp"
 #include "codes/messages/heater/turn_off.hpp"
+#include "codes/messages/cuvette_pump/info_request.hpp"
+#include "codes/messages/cuvette_pump/info_response.hpp"
 #include "codes/messages/cuvette_pump/set_speed.hpp"
 #include "codes/messages/cuvette_pump/get_speed_request.hpp"
 #include "codes/messages/cuvette_pump/get_speed_response.hpp"
@@ -311,6 +313,22 @@ std::future <bool> CanControlModule::stopMixer() {
 
     App_messages::Mixer::Stop r;
     return base.set(r);
+}
+
+std::future<IControlModule::ControlInfo> CanControlModule::getCuvettePumpInfo() {
+    return base.get<App_messages::Cuvette_pump::Info_request,
+            App_messages::Cuvette_pump::Info_response,
+            IControlModule::ControlInfo>(
+            App_messages::Cuvette_pump::Info_request{},
+        [](const App_messages::Cuvette_pump::Info_response& response) {
+            IControlModule::ControlInfo result;
+            result.max = static_cast<float>(response.max_flowrate);
+            result.min = static_cast<float>(response.min_flowrate);
+            return result;
+        },
+        default_timeout_ms
+    );
+
 }
 
 

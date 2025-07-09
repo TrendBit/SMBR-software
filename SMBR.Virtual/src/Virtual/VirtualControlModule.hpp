@@ -38,6 +38,7 @@ public:
     std::future <float> getMixerRpm() override;
     std::future <bool> stirMixer(float rpm, float time) override;
     std::future <bool> stopMixer() override;
+    std::future <ControlInfo> getCuvettePumpInfo() override;
 
 };
 

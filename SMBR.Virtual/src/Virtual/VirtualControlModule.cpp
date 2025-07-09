@@ -216,4 +216,14 @@ std::future <bool> VirtualControlModule::stopMixer(){
     });
 }
 
+std::future <IControlModule::ControlInfo> VirtualControlModule::getCuvettePumpInfo(){
+    return std::async(std::launch::async, []() {
+        Random::randomDelay(100);
+        return IControlModule::ControlInfo {
+            .max = 200,
+            .min = 10
+        };
+    });
+}
+
 

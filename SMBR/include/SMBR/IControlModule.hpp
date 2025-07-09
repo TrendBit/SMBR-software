@@ -23,6 +23,14 @@ public:
         float intensity;
     };
 
+    /**
+     * @brief Info structure of control module.
+     */
+    struct ControlInfo {
+        float max;
+        float min;
+    };
+
    /**
     * @brief Sets the intensity of LEDs on a module.
     */
@@ -171,6 +179,11 @@ public:
      * @brief Stops the mixer immediately.
      */
     virtual std::future <bool> stopMixer() = 0; 
+
+    /**
+     * @brief Retrieves information about the cuvette pump.
+     */
+    virtual std::future <ControlInfo> getCuvettePumpInfo() = 0;
 
 };
 

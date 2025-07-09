@@ -21,7 +21,7 @@ public:
     std::future <bool> restartModule() override;
     std::future <bool> rebootModuleUsbBootloader() override;
     std::future <bool> rebootModuleCanBootloader() override;
-    std::future <ICommonModule::FwVersion> getFwVersion() override;
+    std::future <FwVersion> getFwVersion() override;
     std::future <std::string> getHwVersion() override;
 private:
     ModuleID id_;

@@ -597,6 +597,16 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     });
 }
 
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getCuvettePumpInfo() {
+    return process(__FUNCTION__, [&]() {
+        auto response = waitFor(systemModule->controlModule()->getCuvettePumpInfo());
+        auto dto = CuvettePumpInfoDto::createShared();
+        dto->max_flowrate = response.max;
+        dto->min_flowrate = response.min;
+        return createDtoResponse(Status::CODE_200, dto);
+    });
+}
+
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::setCuvettePumpSpeed(const oatpp::Object<SpeedDto>& body) {
 
     return processBool(__FUNCTION__, [&](){
@@ -651,7 +661,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         return waitFor(systemModule->controlModule()->moveCuvettePump(body->volume, body->flowrate));
     });
 }
-
+/*
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::primeCuvettePump() {
 
     return processBool(__FUNCTION__, [&](){
@@ -664,7 +674,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     return processBool(__FUNCTION__, [&](){
         return waitFor(systemModule->controlModule()->purgeCuvettePump());
     });
-}
+}*/
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::stopCuvettePump() {
 

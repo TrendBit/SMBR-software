@@ -38,6 +38,11 @@ public:
     virtual std::future <int64_t> getSerialNumber() = 0;
 
     /**
+     * @brief Retrieves model of the Core module.
+     */
+    virtual std::future<std::string> getModel() = 0;
+
+    /**
      * @brief Retrieves the type of power supply powering the device.
      */
     struct PowerSupplyType { 

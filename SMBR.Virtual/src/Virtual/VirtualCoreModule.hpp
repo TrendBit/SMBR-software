@@ -11,6 +11,7 @@ public:
     std::future <std::string> getIpAddress() override;
     std::future <std::string> getHostname() override;
     std::future <int64_t> getSerialNumber() override;
+    std::future <std::string> getModel() override;
     std::future <PowerSupplyType> getPowerSupplyType() override;
     std::future <float> getVoltage5V() override;
     std::future <float> getVoltageVIN() override;

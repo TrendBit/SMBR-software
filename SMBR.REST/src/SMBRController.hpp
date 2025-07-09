@@ -26,6 +26,7 @@
 #include "dto/IpDto.hpp"
 #include "dto/HostnameDto.hpp"
 #include "dto/SerialDto.hpp"
+#include "dto/ModelDto.hpp"
 #include "dto/SupplyTypeDto.hpp"
 #include "dto/VoltageDto.hpp"
 #include "dto/CurrentDto.hpp"
@@ -396,6 +397,31 @@ public:
     }
     ADD_CORS(getSerialNumber)
     ENDPOINT("GET", "/core/serial", getSerialNumber);
+
+    /**
+     * @brief Retrieves the model of the Core module (SBC).
+     */
+    ENDPOINT_INFO(getModel) {
+        info->summary = "Get model of the Core module";
+        info->addTag("Core module");  
+        info->description = 
+                "Gets model of the Core module. Core module is based on SBC (RPi) and interface board (specific for SBC).\n"
+                "Thus, the model ID is the model of the SBC.\n\n"
+                "**Possible models:**\n\n"
+                "- `RPi4B = Raspberry Pi 4 Model B`\n\n"
+                "- `RPi3B+ = Raspberry Pi 3 Model B+`\n\n"
+                "- `RPiZ2W = Raspberry Pi Zero 2 W`";
+        auto example = ModelDto::createShared();
+        example->model = "RPi4B";
+        info->addResponse<Object<ModelDto>>(Status::CODE_200, "application/json")
+            .addExample("application/json", example);
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve model")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve model"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_504, "application/json", "Request timed out")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
+    }
+    ADD_CORS(getModel)
+    ENDPOINT("GET", "/core/model", getModel);
 
     /**
      * @brief Retrieves the type of power supply powering the device.

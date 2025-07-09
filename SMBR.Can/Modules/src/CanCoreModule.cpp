@@ -14,6 +14,8 @@
 #include "codes/messages/core/hostname_response.hpp"
 #include "codes/messages/core/serial_request.hpp"
 #include "codes/messages/core/serial_response.hpp"
+#include "codes/messages/core/model_request.hpp"
+#include "codes/messages/core/model_response.hpp"
 #include "codes/messages/core/supply_type_request.hpp"
 #include "codes/messages/core/supply_type_response.hpp"
 #include "codes/messages/core/supply_5v_rail_request.hpp"
@@ -77,6 +79,15 @@ std::future <int64_t> CanCoreModule::getSerialNumber() {
         int64_t>([](App_messages::Core::Serial_response response){
             int64_t res = response.serial_number;
             return res;
+        }, 1000);
+}
+
+std::future<std::string> CanCoreModule::getModel() {
+    return base.get<
+        App_messages::Core::Model_request,
+        App_messages::Core::Model_response,
+        std::string>([](App_messages::Core::Model_response response) {
+            return std::string(response.model_name);
         }, 1000);
 }
 

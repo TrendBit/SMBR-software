@@ -32,6 +32,13 @@ std::future <int64_t> VirtualCoreModule::getSerialNumber() {
     });
 }
 
+std::future <std::string> VirtualCoreModule::getModel() {
+    return std::async(std::launch::async, []() {
+        Random::randomDelay();
+        return std::string("RPi4B");
+    });
+}
+
 std::future <ICoreModule::PowerSupplyType> VirtualCoreModule::getPowerSupplyType() {
     return std::async(std::launch::async, []() {
         Random::randomDelay();

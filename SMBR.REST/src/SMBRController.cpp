@@ -383,6 +383,15 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     });
 }
 
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getModel() {
+    return process(__FUNCTION__, [&]() {
+        auto model = waitFor(systemModule->coreModule()->getModel());
+        auto modelDto = ModelDto::createShared();
+        modelDto->model = model;
+        return createDtoResponse(Status::CODE_200, modelDto);
+    });
+}
+
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getPowerSupplyType() {
 
     return process(__FUNCTION__, [&](){

@@ -22,6 +22,7 @@ public:
     std::future <float> getHeaterTargetTemperature() override;
     std::future <float> getHeaterPlateTemperature() override;
     std::future <bool> turnOffHeater() override;
+    std::future <ControlInfo> getCuvettePumpInfo() override;
     std::future <bool> setCuvettePumpSpeed(float speed) override;
     std::future <float> getCuvettePumpSpeed() override;
     std::future <bool> setCuvettePumpFlowrate(float flowrate) override;
@@ -30,6 +31,7 @@ public:
     std::future <bool> primeCuvettePump() override;
     std::future <bool> purgeCuvettePump() override;
     std::future <bool> stopCuvettePump() override;
+    std::future <ControlInfo> getAeratorInfo() override;
     std::future <bool> setAeratorSpeed(float speed) override;
     std::future <float> getAeratorSpeed() override;
     std::future <bool> setAeratorFlowrate(float flowrate) override;
@@ -42,7 +44,6 @@ public:
     std::future <float> getMixerRpm() override;
     std::future <bool> stirMixer(float rpm, float time) override;
     std::future <bool> stopMixer() override;
-    std::future <IControlModule::ControlInfo> getCuvettePumpInfo() override;
 
 private:
     BaseModule base;

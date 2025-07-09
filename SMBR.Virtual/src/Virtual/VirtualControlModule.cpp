@@ -76,6 +76,16 @@ std::future <bool> VirtualControlModule::turnOffHeater(){
     });
 }
 
+std::future <IControlModule::ControlInfo> VirtualControlModule::getCuvettePumpInfo(){
+    return std::async(std::launch::async, []() {
+        Random::randomDelay(100);
+        return IControlModule::ControlInfo {
+            .max = 200,
+            .min = 10
+        };
+    });
+}
+
 std::future <bool> VirtualControlModule::setCuvettePumpSpeed(float speed){
     return std::async(std::launch::async, [speed]() {
         Random::randomDelay();
@@ -129,6 +139,16 @@ std::future <bool> VirtualControlModule::stopCuvettePump(){
     return std::async(std::launch::async, []() {
         Random::randomDelay();
         return true;
+    });
+}
+
+std::future <IControlModule::ControlInfo> VirtualControlModule::getAeratorInfo(){
+    return std::async(std::launch::async, []() {
+        Random::randomDelay(100);
+        return IControlModule::ControlInfo {
+            .max = 200,
+            .min = 10
+        };
     });
 }
 
@@ -216,14 +236,5 @@ std::future <bool> VirtualControlModule::stopMixer(){
     });
 }
 
-std::future <IControlModule::ControlInfo> VirtualControlModule::getCuvettePumpInfo(){
-    return std::async(std::launch::async, []() {
-        Random::randomDelay(100);
-        return IControlModule::ControlInfo {
-            .max = 200,
-            .min = 10
-        };
-    });
-}
 
 

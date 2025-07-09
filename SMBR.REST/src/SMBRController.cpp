@@ -683,6 +683,16 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     });
 }
 
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getAeratorInfo() {
+    return process(__FUNCTION__, [&](){
+        auto result = waitFor(systemModule->controlModule()->getAeratorInfo());
+        auto dto = AeratorInfoDto::createShared();
+        dto->max_flowrate = result.max;
+        dto->min_flowrate = result.min;
+        return createDtoResponse(Status::CODE_200, dto);
+    });
+}
+
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::setAeratorSpeed(const oatpp::Object<SpeedDto>& body) {
 
     return processBool(__FUNCTION__, [&](){

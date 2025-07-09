@@ -30,6 +30,8 @@
 #include "codes/messages/cuvette_pump/prime.hpp"
 #include "codes/messages/cuvette_pump/purge.hpp"
 #include "codes/messages/cuvette_pump/stop.hpp"
+#include "codes/messages/aerator/info_request.hpp"
+#include "codes/messages/aerator/info_response.hpp"
 #include "codes/messages/aerator/set_speed.hpp"
 #include "codes/messages/aerator/get_speed_request.hpp"
 #include "codes/messages/aerator/get_speed_response.hpp"
@@ -171,6 +173,22 @@ std::future <bool> CanControlModule::turnOffHeater() {
     return base.set(r);
 }
 
+std::future<IControlModule::ControlInfo> CanControlModule::getCuvettePumpInfo() {
+    return base.get<App_messages::Cuvette_pump::Info_request,
+            App_messages::Cuvette_pump::Info_response,
+            IControlModule::ControlInfo>(
+            App_messages::Cuvette_pump::Info_request{},
+        [](const App_messages::Cuvette_pump::Info_response& response) {
+            IControlModule::ControlInfo result;
+            result.max = static_cast<float>(response.max_flowrate);
+            result.min = static_cast<float>(response.min_flowrate);
+            return result;
+        },
+        default_timeout_ms
+    );
+
+}
+
 std::future <bool> CanControlModule::setCuvettePumpSpeed(float speed) {
 
     App_messages::Cuvette_pump::Set_speed r((float)speed);
@@ -225,6 +243,23 @@ std::future <bool> CanControlModule::stopCuvettePump() {
 
     App_messages::Cuvette_pump::Stop r;
     return base.set(r);
+}
+
+std::future<IControlModule::ControlInfo> CanControlModule::getAeratorInfo() {
+    return base.get<
+        App_messages::Aerator::Info_request,
+        App_messages::Aerator::Info_response,
+        IControlModule::ControlInfo
+    >(
+        App_messages::Aerator::Info_request{}, 
+        [](const App_messages::Aerator::Info_response& response) {
+            IControlModule::ControlInfo result;
+            result.max = static_cast<float>(response.max_flowrate);
+            result.min = static_cast<float>(response.min_flowrate);
+            return result;
+        },
+        default_timeout_ms
+    );
 }
 
 std::future <bool> CanControlModule::setAeratorSpeed(float speed) {
@@ -315,21 +350,7 @@ std::future <bool> CanControlModule::stopMixer() {
     return base.set(r);
 }
 
-std::future<IControlModule::ControlInfo> CanControlModule::getCuvettePumpInfo() {
-    return base.get<App_messages::Cuvette_pump::Info_request,
-            App_messages::Cuvette_pump::Info_response,
-            IControlModule::ControlInfo>(
-            App_messages::Cuvette_pump::Info_request{},
-        [](const App_messages::Cuvette_pump::Info_response& response) {
-            IControlModule::ControlInfo result;
-            result.max = static_cast<float>(response.max_flowrate);
-            result.min = static_cast<float>(response.min_flowrate);
-            return result;
-        },
-        default_timeout_ms
-    );
 
-}
 
 
 

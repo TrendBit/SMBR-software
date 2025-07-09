@@ -81,6 +81,11 @@ public:
     virtual std::future <bool> turnOffHeater() = 0;
 
     /**
+     * @brief Retrieves information about the cuvette pump.
+     */
+    virtual std::future <ControlInfo> getCuvettePumpInfo() = 0;
+
+    /**
      * @brief Sets the speed of the cuvette pump.
      */
     virtual std::future <bool> setCuvettePumpSpeed(float speed) = 0;
@@ -119,6 +124,11 @@ public:
      * @brief Sends a command to stop the cuvette pump and disable any planned movements.
      */
     virtual std::future <bool> stopCuvettePump() = 0;
+
+    /**
+     * @brief Retrieves information about the aerator (air pump).
+     */
+    virtual std::future <ControlInfo> getAeratorInfo() = 0;
 
     /**
      * @brief Sets the speed of the aerator.
@@ -180,10 +190,6 @@ public:
      */
     virtual std::future <bool> stopMixer() = 0; 
 
-    /**
-     * @brief Retrieves information about the cuvette pump.
-     */
-    virtual std::future <ControlInfo> getCuvettePumpInfo() = 0;
 
 };
 

@@ -18,6 +18,7 @@
 #include "dto/FlowrateDto.hpp"
 #include "dto/CuvettePumpInfoDto.hpp"
 #include "dto/MoveDto.hpp"
+#include "dto/AeratorInfoDto.hpp"
 #include "dto/RpmDto.hpp"
 #include "dto/StirDto.hpp"
 #include "dto/SIDDto.hpp"
@@ -904,6 +905,30 @@ public:
     }
     ADD_CORS(stopCuvettePump)
     ENDPOINT("GET", "/control/cuvette_pump/stop", stopCuvettePump);
+
+    /**
+     * @brief Retrieves capabilities of the aerator (air pump).
+     */
+    ENDPOINT_INFO(getAeratorInfo) {
+        info->summary = "Retrieves information about the aerator (air pump)";
+        info->description = "Units: ml/min. Retrieves information about the aerator capabilities.\n"
+            "This includes maximum and minimum flowrate of the aerator at nominal conditions.\n"
+            "Aerator maximal and minimal flowrates can be different based on used tubing and their lengths.";
+        info->addTag("Control module");
+        auto example = AeratorInfoDto::createShared();
+        example->max_flowrate = 2500.0f;
+        example->min_flowrate = 10.0f;
+    
+        info->addResponse<Object<AeratorInfoDto>>(Status::CODE_200, "application/json")
+            .addExample("application/json", example);
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve aerator info")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve aerator info"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_504, "application/json", "Request timed out")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
+    }
+    ADD_CORS(getAeratorInfo)
+    ENDPOINT("GET", "/control/aerator/info", getAeratorInfo);
+
 
     /**
      * @brief Sets the speed of the aerator.

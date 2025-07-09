@@ -20,6 +20,7 @@
 #include "dto/MoveDto.hpp"
 #include "dto/AeratorInfoDto.hpp"
 #include "dto/RpmDto.hpp"
+#include "dto/MixerInfoDto.hpp"
 #include "dto/StirDto.hpp"
 #include "dto/SIDDto.hpp"
 #include "dto/IpDto.hpp"
@@ -1046,6 +1047,30 @@ public:
     }
     ADD_CORS(stopAerator)
     ENDPOINT("GET", "/control/aerator/stop", stopAerator);
+
+    /**
+     * @brief Retrieves capabilities of the mixer.
+     */
+    ENDPOINT_INFO(getMixerInfo) {
+        info->summary = "Retrieves information about the mixer";
+        info->description = "Units: revolutions per minute (RPM). Retrieves information about the mixer capabilities.\n"
+            "This includes maximum and minimum reliable RPM of the mixer at normal conditions.\n"
+            "Mixer maximal and minimal speeds can be different based on used magnetic stirrer and liquid density.\n"
+            "Lower then minimal values can be set.";
+        info->addTag("Control module");
+        auto example = MixerInfoDto::createShared();
+        example->max_rpm = 5000;
+        example->min_rpm = 1000;
+
+        info->addResponse<Object<MixerInfoDto>>(Status::CODE_200, "application/json")
+            .addExample("application/json", example);
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve mixer info")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve mixer info"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_504, "application/json", "Request timed out")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
+    }
+    ADD_CORS(getMixerInfo)
+    ENDPOINT("GET", "/control/mixer/info", getMixerInfo);
 
     /**
      * @brief Sets the speed of the mixer.

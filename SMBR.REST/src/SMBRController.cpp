@@ -756,6 +756,16 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     });
 }
 
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getMixerInfo() {
+    return process(__FUNCTION__, [&](){
+        auto result = waitFor(systemModule->controlModule()->getMixerInfo());
+        auto dto = MixerInfoDto::createShared();
+        dto->max_rpm = result.maxRPM;
+        dto->min_rpm = result.minRPM;
+        return createDtoResponse(Status::CODE_200, dto);
+    });
+}
+
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::setMixerSpeed(const oatpp::Object<SpeedDto>& body) {
 
     return processBool(__FUNCTION__, [&](){

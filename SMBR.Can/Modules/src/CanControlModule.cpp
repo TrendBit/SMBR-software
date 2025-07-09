@@ -40,6 +40,8 @@
 #include "codes/messages/aerator/get_flowrate_response.hpp"
 #include "codes/messages/aerator/move.hpp"
 #include "codes/messages/aerator/stop.hpp"
+#include "codes/messages/mixer/info_request.hpp"
+#include "codes/messages/mixer/info_response.hpp"
 #include "codes/messages/mixer/set_speed.hpp"
 #include "codes/messages/mixer/get_speed_request.hpp"
 #include "codes/messages/mixer/get_speed_response.hpp"
@@ -304,6 +306,23 @@ std::future <bool> CanControlModule::stopAerator() {
 
     App_messages::Aerator::Stop r;
     return base.set(r);
+}
+
+std::future<IControlModule::MixerInfo> CanControlModule::getMixerInfo() {
+    return base.get<
+        App_messages::Mixer::Info_request,
+        App_messages::Mixer::Info_response,
+        IControlModule::MixerInfo
+    >(
+        App_messages::Mixer::Info_request{},
+        [](const App_messages::Mixer::Info_response& response) {
+            IControlModule::MixerInfo result;
+            result.maxRPM = static_cast<int>(response.max_rpm);
+            result.minRPM = static_cast<int>(response.min_rpm);
+            return result;
+        },
+        default_timeout_ms
+    );
 }
 
 std::future <bool> CanControlModule::setMixerSpeed(float speed) {

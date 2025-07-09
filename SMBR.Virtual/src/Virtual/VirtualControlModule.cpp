@@ -146,7 +146,7 @@ std::future <IControlModule::ControlInfo> VirtualControlModule::getAeratorInfo()
     return std::async(std::launch::async, []() {
         Random::randomDelay(100);
         return IControlModule::ControlInfo {
-            .max = 200,
+            .max = 2500,
             .min = 10
         };
     });
@@ -191,6 +191,16 @@ std::future <bool> VirtualControlModule::stopAerator(){
     return std::async(std::launch::async, []() {
         Random::randomDelay();
         return true;
+    });
+}
+
+std::future <IControlModule::MixerInfo> VirtualControlModule::getMixerInfo(){
+    return std::async(std::launch::async, []() {
+        Random::randomDelay(100);
+        return IControlModule::MixerInfo {
+            .maxRPM = 5000,
+            .minRPM = 1000
+        };
     });
 }
 

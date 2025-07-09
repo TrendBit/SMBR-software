@@ -31,6 +31,14 @@ public:
         float min;
     };
 
+    /**
+     * @brief Info structure of mixer
+     */
+    struct MixerInfo {
+        int16_t maxRPM;
+        int16_t minRPM;
+    };
+
    /**
     * @brief Sets the intensity of LEDs on a module.
     */
@@ -159,6 +167,11 @@ public:
      * @brief Sends a command to stop the aerator and disable any planned movements.
      */
     virtual std::future <bool> stopAerator() = 0;
+
+    /**
+     * @brief Retrieves information about the mixer.
+     */
+    virtual std::future <MixerInfo> getMixerInfo() = 0;
 
     /**
      * @brief Sets the speed of the mixer.

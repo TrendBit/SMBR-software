@@ -29,3 +29,4 @@ ENUM(TimebaseEnum, v_int32,
 #include OATPP_CODEGEN_END(DTO)
 
 }
+

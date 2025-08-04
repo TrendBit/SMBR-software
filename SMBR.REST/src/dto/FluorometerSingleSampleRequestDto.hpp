@@ -12,6 +12,11 @@ class FluorometerSingleSampleRequestDto : public oatpp::DTO {
     DTO_INIT(FluorometerSingleSampleRequestDto, DTO)
 
     /**
+     * @brief Gain values.
+     */
+    DTO_FIELD(String, detector_gain, "detector_gain");
+    
+    /**
      * @brief Intensity of the emitter.
      */
     DTO_FIELD(Float32, emitor_intensity);

@@ -13,6 +13,11 @@ class FluorometerOjipCaptureRequestDto : public oatpp::DTO {
     DTO_INIT(FluorometerOjipCaptureRequestDto, DTO)
 
     /**
+     * @brief Gain values.
+     */
+    DTO_FIELD(String, detector_gain, "detector_gain");
+
+    /**
      * @brief Intensity of the emitter.
      */
     DTO_FIELD(Float32, emitor_intensity);
@@ -20,7 +25,7 @@ class FluorometerOjipCaptureRequestDto : public oatpp::DTO {
     /**
      * @brief Sample timing.
      */
-    DTO_FIELD(Enum<dto::TimebaseEnum>::AsString, timebase);
+    DTO_FIELD(String, timebase, "timebase");
 
     /**
      * @brief Length of the measurement in milliseconds.

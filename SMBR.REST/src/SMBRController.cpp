@@ -661,6 +661,9 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::moveCuvettePump(const oatpp::Object<MoveDto>& body) {
 
     return processBool(__FUNCTION__, [&](){
+        if (!body->volume || !body->flowrate) {
+            throw ArgumentException("Missing required parameters.");
+        }
         if (!body || body->volume < 0.0f || body->volume > 1000.0f) {
             throw ArgumentException("Invalid volume value. Must be between 0.0 and 1000.0.");
         }
@@ -747,6 +750,9 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::moveAerator(const oatpp::Object<MoveDto>& body) {
 
     return processBool(__FUNCTION__, [&](){
+        if (!body->volume || !body->flowrate) {
+            throw ArgumentException("Missing required parameters.");
+        }
         if (!body || body->volume < 0.0f || body->volume > 1000.0f) {
             throw ArgumentException("Invalid volume value. Must be between 0.0 and 1000.0.");
         }
@@ -820,6 +826,9 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::stirMixer(const oatpp::Object<StirDto>& body) {
 
     return processBool(__FUNCTION__, [&](){
+        if (!body->rpm || !body->time) {
+            throw ArgumentException("Missing required parameters.");
+        }
         if (!body || body->rpm < 0.0f || body->rpm > 10000.0f || body->time < 0.0f || body->time > 3600.0f) {
             throw ArgumentException("Invalid RPM or time value. RPM must be between 0 and 10000, and time must be between 0 and 3600 seconds.");
         }
@@ -901,44 +910,47 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     });
 }
 
-Fluorometer_config::Gain SMBRController::getGain(const dto::GainEnum& gain) {
-    switch (gain) {
-        case dto::GainEnum::x1:
-            return Fluorometer_config::Gain::x1;
-        case dto::GainEnum::x10:
-            return Fluorometer_config::Gain::x10;
-        case dto::GainEnum::x50:
-            return Fluorometer_config::Gain::x50;
-        case dto::GainEnum::Auto:
-            return Fluorometer_config::Gain::Auto;
-        default:
-            throw NotFoundException("Gain not found");
+Fluorometer_config::Gain SMBRController::getGain(const std::string& gainStr) {
+    if (gainStr == "x1") {
+        return Fluorometer_config::Gain::x1;
+    } else if (gainStr == "x10") {
+        return Fluorometer_config::Gain::x10;
+    } else if (gainStr == "x50") {
+        return Fluorometer_config::Gain::x50;
+    } else if (gainStr == "Auto") {
+        return Fluorometer_config::Gain::Auto;
+    } else {
+        throw NotFoundException("Gain not found: " + gainStr);
     }
 }
 
-Fluorometer_config::Timing SMBRController::getTimebase(const dto::TimebaseEnum& timebase) {
-    switch (timebase) {
-        case dto::TimebaseEnum::Linear:
-            return Fluorometer_config::Timing::Linear;
-        case dto::TimebaseEnum::Logarithmic:
-            return Fluorometer_config::Timing::Logarithmic;
-        default:
-            throw NotFoundException("Timing not found");
-    }
+Fluorometer_config::Timing SMBRController::getTimebase(const std::string& timebaseStr) {
+  if (timebaseStr == "Linear") {
+    return Fluorometer_config::Timing::Linear;
+  } else if (timebaseStr == "Logarithmic") {
+    return Fluorometer_config::Timing::Logarithmic;
+  } else {
+    throw NotFoundException("Timing not found: " + timebaseStr);
+  }
 }
+
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::performFluorometerSingleSample(
-    const oatpp::Enum<dto::GainEnum>::AsString& gain,
     const oatpp::Object<FluorometerSingleSampleRequestDto>& body
 ) {
     return process(__FUNCTION__, [&]() {
+        if (!body->detector_gain || !body->emitor_intensity) {
+            throw ArgumentException("Missing required parameters.");
+        }
         if (body->emitor_intensity < 0.2f || body->emitor_intensity > 1.0f) {
             throw ArgumentException("Invalid emitor intensity. Must be between 0.2 and 1.0");
         }
+        const std::unordered_set<std::string> validGains = {"x1", "x10", "x50", "Auto"};
+        if (validGains.find(body->detector_gain) == validGains.end()) {
+            throw ArgumentException("Invalid detector_gain. Must be one of: x1, x10, x50, Auto.");
+        }
 
-        Fluorometer_config::Gain detector_gain = getGain(gain);
-
-        auto sample = waitFor(systemModule->sensorModule()->takeFluorometerSingleSample(detector_gain, body->emitor_intensity));
+        auto sample = waitFor(systemModule->sensorModule()->takeFluorometerSingleSample(getGain(body->detector_gain), body->emitor_intensity));
 
         auto responseDto = FluorometerSingleSampleResponseDto::createShared();
         responseDto->raw_value = sample.raw_value;
@@ -950,39 +962,39 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::captureFluorometerOjip(
-    const oatpp::Enum<dto::GainEnum>::AsString& gain,
-    const oatpp::Enum<dto::TimebaseEnum>::AsString& timebase,
-    const oatpp::String& length_ms,
-    const oatpp::String& sample_count,
     const oatpp::Object<FluorometerOjipCaptureRequestDto>& body
 ) {
-    oatpp::UInt16 finalLengthMs;
-    try {
-        finalLengthMs = length_ms->empty() ? body->length_ms : static_cast<oatpp::UInt16>(std::stoi(length_ms->c_str()));
-    } catch (const std::exception& e) {
+    if (!body->detector_gain || !body->timebase || !body->emitor_intensity || !body->length_ms || !body->sample_count) {
         auto dto = MessageDto::createShared();
-        dto->message = "Invalid value for length_ms.";
+        dto->message = "Missing required parameters.";
         return createDtoResponse(Status::CODE_500, dto);
     }
-
-    if (finalLengthMs < 200 || finalLengthMs > 4000) {
+    if (body->length_ms < 200 || body->length_ms > 4000) {
+        auto dto = MessageDto::createShared();
+        dto->message = "Invalid length. Must be between 200 and 4000.";
+        return createDtoResponse(Status::CODE_500, dto);
+    }
+    if (body->sample_count  < 200 || body->sample_count  > 4000) {
         auto dto = MessageDto::createShared();
         dto->message = "Invalid sample count. Must be between 200 and 4000.";
         return createDtoResponse(Status::CODE_500, dto);
     }
-
-    oatpp::UInt16 finalSampleCount;
-    try {
-        finalSampleCount = sample_count->empty() ? body->sample_count : static_cast<oatpp::UInt16>(std::stoi(sample_count->c_str()));
-    } catch (const std::exception& e) {
+    if (body->emitor_intensity < 0.2f || body->emitor_intensity > 1.0f) {
         auto dto = MessageDto::createShared();
-        dto->message = "Invalid value for sample_count.";
+        dto->message = "Invalid emitor intensity. Must be between 0.2 and 1.0.";
         return createDtoResponse(Status::CODE_500, dto);
     }
 
-    if (finalSampleCount < 200 || finalSampleCount > 4000) {
+    const std::unordered_set<std::string> validGains = {"x1", "x10", "x50", "Auto"};
+    const std::unordered_set<std::string> validTimebases = {"Logarithmic", "Linear"};
+    if (validGains.find(body->detector_gain) == validGains.end()) {
         auto dto = MessageDto::createShared();
-        dto->message = "Invalid sample count. Must be between 200 and 4000.";
+        dto->message = "Invalid detector_gain. Must be one of: x1, x10, x50, Auto.";
+        return createDtoResponse(Status::CODE_500, dto);
+    }
+    if (validTimebases.find(body->timebase) == validTimebases.end()) {
+        auto dto = MessageDto::createShared();
+        dto->message = "Invalid timebase. Must be one of: Logarithmic, Linear.";
         return createDtoResponse(Status::CODE_500, dto);
     }
 
@@ -1001,7 +1013,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
             dto->message = "Capture queue is full, try again later.";
             return createDtoResponse(Status::CODE_429, dto); 
         }
-        captureQueue.push([this, promise, gain, timebase, finalLengthMs, finalSampleCount, body]() {
+        captureQueue.push([this, promise, body]() {
             try {
                 {
                     std::unique_lock<std::mutex> retrieveLock(retrieveMutex);
@@ -1013,11 +1025,11 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
                 std::unique_lock<std::mutex> captureLock(captureMutex);
 
                 ISensorModule::FluorometerInput input{
-                    .detector_gain = getGain(gain),
-                    .sample_timebase = getTimebase(timebase),
+                    .detector_gain = getGain(body->detector_gain),
+                    .sample_timebase = getTimebase(body->timebase),
                     .emitor_intensity = body->emitor_intensity,
-                    .length_ms = finalLengthMs,
-                    .sample_count = finalSampleCount
+                    .length_ms = body->length_ms,
+                    .sample_count = body->sample_count
                 };
 
                 //TODO specify timeout

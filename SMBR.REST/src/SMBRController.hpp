@@ -1367,11 +1367,15 @@ public:
             "This will start capturing of single sample and immediately retrieve it.\n"
             "Detector gain and emitor intensity can be used to change relative range of measured values.\n"
             "Emitor intensity is not strictly linear, so it is better to use gain of detector to change range.\n"
-            "Absolute value is calculated based on gain of detector and emitor intensity. And relates to detector max range.";
+            "Absolute value is calculated based on gain of detector and emitor intensity. And relates to detector max range.\n"
+            "\n"
+            "Allowed values:\n"
+            "- detector_gain: \"x1\", \"x10\", \"x50\", \"Auto\"\n";
         info->addTag("Sensor module");
 
         auto exampleRequest = FluorometerSingleSampleRequestDto::createShared();
         exampleRequest->emitor_intensity = 0.5f;
+        exampleRequest->detector_gain = "x1";
         
         auto exampleResponse = FluorometerSingleSampleResponseDto::createShared();
         exampleResponse->raw_value = 1023;
@@ -1385,7 +1389,6 @@ public:
     }
     ADD_CORS(performFluorometerSingleSample)
     ENDPOINT("POST", "/sensor/fluorometer/single_sample", performFluorometerSingleSample, 
-        QUERY(oatpp::Enum<dto::GainEnum>::AsString, gain), 
         BODY_DTO(Object<FluorometerSingleSampleRequestDto>, body));
 
     /**
@@ -1405,7 +1408,11 @@ public:
             "Absolute value is calculated based on the gain of the detector and emitter intensity. And relates to the detector's max range.\n"
             "More info about the returned data can be found in the read_last endpoint description.\n"
             "Expected timeout can be estimated as:\n"
-            "timeout_ms ≈ length_ms + 2 × required_samples (in milliseconds).\n";
+            "timeout_ms ≈ length_ms + 2 × required_samples (in milliseconds).\n"
+            "\n"
+            "Allowed values:\n"
+            "- detector_gain: \"x1\", \"x10\", \"x50\", \"Auto\"\n"
+            "- timebase: \"Linear\", \"Logarithmic\"\n";
         info->addTag("Sensor module");
 
         auto example = FluorometerMeasurementDto::createShared();
@@ -1435,8 +1442,9 @@ public:
         sample2->absolute_value = 0.95f;
 
         auto example2 = FluorometerOjipCaptureRequestDto::createShared();
+        example2->detector_gain = "x1";
         example2->emitor_intensity = 1.0;
-        example2->timebase = dto::TimebaseEnum::Logarithmic;
+        example2->timebase = "Logarithmic";
         example2->length_ms = 1000;
         example2->sample_count = 1000;
 
@@ -1452,10 +1460,6 @@ public:
 
     ADD_CORS(captureFluorometerOjip)
     ENDPOINT("POST", "/sensor/fluorometer/ojip/capture", captureFluorometerOjip,
-        QUERY(oatpp::Enum<dto::GainEnum>::AsString, gain), 
-        QUERY(oatpp::Enum<dto::TimebaseEnum>::AsString, timebase),
-        QUERY(oatpp::String, length_ms, "length_ms", ""),
-        QUERY(oatpp::String, sample_count, "sample_count", ""),
         BODY_DTO(Object<FluorometerOjipCaptureRequestDto>, body));
 
     /**
@@ -1996,8 +2000,8 @@ private:
     
     std::shared_ptr<ICommonModule> getModule(const oatpp::Enum<dto::ModuleEnum>::AsString& module);
     int getChannel(const dto::ChannelEnum& channel);
-    Fluorometer_config::Gain getGain(const dto::GainEnum& gain);
-    Fluorometer_config::Timing getTimebase(const dto::TimebaseEnum& timebase);
+    Fluorometer_config::Gain getGain(const std::string& gainStr);
+    Fluorometer_config::Timing getTimebase(const std::string& timebaseStr);
 
     std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> process(
         std::string name,

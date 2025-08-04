@@ -19,7 +19,7 @@ public:
      */
     struct FluorometerInput {
         Fluorometer_config::Gain detector_gain;
-        Fluorometer_config::Timing sample_timing;
+        Fluorometer_config::Timing sample_timebase;
         float emitor_intensity = 1.0f;
         uint16_t length_ms = 1000;
         uint16_t sample_count = 1000;

@@ -1414,7 +1414,7 @@ public:
         example->saturated = false;
         example->detector_gain = dto::GainEnum::x1;
         example->emitor_intensity = 0.5;
-        example->timebase = dto::TimingEnum::Logarithmic;
+        example->timebase = dto::TimebaseEnum::Logarithmic;
         example->timestamp = "2025-05-30T12:34:56";
         example->length_ms = 1000;
         example->required_samples = 1000;
@@ -1436,7 +1436,7 @@ public:
 
         auto example2 = FluorometerOjipCaptureRequestDto::createShared();
         example2->emitor_intensity = 1.0;
-        example2->timebase = dto::TimingEnum::Logarithmic;
+        example2->timebase = dto::TimebaseEnum::Logarithmic;
         example2->length_ms = 1000;
         example2->sample_count = 1000;
 
@@ -1453,7 +1453,7 @@ public:
     ADD_CORS(captureFluorometerOjip)
     ENDPOINT("POST", "/sensor/fluorometer/ojip/capture", captureFluorometerOjip,
         QUERY(oatpp::Enum<dto::GainEnum>::AsString, gain), 
-        QUERY(oatpp::Enum<dto::TimingEnum>::AsString, timing),
+        QUERY(oatpp::Enum<dto::TimebaseEnum>::AsString, timebase),
         QUERY(oatpp::String, length_ms, "length_ms", ""),
         QUERY(oatpp::String, sample_count, "sample_count", ""),
         BODY_DTO(Object<FluorometerOjipCaptureRequestDto>, body));
@@ -1509,7 +1509,7 @@ public:
         example->saturated = false;
         example->detector_gain = dto::GainEnum::x1;
         example->emitor_intensity = 0.5;
-        example->timebase = dto::TimingEnum::Logarithmic;
+        example->timebase = dto::TimebaseEnum::Logarithmic;
         example->timestamp = "2025-05-30T12:34:56";
         example->length_ms = 1000;
         example->required_samples = 1000;
@@ -1997,7 +1997,7 @@ private:
     std::shared_ptr<ICommonModule> getModule(const oatpp::Enum<dto::ModuleEnum>::AsString& module);
     int getChannel(const dto::ChannelEnum& channel);
     Fluorometer_config::Gain getGain(const dto::GainEnum& gain);
-    Fluorometer_config::Timing getTiming(const dto::TimingEnum& timing);
+    Fluorometer_config::Timing getTimebase(const dto::TimebaseEnum& timebase);
 
     std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> process(
         std::string name,

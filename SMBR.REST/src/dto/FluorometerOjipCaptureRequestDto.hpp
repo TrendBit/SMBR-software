@@ -20,7 +20,7 @@ class FluorometerOjipCaptureRequestDto : public oatpp::DTO {
     /**
      * @brief Sample timing.
      */
-    DTO_FIELD(Enum<dto::TimingEnum>::AsString, timebase);
+    DTO_FIELD(Enum<dto::TimebaseEnum>::AsString, timebase);
 
     /**
      * @brief Length of the measurement in milliseconds.

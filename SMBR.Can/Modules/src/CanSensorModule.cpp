@@ -359,12 +359,12 @@ std::future<ISensorModule::FluorometerOjipData> CanSensorModule::captureFluorome
     std::string isoTimeString = OjipMeasurementStorage::toIso8601(startTime);
     last_iso_start_time = isoTimeString;
     isRead = false;
-    last_timebase = input.sample_timing;
+    last_timebase = input.sample_timebase;
 
     params.api_id = api_id;
     params.samples = input.sample_count;
     params.length_ms = input.length_ms;
-    params.timebase = static_cast<int>(input.sample_timing);
+    params.timebase = static_cast<int>(input.sample_timebase);
     params.isRead = isRead;
 
     auto [writeSuccess, writeError] = OjipMeasurementStorage::writeMeasurementParams(PARAMS_FILE_PATH, params);
@@ -380,7 +380,7 @@ std::future<ISensorModule::FluorometerOjipData> CanSensorModule::captureFluorome
     App_messages::Fluorometer::OJIP_capture_request r{
         measurement_id,
         input.detector_gain,
-        input.sample_timing,
+        input.sample_timebase,
         input.emitor_intensity,
         input.length_ms,
         input.sample_count

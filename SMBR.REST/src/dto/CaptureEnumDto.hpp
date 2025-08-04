@@ -21,7 +21,7 @@ ENUM(GainEnum, v_int32,
 /**
  * @brief Enumeration representing different timing bases.
  */
-ENUM(TimingEnum, v_int32,
+ENUM(TimebaseEnum, v_int32,
      //VALUE(Undefined, 0, "Undefined"),
      VALUE(Logarithmic, 2, "Logarithmic"),
      VALUE(Linear, 1, "Linear"))

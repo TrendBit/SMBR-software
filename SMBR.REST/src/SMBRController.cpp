@@ -916,11 +916,11 @@ Fluorometer_config::Gain SMBRController::getGain(const dto::GainEnum& gain) {
     }
 }
 
-Fluorometer_config::Timing SMBRController::getTiming(const dto::TimingEnum& timing) {
-    switch (timing) {
-        case dto::TimingEnum::Linear:
+Fluorometer_config::Timing SMBRController::getTimebase(const dto::TimebaseEnum& timebase) {
+    switch (timebase) {
+        case dto::TimebaseEnum::Linear:
             return Fluorometer_config::Timing::Linear;
-        case dto::TimingEnum::Logarithmic:
+        case dto::TimebaseEnum::Logarithmic:
             return Fluorometer_config::Timing::Logarithmic;
         default:
             throw NotFoundException("Timing not found");
@@ -951,7 +951,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::captureFluorometerOjip(
     const oatpp::Enum<dto::GainEnum>::AsString& gain,
-    const oatpp::Enum<dto::TimingEnum>::AsString& timing,
+    const oatpp::Enum<dto::TimebaseEnum>::AsString& timebase,
     const oatpp::String& length_ms,
     const oatpp::String& sample_count,
     const oatpp::Object<FluorometerOjipCaptureRequestDto>& body
@@ -1001,7 +1001,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
             dto->message = "Capture queue is full, try again later.";
             return createDtoResponse(Status::CODE_429, dto); 
         }
-        captureQueue.push([this, promise, gain, timing, finalLengthMs, finalSampleCount, body]() {
+        captureQueue.push([this, promise, gain, timebase, finalLengthMs, finalSampleCount, body]() {
             try {
                 {
                     std::unique_lock<std::mutex> retrieveLock(retrieveMutex);
@@ -1014,7 +1014,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
                 ISensorModule::FluorometerInput input{
                     .detector_gain = getGain(gain),
-                    .sample_timing = getTiming(timing),
+                    .sample_timebase = getTimebase(timebase),
                     .emitor_intensity = body->emitor_intensity,
                     .length_ms = finalLengthMs,
                     .sample_count = finalSampleCount
@@ -1026,7 +1026,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
                 auto ojipDataDto = FluorometerMeasurementDto::createShared();
                 ojipDataDto->measurement_id = fluorometerData.measurement_id;
                 ojipDataDto->detector_gain = static_cast<dto::GainEnum>(fluorometerData.detector_gain);
-                ojipDataDto->timebase = static_cast<dto::TimingEnum>(fluorometerData.timebase);
+                ojipDataDto->timebase = static_cast<dto::TimebaseEnum>(fluorometerData.timebase);
                 ojipDataDto->emitor_intensity = fluorometerData.emitor_intensity;
                 ojipDataDto->length_ms = fluorometerData.length_ms;
                 ojipDataDto->required_samples = fluorometerData.required_samples;
@@ -1110,7 +1110,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         auto dto = FluorometerMeasurementDto::createShared();
         dto->measurement_id = fluorometerData.measurement_id;
         dto->detector_gain = static_cast<dto::GainEnum>(fluorometerData.detector_gain);
-        dto->timebase = static_cast<dto::TimingEnum>(fluorometerData.timebase);
+        dto->timebase = static_cast<dto::TimebaseEnum>(fluorometerData.timebase);
         dto->emitor_intensity = fluorometerData.emitor_intensity;
         dto->length_ms = fluorometerData.length_ms;
         dto->required_samples = fluorometerData.required_samples;

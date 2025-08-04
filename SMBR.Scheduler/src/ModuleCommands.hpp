@@ -180,7 +180,7 @@ namespace Scripting {
         public:
             ISensorModule::FluorometerInput parse(ScriptLine l){
                 ISensorModule::FluorometerInput input;
-                input.sample_timing = Fluorometer_config::Timing::Logarithmic;
+                input.sample_timebase = Fluorometer_config::Timing::Logarithmic;
                 input.emitor_intensity = 1.0f;
 
                 input.length_ms = l.argAsInt(0, 500, 2000);

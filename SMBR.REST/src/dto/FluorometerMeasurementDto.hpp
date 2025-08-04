@@ -42,7 +42,7 @@ class FluorometerMeasurementDto : public oatpp::DTO {
   /**
    * @brief Timing configuration for the measurement.
    */
-  DTO_FIELD(Enum<dto::TimingEnum>::AsString, timebase);  
+  DTO_FIELD(Enum<dto::TimebaseEnum>::AsString, timebase);  
 
   /**
    * @brief ISO 8601 timestamp when the measurement started.

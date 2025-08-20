@@ -1412,7 +1412,7 @@ public:
             "\n"
             "Allowed values:\n"
             "- detector_gain: \"x1\", \"x10\", \"x50\", \"Auto\"\n"
-            "- timebase: \"Linear\", \"Logarithmic\"\n";
+            "- timebase: \"linear\", \"logarithmic\"\n";
         info->addTag("Sensor module");
 
         auto example = FluorometerMeasurementDto::createShared();
@@ -1421,7 +1421,7 @@ public:
         example->saturated = false;
         example->detector_gain = dto::GainEnum::x1;
         example->emitor_intensity = 0.5;
-        example->timebase = dto::TimebaseEnum::Logarithmic;
+        example->timebase = dto::TimebaseEnum::logarithmic;
         example->timestamp = "2025-05-30T12:34:56";
         example->length_ms = 1000;
         example->required_samples = 1000;
@@ -1444,7 +1444,7 @@ public:
         auto example2 = FluorometerOjipCaptureRequestDto::createShared();
         example2->detector_gain = "x1";
         example2->emitor_intensity = 1.0;
-        example2->timebase = "Logarithmic";
+        example2->timebase = "logarithmic";
         example2->length_ms = 1000;
         example2->sample_count = 1000;
 
@@ -1513,7 +1513,7 @@ public:
         example->saturated = false;
         example->detector_gain = dto::GainEnum::x1;
         example->emitor_intensity = 0.5;
-        example->timebase = dto::TimebaseEnum::Logarithmic;
+        example->timebase = dto::TimebaseEnum::logarithmic;
         example->timestamp = "2025-05-30T12:34:56";
         example->length_ms = 1000;
         example->required_samples = 1000;

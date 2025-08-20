@@ -925,9 +925,9 @@ Fluorometer_config::Gain SMBRController::getGain(const std::string& gainStr) {
 }
 
 Fluorometer_config::Timing SMBRController::getTimebase(const std::string& timebaseStr) {
-  if (timebaseStr == "Linear") {
+  if (timebaseStr == "linear") {
     return Fluorometer_config::Timing::Linear;
-  } else if (timebaseStr == "Logarithmic") {
+  } else if (timebaseStr == "logarithmic") {
     return Fluorometer_config::Timing::Logarithmic;
   } else {
     throw NotFoundException("Timing not found: " + timebaseStr);
@@ -986,7 +986,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     }
 
     const std::unordered_set<std::string> validGains = {"x1", "x10", "x50", "Auto"};
-    const std::unordered_set<std::string> validTimebases = {"Logarithmic", "Linear"};
+    const std::unordered_set<std::string> validTimebases = {"logarithmic", "linear"};
     if (validGains.find(body->detector_gain) == validGains.end()) {
         auto dto = MessageDto::createShared();
         dto->message = "Invalid detector_gain. Must be one of: x1, x10, x50, Auto.";
@@ -994,7 +994,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     }
     if (validTimebases.find(body->timebase) == validTimebases.end()) {
         auto dto = MessageDto::createShared();
-        dto->message = "Invalid timebase. Must be one of: Logarithmic, Linear.";
+        dto->message = "Invalid timebase. Must be one of: logarithmic, linear.";
         return createDtoResponse(Status::CODE_500, dto);
     }
 

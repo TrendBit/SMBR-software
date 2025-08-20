@@ -23,8 +23,8 @@ ENUM(GainEnum, v_int32,
  */
 ENUM(TimebaseEnum, v_int32,
      //VALUE(Undefined, 0, "Undefined"),
-     VALUE(Logarithmic, 2, "Logarithmic"),
-     VALUE(Linear, 1, "Linear"))
+     VALUE(logarithmic, 2, "logarithmic"),
+     VALUE(linear, 1, "linear"))
 
 #include OATPP_CODEGEN_END(DTO)
 

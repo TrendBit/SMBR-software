@@ -104,7 +104,16 @@ public:
     oatpp::swagger::DocumentInfo::Builder builder;
     builder
       .setTitle("Smart Modular BioReactor API/CAN Specification")
-      .setDescription("API facilitating communication with SMBR (Smart Modular BioReactor), which is used for algae cultivation.")
+      .setDescription(
+        "API facilitating communication with SMBR (Smart Modular BioReactor), which is used for algae cultivation.\n\n"
+        "API enables communication with components of the device, this could be:\n"
+        "  - System - abstraction of whole device, this is not a module, but can initiate into communication with them\n"
+        "  - Code module - Represents main unit - SBC (RaspberryPi) - Also connected to CAN but only internally; can supply power info, network statistics, etc.\n"
+        "  - Modules: All external hardware connected via CAN to one network, each module has specific functionality:\n"
+        "    - Control module - responsible for controlling most of the actions of the system (heating, cooling, mixing, etc.)\n"
+        "    - Sensor module - responsible for reading the temperature sensor data\n\n"
+        "Gate/Gateway is another abstract module representing API access to CAN bus. It will not be addressed by any CAN message (cannot be), but within this documentation the API can be referred to as part of the CAN network as Gate/Gateway."
+      )
       .setVersion("0.1.0")
       .setContactName("Your Name")
       .setLicenseName("Apache License, Version 2.0")

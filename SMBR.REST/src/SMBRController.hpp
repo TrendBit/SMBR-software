@@ -51,6 +51,13 @@
 #include "dto/SingleChannelMeasurementDto.hpp"
 #include "dto/SpectroCalibrateDto.hpp"
 #include "dto/SystemProblemDto.hpp"
+#include "dto/RxPacketsDto.hpp"
+#include "dto/TxPacketsDto.hpp"
+#include "dto/RxErrorsDto.hpp"
+#include "dto/TxErrorsDto.hpp"
+#include "dto/RxDroppedDto.hpp"
+#include "dto/TxDroppedDto.hpp"
+#include "dto/CollisionsDto.hpp"
 #include "oatpp/data/mapping/ObjectMapper.hpp"
 
 #include <future>
@@ -65,6 +72,7 @@
 #include <chrono> 
 #include <cmath>
 #include <iostream>
+#include <fstream>
 
 #include "SMBR/ISystemModule.hpp"
 #include "SMBR/ISensorModule.hpp"
@@ -153,6 +161,166 @@ public:
     }
     ADD_CORS(getSystemErrors)
     ENDPOINT("GET", "/system/errors", getSystemErrors);
+
+    /**
+     * @brief Returns the number of received CAN packets.
+     */
+    ENDPOINT_INFO(getCanRxPackets) {
+        info->summary = "Returns the number of received CAN packets";
+        info->description = "Returns the total count of CAN packets received on the interface.";
+        info->addTag("System");
+        
+        auto successExample = RxPacketsDto::createShared();
+        successExample->rx_packets = 144640;
+        info->addResponse<Object<RxPacketsDto>>(Status::CODE_200, "application/json")
+            .addExample("application/json", successExample);
+        auto timeoutExample = MessageDto::createShared();
+        timeoutExample->message = "Timeout occurred while retrieving CAN data";
+        info->addResponse<Object<MessageDto>>(Status::CODE_408, "application/json")
+            .addExample("application/json", timeoutExample);
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve CAN data")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve CAN data"}}));
+    }
+    ADD_CORS(getCanRxPackets)
+    ENDPOINT("GET", "/system/can/rx_packets", getCanRxPackets);
+
+    /**
+     * @brief Returns the number of transmitted CAN packets.
+     */
+    ENDPOINT_INFO(getCanTxPackets) {
+        info->summary = "Returns the number of transmitted CAN packets";
+        info->description = "Returns the total count of CAN packets transmitted on the interface.";
+        info->addTag("System");
+
+        auto example = TxPacketsDto::createShared();
+        example->tx_packets = 132750;
+        info->addResponse<Object<TxPacketsDto>>(Status::CODE_200, "application/json")
+            .addExample("application/json", example);
+
+        auto timeoutExample = MessageDto::createShared();
+        timeoutExample->message = "Timeout occurred while retrieving CAN data";
+        info->addResponse<Object<MessageDto>>(Status::CODE_408, "application/json")
+            .addExample("application/json", timeoutExample);
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve CAN data")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve CAN data"}}));
+    }
+    ADD_CORS(getCanTxPackets)
+    ENDPOINT("GET", "/system/can/tx_packets", getCanTxPackets);
+
+    /**
+     * @brief Returns the number of receive errors on the CAN interface.
+     */
+    ENDPOINT_INFO(getCanRxErrors) {
+        info->summary = "Returns the number of receive errors on the CAN interface";
+        info->description = "Returns the count of errors encountered while receiving CAN packets.";
+        info->addTag("System");
+
+        auto example = RxErrorsDto::createShared();
+        example->rx_errors = static_cast<uint64_t>(0);
+        info->addResponse<Object<RxErrorsDto>>(Status::CODE_200, "application/json")
+            .addExample("application/json", example);
+
+        auto timeoutExample = MessageDto::createShared();
+        timeoutExample->message = "Timeout while trying to retrieve CAN data";
+        info->addResponse<Object<MessageDto>>(Status::CODE_408, "application/json")
+            .addExample("application/json", timeoutExample);
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve CAN data")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve CAN data"}}));
+    }
+    ADD_CORS(getCanRxErrors)
+    ENDPOINT("GET", "/system/can/rx_errors", getCanRxErrors);
+
+    /**
+     * @brief Returns the number of transmit errors on the CAN interface.
+     */
+    ENDPOINT_INFO(getCanTxErrors) {
+        info->summary = "Returns the number of transmit errors on the CAN interface";
+        info->description = "Returns the count of errors encountered while transmitting CAN packets.";
+        info->addTag("System");
+
+        auto example = TxErrorsDto::createShared();
+        example->tx_errors = static_cast<uint64_t>(0);
+        info->addResponse<Object<TxErrorsDto>>(Status::CODE_200, "application/json")
+            .addExample("application/json", example);
+
+        auto timeoutExample = MessageDto::createShared();
+        timeoutExample->message = "Timeout while trying to retrieve CAN data";
+        info->addResponse<Object<MessageDto>>(Status::CODE_408, "application/json")
+            .addExample("application/json", timeoutExample);
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve CAN data")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve CAN data"}}));
+    }
+    ADD_CORS(getCanTxErrors)
+    ENDPOINT("GET", "/system/can/tx_errors", getCanTxErrors);
+
+    /**
+     * @brief Returns the number of received dropped packets on the CAN interface.
+     */
+    ENDPOINT_INFO(getCanRxDropped) {
+        info->summary = "Returns the number of received dropped packets on the CAN interface";
+        info->description = "Returns the count of CAN packets that were dropped on reception.";
+        info->addTag("System");
+
+        auto example = RxDroppedDto::createShared();
+        example->rx_dropped = static_cast<uint64_t>(0);
+        info->addResponse<Object<RxDroppedDto>>(Status::CODE_200, "application/json")
+            .addExample("application/json", example);
+
+        auto timeoutExample = MessageDto::createShared();
+        timeoutExample->message = "Timeout while trying to retrieve CAN data";
+        info->addResponse<Object<MessageDto>>(Status::CODE_408, "application/json")
+            .addExample("application/json", timeoutExample);
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve CAN data")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve CAN data"}}));
+    }
+    ADD_CORS(getCanRxDropped)
+    ENDPOINT("GET", "/system/can/rx_dropped", getCanRxDropped);
+
+    /**
+     * @brief Returns the number of transmitted dropped packets on the CAN interface.
+     */
+    ENDPOINT_INFO(getCanTxDropped) {
+        info->summary = "Returns the number of transmitted dropped packets on the CAN interface";
+        info->description = "Returns the count of CAN packets that were dropped on transmission.";
+        info->addTag("System");
+
+        auto example = TxDroppedDto::createShared();
+        example->tx_dropped = static_cast<uint64_t>(0);
+        info->addResponse<Object<TxDroppedDto>>(Status::CODE_200, "application/json")
+            .addExample("application/json", example);
+
+        auto timeoutExample = MessageDto::createShared();
+        timeoutExample->message = "Timeout while trying to retrieve CAN data";
+        info->addResponse<Object<MessageDto>>(Status::CODE_408, "application/json")
+            .addExample("application/json", timeoutExample);
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve CAN data")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve CAN data"}}));
+    }
+    ADD_CORS(getCanTxDropped)
+    ENDPOINT("GET", "/system/can/tx_dropped", getCanTxDropped);
+
+    /**
+     * @brief Returns the number of collisions detected on the CAN interface.
+     */
+    ENDPOINT_INFO(getCanCollisions){
+        info->summary = "Returns the number of collisions detected on the CAN interface";
+        info->description = "Returns the count of detected collisions on the CAN interface.";
+        info->addTag("System");
+
+        auto example = CollisionsDto::createShared();
+        example->collisions = static_cast<uint64_t>(0);
+        info->addResponse<Object<CollisionsDto>>(Status::CODE_200, "application/json")
+            .addExample("application/json", example);
+
+        auto timeoutExample = MessageDto::createShared();
+        timeoutExample->message = "Timeout while trying to retrieve CAN data";
+        info->addResponse<Object<MessageDto>>(Status::CODE_408, "application/json")
+            .addExample("application/json", timeoutExample);
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve CAN data")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve CAN data"}}));
+    }
+    ADD_CORS(getCanCollisions)
+    ENDPOINT("GET", "/system/can/collisions", getCanCollisions);
 
 // ==========================================
 // Common Endpoints
@@ -2038,6 +2206,31 @@ public:
     static std::string moduleToString(Modules module);
 
 private:
+   template<typename TDto>
+    std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> 
+    readCanStat(const std::string& statName,
+                const std::string& jsonField,
+                std::function<oatpp::Object<TDto>(uint64_t)> makeDto) 
+    {
+        std::string path = "/sys/class/net/can0/statistics/" + statName;
+        std::ifstream file(path);
+        if (!file.is_open()) {
+            auto errorDto = MessageDto::createShared();
+            errorDto->message = "Failed to open CAN statistics file: " + path;
+            return createDtoResponse(Status::CODE_500, errorDto);
+        }
+
+        uint64_t value = 0;
+        file >> value;
+        if (file.fail()) {
+            auto errorDto = MessageDto::createShared();
+            errorDto->message = "Failed to parse CAN statistics value from: " + path;
+            return createDtoResponse(Status::CODE_500, errorDto);
+        }
+
+        auto dto = makeDto(value);
+        return createDtoResponse(Status::CODE_200, dto);
+    }
     
     std::shared_ptr<ICommonModule> getModule(const oatpp::Enum<dto::ModuleEnum>::AsString& module);
     int getChannel(const dto::ChannelEnum& channel);

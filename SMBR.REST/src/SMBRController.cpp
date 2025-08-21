@@ -266,6 +266,83 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     }
 }
 
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getCanRxPackets() {
+    return process(__FUNCTION__, [&]() {
+        return readCanStat<RxPacketsDto>("rx_packets", "rx_packets",
+            [](uint64_t val){
+                auto dto = RxPacketsDto::createShared();
+                dto->rx_packets = val;
+                return dto;
+            });
+    });
+}
+
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response>  SMBRController::getCanTxPackets() {
+    return process(__FUNCTION__, [&]() {
+        return readCanStat<TxPacketsDto>("tx_packets", "tx_packets",
+            [](uint64_t val){
+                auto dto = TxPacketsDto::createShared();
+                dto->tx_packets = val;
+                return dto;
+            });
+    });
+}
+
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response>  SMBRController::getCanRxErrors() {
+    return process(__FUNCTION__, [&]() {
+        return readCanStat<RxErrorsDto>("rx_errors", "rx_errors",
+            [](uint64_t val){
+                auto dto = RxErrorsDto::createShared();
+                dto->rx_errors = val;
+                return dto;
+            });
+    });
+}
+
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response>  SMBRController::getCanTxErrors() {
+    return process(__FUNCTION__, [&]() {
+        return readCanStat<TxErrorsDto>("tx_errors", "tx_errors",
+            [](uint64_t val){
+                auto dto = TxErrorsDto::createShared();
+                dto->tx_errors = val;
+                return dto;
+            });
+    });
+}
+
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response>  SMBRController::getCanRxDropped() {
+    return process(__FUNCTION__, [&]() {
+        return readCanStat<RxDroppedDto>("rx_dropped", "rx_dropped",
+            [](uint64_t val){
+                auto dto = RxDroppedDto::createShared();
+                dto->rx_dropped = val;
+                return dto;
+            });
+    });
+}
+
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response>  SMBRController::getCanTxDropped() {
+    return process(__FUNCTION__, [&]() {
+        return readCanStat<TxDroppedDto>("tx_dropped", "tx_dropped",
+            [](uint64_t val){
+                auto dto = TxDroppedDto::createShared();
+                dto->tx_dropped = val;
+                return dto;
+            });
+    });
+}
+
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response>  SMBRController::getCanCollisions() {
+    return process(__FUNCTION__, [&]() {
+        return readCanStat<CollisionsDto>("collisions", "collisions",
+            [](uint64_t val){
+                auto dto = CollisionsDto::createShared();
+                dto->collisions = val;
+                return dto;
+            });
+    });
+}
+
   // ==========================================
   // Common Endpoints
   // ==========================================

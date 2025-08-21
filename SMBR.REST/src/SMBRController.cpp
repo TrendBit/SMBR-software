@@ -201,6 +201,71 @@ std::string SMBRController::moduleToString(Modules module) {
     }
 }
 
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getSystemErrors() {
+
+    auto result = waitFor(systemModule->getAvailableModules());
+    auto errors = oatpp::List<oatpp::Object<SystemProblemDto>>::createShared();
+
+    // ModuleUnavailable (ID=1)
+    std::unordered_set<std::string> foundModules;
+    for (auto &m : result) {
+        foundModules.insert(moduleToString(m.type));
+    }
+    std::vector<std::string> requiredModules = {"core", "sensor", "control"};
+    for (auto &req : requiredModules) {
+        if (foundModules.find(req) == foundModules.end()) {
+            auto err = SystemProblemDto::createShared();
+            err->type = "ModuleUnavailable";
+            err->id = 1;
+            err->message = "One or more modules are unavailable";
+            err->detail = "Module " + req + " not responding.";
+            errors->push_back(err);
+        }
+    }
+
+    // UnknownInstance (ID=2)
+    for (auto &m : result) {
+        std::string inst = instanceToString(m.instance);
+        if (inst == "All" || inst == "Undefined" || inst == "Reserved") {
+            auto err = SystemProblemDto::createShared();
+            err->type = "UnknownInstance";
+            err->id = 2;
+            err->message = "Unknown module instance detected: " + inst;
+            err->detail = "Module " + moduleToString(m.type) + " reported instance value " + inst + ".";
+            errors->push_back(err);
+        }
+    } 
+
+    // DuplicateInstance (ID=3) 
+    std::unordered_map<std::string, std::unordered_map<std::string, int>> moduleInstanceCount;
+    for (auto &m : result) {
+        std::string moduleType = moduleToString(m.type);
+        std::string inst = instanceToString(m.instance);
+        moduleInstanceCount[moduleType][inst]++;
+    }
+    for (const auto &modPair : moduleInstanceCount) {
+        for (const auto &kv : modPair.second) {
+            if (kv.second > 1) {
+                auto err = SystemProblemDto::createShared();
+                err->type = "DuplicateInstance";
+                err->id = 3;
+                err->message = "Multiple instances of the same module instance detected: " + kv.first;
+                err->detail = "Detected " + std::to_string(kv.second) + "x " + kv.first +
+                              " in module type " + modPair.first + ".";
+                errors->push_back(err);
+            }
+        }
+    } 
+
+    if (errors->empty()) {
+        auto msg = MessageDto::createShared();
+        msg->message = "System is operating normally. No errors detected.";
+        return createDtoResponse(Status::CODE_200, msg);
+    } else {
+        return createDtoResponse(Status::CODE_422, errors);
+    }
+}
+
   // ==========================================
   // Common Endpoints
   // ==========================================

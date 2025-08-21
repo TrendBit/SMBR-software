@@ -50,6 +50,7 @@
 #include "dto/SpectroMeasurementsDto.hpp"
 #include "dto/SingleChannelMeasurementDto.hpp"
 #include "dto/SpectroCalibrateDto.hpp"
+#include "dto/SystemProblemDto.hpp"
 #include "oatpp/data/mapping/ObjectMapper.hpp"
 
 #include <future>
@@ -112,6 +113,46 @@ public:
     }
     ADD_CORS(getSystemModules)
     ENDPOINT("GET", "/system/modules", getSystemModules);
+
+    /**
+     * @brief Lists all detected system errors or confirms that the system is operating normally.
+     */
+    ENDPOINT_INFO(getSystemErrors) {
+    info->summary = "Lists all detected system errors or confirms that the system is operating normally";
+    info->addTag("System");
+    info->description =
+        "Returns all detected system errors. If no errors are present, responds with code 200 and a message indicating that the system is operating normally.\n\n"
+        "**Error types:**\n"
+        "  - Multiple instances of the same numbered module instance (e.g., 2x Instance_1) or multiple exclusive modules (e.g., 2x Exclusive)\n"
+        "  - Unknown module instance (All, Undefined, or Reserved)\n"
+        //"  - Firmware version mismatch between modules of the same type (e.g., multiple pump modules with different firmware versions)\n"
+        "  - Unavailability of one of the three modules (core, sensor, control)";
+    auto errors = oatpp::Vector<oatpp::Object<SystemProblemDto>>::createShared();
+    auto example1 = SystemProblemDto::createShared();
+        example1->type = "ModuleUnavailable";
+        example1->id = 1;
+        example1->message = "One or more modules are unavailable";
+        example1->detail = "Module sensor not responding";
+    auto example2 = SystemProblemDto::createShared();
+        example2->type = "UnknownInstance";
+        example2->id = 2;
+        example2->message = "Unknown module instance detected: Reserved";
+        example2->detail = "Module control reported instance value Reserved";
+    auto example3 = SystemProblemDto::createShared();
+        example3->type = "DuplicateInstance";
+        example3->id = 3;
+        example3->message = "Multiple instances of the same module instance detected: Instance_1";
+        example3->detail = "Detected more than one Instance_1 in module type sensor";
+    errors->push_back(example1);
+    errors->push_back(example2);
+    errors->push_back(example3);
+    info->addResponse<Object<MessageDto>>(Status::CODE_200, "application/json")
+        .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "System is operating normally. No errors detected."}}));
+    info->addResponse<List<Object<SystemProblemDto>>>(Status::CODE_422, "application/json")
+        .addExample("application/json", errors);
+    }
+    ADD_CORS(getSystemErrors)
+    ENDPOINT("GET", "/system/errors", getSystemErrors);
 
 // ==========================================
 // Common Endpoints

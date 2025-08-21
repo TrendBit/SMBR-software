@@ -266,6 +266,142 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     }
 }
 
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getSystemWarnings() {
+    auto result = waitFor(systemModule->getAvailableModules());
+    auto warnings = oatpp::List<oatpp::Object<SystemProblemDto>>::createShared();
+
+    static std::optional<std::string> nonCoreFwRef;
+    for (auto &m : result) {
+        std::string moduleType = moduleToString(m.type);
+
+        dto::ModuleEnum moduleEnum;
+        switch(m.type) {
+        case Modules::Core:    moduleEnum = dto::ModuleEnum::core; break;
+        case Modules::Control: moduleEnum = dto::ModuleEnum::control; break;
+        case Modules::Sensor:  moduleEnum = dto::ModuleEnum::sensor; break;
+        default: throw std::runtime_error("Unknown module");
+        }
+
+        auto fwDto = waitFor(getModule(oatpp::Enum<dto::ModuleEnum>::AsString(moduleEnum))->getFwVersion());
+
+        std::string fwVersion = fwDto.version;
+        bool isDirty = fwDto.dirty;
+
+        // FirmwareVersionMismatc (ID=1) 
+        if (m.type != Modules::Core) {
+            if (!nonCoreFwRef.has_value()) {
+                nonCoreFwRef = fwVersion;
+            } 
+            else if (nonCoreFwRef.value() != fwVersion) {
+                auto warn = SystemProblemDto::createShared();
+                warn->type = "FirmwareVersionMismatch";
+                warn->id = 1;
+                warn->message = "Firmware versions differ between modules of different types (excluding core modules)";
+                warn->detail = "Expected " + nonCoreFwRef.value() + 
+                            " but got " + fwVersion + " for " + moduleType;
+                warnings->push_back(warn);
+            }
+        }
+
+        // DirtyBuildFirmware (ID=2) 
+        if (isDirty) {
+            auto warn = SystemProblemDto::createShared();
+            warn->type = "DirtyBuildFirmware";
+            warn->id = 2;
+            warn->message = "Dirty build firmware detected on a module";
+            warn->detail = "Module " + moduleType + " flagged as dirty build";
+            warnings->push_back(warn);
+        }
+
+        // ModuleHighPing (ID=5) 
+        float pingTime = waitFor(getModule(oatpp::Enum<dto::ModuleEnum>::AsString(moduleEnum))->ping());
+        if (pingTime > 500.0f) {
+            auto warn = SystemProblemDto::createShared();
+            warn->id = 5;
+            warn->type = "ModuleHighPing";
+            warn->message = "High ping time detected on a module";
+            warn->detail = "Module " + moduleType + " responded in " + std::to_string(pingTime) + " ms";
+            warnings->push_back(warn);
+        }
+    }
+
+    // CANBusErrorRateHigh (ID=4) 
+    try {
+        uint64_t rxPackets = readCanValue("rx_packets");
+        uint64_t txPackets = readCanValue("tx_packets");
+        uint64_t rxErrors  = readCanValue("rx_errors");
+        uint64_t txErrors  = readCanValue("tx_errors");
+        uint64_t rxDropped = readCanValue("rx_dropped");
+        uint64_t txDropped = readCanValue("tx_dropped");
+        uint64_t collisions= readCanValue("collisions");
+
+        uint64_t totalPackets = rxPackets + txPackets;
+        uint64_t totalErrors  = rxErrors + txErrors + rxDropped + txDropped + collisions;
+
+        if (totalPackets == 0) {
+            auto warn = SystemProblemDto::createShared();
+            warn->id = 4;
+            warn->type = "CANBusUnreachable";
+            warn->message = "No packets observed on CAN bus (possibly unreachable)";
+            warn->detail = "Interface can0 has 0 transmitted/received packets";
+            warnings->push_back(warn);
+        } else {
+            double errorRate = (static_cast<double>(totalErrors) / totalPackets) * 100.0;
+            if (errorRate > 5.0) {
+                auto warn = SystemProblemDto::createShared();
+                warn->id = 5;
+                warn->type = "CANBusErrorRateHigh";
+                warn->message = "CAN bus error rate above threshold";
+                warn->detail = "Error rate at " + std::to_string(errorRate) + " % on CAN interface can0";
+                warnings->push_back(warn);
+            }
+        }
+    } catch (const std::exception& ex) {
+        auto warn = SystemProblemDto::createShared();
+        warn->id = 4;
+        warn->type = "CANBusStatReadError";
+        warn->message = "Failed to read CAN bus statistics";
+        warn->detail = ex.what();
+        warnings->push_back(warn);
+    }
+
+    // LowVoltageHighCurrentPower (ID=3) 
+    auto supply = waitFor(systemModule->coreModule()->getPowerSupplyType());
+
+    float voltage = 0.0f;
+    if (supply.isVIN) {
+        voltage = waitFor(systemModule->coreModule()->getVoltageVIN());
+    } else {
+        voltage = waitFor(systemModule->coreModule()->getVoltagePoE());
+    }
+    float current = waitFor(systemModule->coreModule()->getCurrentConsumption());
+    float power = waitFor(systemModule->coreModule()->getPowerDraw());
+
+    if (voltage < 11.0f || current > 3.0f || power > 36.0f) {
+        auto warning = SystemProblemDto::createShared();
+        warning->id = 3;
+        warning->type = "LowVoltageHighCurrentPower";
+        warning->message = "Low voltage, high current or high power consumption detected";
+
+        if (voltage < 11.0f) {
+            warning->detail = "Voltage is too low: " + std::to_string(voltage) + " V";
+        } else if (current > 3.0f) {
+            warning->detail = "Current is too high: " + std::to_string(current) + " A";
+        } else {
+            warning->detail = "Power draw is too high: " + std::to_string(power) + " W";
+        }
+        warnings->push_back(warning);
+    }
+
+    if (warnings->empty()) {
+        auto msg = MessageDto::createShared();
+        msg->message = "System is operating normally. No warnings detected.";
+        return createDtoResponse(Status::CODE_200, msg);
+    } else {
+        return createDtoResponse(Status::CODE_207, warnings);
+    }
+}
+
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getCanRxPackets() {
     return process(__FUNCTION__, [&]() {
         return readCanStat<RxPacketsDto>("rx_packets", "rx_packets",
@@ -341,6 +477,30 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response>  SMBRController:
                 return dto;
             });
     });
+}
+
+uint64_t SMBRController::readCanValue(const std::string& statName) {
+    using namespace std::chrono_literals;
+
+    auto future = std::async(std::launch::async, [statName]() -> uint64_t {
+        std::string path = "/sys/class/net/can0/statistics/" + statName;
+        std::ifstream file(path);
+        if (!file.is_open()) {
+            throw std::runtime_error("Cannot open CAN stat file: " + path);
+        }
+        uint64_t value;
+        file >> value;
+        if (file.fail()) {
+            throw std::runtime_error("Failed to read value from CAN stat file: " + path);
+        }
+        return value;
+    });
+
+    if (future.wait_for(2s) == std::future_status::ready) {
+        return future.get();
+    } else {
+        throw std::runtime_error("Timeout reading CAN stat: " + statName);
+    }
 }
 
   // ==========================================
@@ -1299,7 +1459,6 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     return process(__FUNCTION__, [&](){
         auto info = waitFor(systemModule->sensorModule()->getFluorometerDetectorInfo());
         auto infoDto = FluorometerDetectorInfoDto::createShared();
-        std::cout<<info.peak_wavelength<<" "<<info.sensitivity<<" "<<info.sampling_rate<<std::endl;
         infoDto->peak_wavelength = info.peak_wavelength;
         infoDto->sensitivity = info.sensitivity;
         infoDto->sampling_rate = info.sampling_rate;

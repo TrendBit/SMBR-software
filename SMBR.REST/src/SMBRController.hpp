@@ -163,6 +163,65 @@ public:
     ENDPOINT("GET", "/system/errors", getSystemErrors);
 
     /**
+    * @brief Lists all detected system warnings or confirms that the system is operating normally.
+    */
+    ENDPOINT_INFO(getSystemWarnings) {
+        info->summary = "Lists all detected system warnings or confirms normal system operation";
+        info->addTag("System");
+        info->description =
+            "Returns all detected system warnings. If no warnings are present, responds with code 200 and a message indicating that no warnings were detected.\n\n"
+            "**Warning types:**\n"
+            "  - Firmware version mismatch between modules of different types (excluding core modules)\n"
+            "  - Dirty build firmware detected on a module\n"
+            "  - Low voltage, high current or high power consumption detected (<11 V, >3 A, >36 W)\n"
+            "  - CAN bus unreachable or CAN error rate above threshold\n"
+            "  - High ping time (>500 ms) detected for one of the three modules (core, sensor, control)";
+        auto exampleWarnings = oatpp::List<oatpp::Object<SystemProblemDto>>::createShared();
+        auto example1 = SystemProblemDto::createShared();
+        example1->type = "FirmwareVersionMismatch";
+        example1->id = 1;
+        example1->message = "Firmware versions differ between modules of different types (excluding core modules)";
+        example1->detail = "Sensor 1.1.0 vs Control 1.3.5";
+        auto example2 = SystemProblemDto::createShared();
+        example2->type = "DirtyBuildFirmware";
+        example2->id = 2;
+        example2->message = "Dirty build firmware detected on a module";
+        example2->detail = "Module sensor flagged as dirty build";
+        auto example3 = SystemProblemDto::createShared();
+        example3->type = "LowVoltageHighCurrentPower";
+        example3->id = 3;
+        example3->message = "Low voltage or high current/power consumption detected";
+        example3->detail = "Current is too high: 3.2 A";
+        auto example4 = SystemProblemDto::createShared();
+        example4->type = "CANBusUnreachable";
+        example4->id = 4;
+        example4->message = "No packets observed on CAN bus (possibly unreachable)";
+        example4->detail = "Interface can0 has 0 transmitted/received packets";
+        auto example5 = SystemProblemDto::createShared();
+        example5->type = "CANBusErrorRateHigh";
+        example5->id = 5;
+        example5->message = "CAN bus error rate above threshold";
+        example5->detail = "Error rate at 5.4 % on CAN interface can0";
+        auto example6 = SystemProblemDto::createShared();
+        example6->type = "ModuleHighPing";
+        example6->id = 6;
+        example6->message = "High ping time detected for module";
+        example6->detail = "Module control responded in 527 ms";
+        exampleWarnings->push_back(example1);
+        exampleWarnings->push_back(example2);
+        exampleWarnings->push_back(example3);
+        exampleWarnings->push_back(example4);
+        exampleWarnings->push_back(example5);
+        exampleWarnings->push_back(example6);
+        info->addResponse<Object<MessageDto>>(Status::CODE_200, "application/json")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "System is operating normally. No warnings detected."}}));
+        info->addResponse<List<Object<SystemProblemDto>>>(Status::CODE_207, "application/json")
+            .addExample("application/json", exampleWarnings);
+    }
+    ADD_CORS(getSystemWarnings)
+    ENDPOINT("GET", "/system/warnings", getSystemWarnings);
+
+    /**
      * @brief Returns the number of received CAN packets.
      */
     ENDPOINT_INFO(getCanRxPackets) {
@@ -2232,6 +2291,7 @@ private:
         return createDtoResponse(Status::CODE_200, dto);
     }
     
+    uint64_t readCanValue(const std::string& statName);
     std::shared_ptr<ICommonModule> getModule(const oatpp::Enum<dto::ModuleEnum>::AsString& module);
     int getChannel(const dto::ChannelEnum& channel);
     Fluorometer_config::Gain getGain(const std::string& gainStr);

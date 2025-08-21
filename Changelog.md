@@ -2,15 +2,41 @@
 
 The version number consists of MAJOR.MINOR identifiers.
 
+## 0.2
+
+### Added
+- New endpoints:
+  - `GET /system/errors` – returns a list of current system errors
+  - `GET /system/warnings` – returns a list of current system warnings
+  - `GET /system/can/rx_packets` – number of received CAN packets
+  - `GET /system/can/tx_packets` – number of transmitted CAN packets
+  - `GET /system/can/rx_errors` – count of errors during CAN packet reception
+  - `GET /system/can/tx_errors` – count of errors during CAN packet transmission
+  - `GET /system/can/rx_dropped` – number of dropped CAN packets during reception
+  - `GET /system/can/tx_dropped` – number of dropped CAN packets during transmission
+  - `GET /system/can/collisions` – count of CAN bus collisions detected
+- Enhanced Swagger UI with more detailed API descriptions
+
+### Fixed
+- Renamed parameters in `/sensor/fluorometer/ojip/capture`:
+  - `Logarithmic` → `logarithmic`
+  - `Linear` → `linear`
+  - `timing` → `timebase`
+- Refactored ojip endpoint:
+  - Moved input from query parameters to JSON body
+  - Added input validation to prevent malformed requests
+
+
 ## 0.1
 
 ### Added
-- GET /core/model endpoint for retrieving core model information
-- GET /mixer/info endpoint for retrieving mixer information
-- GET /aerator/info endpoint for retrieving aerator information
-- GET /cuvette_pump/info endpoint for retrieving cuvette pump information
-- GET /common/hw_version endpoint for hardware version
-- GET /common/fw_version endpoint for firmware version
+- New endpoints:
+    - `GET /core/model` – retrieve core model information
+    - `GET /mixer/info` – retrieve mixer information
+    - `GET /aerator/info` – retrieve aerator information
+    - `GET /cuvette_pump/info` – retrieve cuvette pump information
+    - `GET /common/hw_version` – retrieve hardware version
+    - `GET /common/fw_version` – retrieve firmware version
 - Timestamp of OJIP measurement start
 
 ### Fixed

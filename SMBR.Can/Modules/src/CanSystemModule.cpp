@@ -65,7 +65,7 @@ std::future <ISystemModule::AvailableModules> CanSystemModule::getAvailableModul
     App_messages::Common::Probe_modules_request rawRequest;
     
 
-    CanID requestId = BaseModule::createId(rawRequest.Type(), Codes::Module::All, Codes::Instance::Exclusive, false);
+    CanID requestId = BaseModule::createId(rawRequest.Type(), Codes::Module::All, Codes::Instance::All, false);
     
     RequestData requestData(requestId, rawRequest.Export_data());
     ResponseInfo responseInfo;

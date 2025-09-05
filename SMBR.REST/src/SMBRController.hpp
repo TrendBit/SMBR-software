@@ -51,6 +51,7 @@
 #include "dto/SingleChannelMeasurementDto.hpp"
 #include "dto/SpectroCalibrateDto.hpp"
 #include "dto/SystemProblemDto.hpp"
+#include "dto/SystemProblemResponseDto.hpp"
 #include "dto/RxPacketsDto.hpp"
 #include "dto/TxPacketsDto.hpp"
 #include "dto/RxErrorsDto.hpp"
@@ -135,29 +136,31 @@ public:
         "  - Unknown module instance (All, Undefined, or Reserved)\n"
         //"  - Firmware version mismatch between modules of the same type (e.g., multiple pump modules with different firmware versions)\n"
         "  - Unavailability of one of the three modules (core, sensor, control)";
-    auto errors = oatpp::Vector<oatpp::Object<SystemProblemDto>>::createShared();
-    auto example1 = SystemProblemDto::createShared();
-        example1->type = "ModuleUnavailable";
-        example1->id = 1;
-        example1->message = "One or more modules are unavailable";
-        example1->detail = "Module sensor not responding";
-    auto example2 = SystemProblemDto::createShared();
-        example2->type = "UnknownInstance";
-        example2->id = 2;
-        example2->message = "Unknown module instance detected: Reserved";
-        example2->detail = "Module control reported instance value Reserved";
-    auto example3 = SystemProblemDto::createShared();
-        example3->type = "DuplicateInstance";
-        example3->id = 3;
-        example3->message = "Multiple instances of the same module instance detected: Instance_1";
-        example3->detail = "Detected more than one Instance_1 in module type sensor";
-    errors->push_back(example1);
-    errors->push_back(example2);
-    errors->push_back(example3);
-    info->addResponse<Object<MessageDto>>(Status::CODE_200, "application/json")
-        .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "System is operating normally. No errors detected."}}));
-    info->addResponse<List<Object<SystemProblemDto>>>(Status::CODE_422, "application/json")
-        .addExample("application/json", errors);
+    auto exampleOk = SystemProblemResponseDto::createShared();
+    exampleOk->message = "System is operating normally. No errors detected.";
+    exampleOk->problems = {};
+    auto exampleErrors = SystemProblemResponseDto::createShared();
+    exampleErrors->message = "System errors detected. See details in 'problems'.";
+    auto e1 = SystemProblemDto::createShared();
+    e1->type = "ModuleUnavailable";
+    e1->id = 1;
+    e1->message = "One or more modules are unavailable";
+    e1->detail = "Module sensor not responding";
+    auto e2 = SystemProblemDto::createShared();
+    e2->type = "UnknownInstance";
+    e2->id = 2;
+    e2->message = "Unknown module instance detected: Reserved";
+    e2->detail = "Module control reported instance value Reserved";
+    auto e3 = SystemProblemDto::createShared();
+    e3->type = "DuplicateInstance";
+    e3->id = 3;
+    e3->message = "Multiple instances of the same module instance detected: Instance_1";
+    e3->detail = "Detected more than one Instance_1 in module type sensor";
+    exampleErrors->problems = { e1, e2, e3 };
+
+    info->addResponse<Object<SystemProblemResponseDto>>(Status::CODE_200, "application/json")
+        .addExample("No Errors", exampleOk)
+        .addExample("Errors", exampleErrors);
     }
     ADD_CORS(getSystemErrors)
     ENDPOINT("GET", "/system/errors", getSystemErrors);
@@ -176,47 +179,41 @@ public:
             "  - Low voltage, high current or high power consumption detected (<11 V, >3 A, >36 W)\n"
             "  - CAN bus unreachable or CAN error rate above threshold\n"
             "  - High ping time (>500 ms) detected for one of the three modules (core, sensor, control)";
-        auto exampleWarnings = oatpp::List<oatpp::Object<SystemProblemDto>>::createShared();
-        auto example1 = SystemProblemDto::createShared();
-        example1->type = "FirmwareVersionMismatch";
-        example1->id = 1;
-        example1->message = "Firmware versions differ between modules of different types (excluding core modules)";
-        example1->detail = "Sensor 1.1.0 vs Control 1.3.5";
-        auto example2 = SystemProblemDto::createShared();
-        example2->type = "DirtyBuildFirmware";
-        example2->id = 2;
-        example2->message = "Dirty build firmware detected on a module";
-        example2->detail = "Module sensor flagged as dirty build";
-        auto example3 = SystemProblemDto::createShared();
-        example3->type = "LowVoltageHighCurrentPower";
-        example3->id = 3;
-        example3->message = "Low voltage or high current/power consumption detected";
-        example3->detail = "Current is too high: 3.2 A";
-        auto example4 = SystemProblemDto::createShared();
-        example4->type = "CANBusUnreachable";
-        example4->id = 4;
-        example4->message = "No packets observed on CAN bus (possibly unreachable)";
-        example4->detail = "Interface can0 has 0 transmitted/received packets";
-        auto example5 = SystemProblemDto::createShared();
-        example5->type = "CANBusErrorRateHigh";
-        example5->id = 5;
-        example5->message = "CAN bus error rate above threshold";
-        example5->detail = "Error rate at 5.4 % on CAN interface can0";
-        auto example6 = SystemProblemDto::createShared();
-        example6->type = "ModuleHighPing";
-        example6->id = 6;
-        example6->message = "High ping time detected for module";
-        example6->detail = "Module control responded in 527 ms";
-        exampleWarnings->push_back(example1);
-        exampleWarnings->push_back(example2);
-        exampleWarnings->push_back(example3);
-        exampleWarnings->push_back(example4);
-        exampleWarnings->push_back(example5);
-        exampleWarnings->push_back(example6);
-        info->addResponse<Object<MessageDto>>(Status::CODE_200, "application/json")
-            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "System is operating normally. No warnings detected."}}));
-        info->addResponse<List<Object<SystemProblemDto>>>(Status::CODE_207, "application/json")
-            .addExample("application/json", exampleWarnings);
+        auto exampleOk = SystemProblemResponseDto::createShared();
+        exampleOk->message = "System is operating normally. No warnings detected.";
+        exampleOk->problems = {};
+        auto exampleWarnings = SystemProblemResponseDto::createShared();
+        exampleWarnings->message = "System warnings detected. See details in 'problems'.";
+        auto w1 = SystemProblemDto::createShared();
+        w1->type = "FirmwareVersionMismatch";
+        w1->id = 1;
+        w1->message = "Firmware versions differ between modules of different types (excluding core modules)";
+        w1->detail = "Sensor 1.1.0 vs Control 1.3.5";
+        auto w2 = SystemProblemDto::createShared();
+        w2->type = "DirtyBuildFirmware";
+        w2->id = 2;
+        w2->message = "Dirty build firmware detected on a module";
+        w2->detail = "Module sensor flagged as dirty build";
+        auto w3 = SystemProblemDto::createShared();
+        w3->type = "CANBusUnreachable";
+        w3->id = 3;
+        w3->message = "No packets observed on CAN bus (possibly unreachable)";
+        w3->detail = "Interface can0 has 0 transmitted/received packets";
+        auto w4 = SystemProblemDto::createShared();
+        w4->type = "CANBusErrorRateHigh";
+        w4->id = 4;
+        w4->message = "CAN bus error rate above threshold";
+        w4->detail = "Error rate at 5.4 % on CAN interface can0";
+        auto w5 = SystemProblemDto::createShared();
+        w5->type = "ModuleHighPing";
+        w5->id = 5;
+        w5->message = "High ping time detected for module";
+        w5->detail = "Module control responded in 527 ms";
+        exampleWarnings->problems = { w1, w2, w3, w4, w5 };
+
+        info->addResponse<Object<SystemProblemResponseDto>>(Status::CODE_200, "application/json")
+            .addExample("No Warnings", exampleOk)
+            .addExample("Warnings", exampleWarnings);
     }
     ADD_CORS(getSystemWarnings)
     ENDPOINT("GET", "/system/warnings", getSystemWarnings);

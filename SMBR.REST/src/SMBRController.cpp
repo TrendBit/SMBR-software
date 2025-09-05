@@ -257,13 +257,16 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         }
     } 
 
+    auto resp = SystemProblemResponseDto::createShared();
     if (errors->empty()) {
-        auto msg = MessageDto::createShared();
-        msg->message = "System is operating normally. No errors detected.";
-        return createDtoResponse(Status::CODE_200, msg);
+        resp->message = "System is operating normally. No errors detected.";
+        resp->problems = {};
     } else {
-        return createDtoResponse(Status::CODE_422, errors);
+        resp->message = "System errors detected. See details in 'problems'.";
+        resp->problems = errors;
     }
+    return createDtoResponse(Status::CODE_200, resp);
+
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getSystemWarnings() {
@@ -393,13 +396,15 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         warnings->push_back(warning);
     }
 
-    if (warnings->empty()) {
-        auto msg = MessageDto::createShared();
-        msg->message = "System is operating normally. No warnings detected.";
-        return createDtoResponse(Status::CODE_200, msg);
+    auto resp = SystemProblemResponseDto::createShared();
+        if (warnings->empty()) {
+        resp->message = "System is operating normally. No errors detected.";
+        resp->problems = {};
     } else {
-        return createDtoResponse(Status::CODE_207, warnings);
+        resp->message = "System warnings detected. See details in 'problems'.";
+        resp->problems = warnings;
     }
+    return createDtoResponse(Status::CODE_200, resp);
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getCanRxPackets() {

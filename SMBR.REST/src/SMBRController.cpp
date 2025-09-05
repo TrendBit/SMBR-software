@@ -328,7 +328,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         }
     }
 
-    // CANBusErrorRateHigh (ID=4) 
+    // CANBusErrorRateHigh (ID=3, ID=4) 
     try {
         uint64_t rxPackets = readCanValue("rx_packets");
         uint64_t txPackets = readCanValue("tx_packets");
@@ -343,7 +343,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
         if (totalPackets == 0) {
             auto warn = SystemProblemDto::createShared();
-            warn->id = 4;
+            warn->id = 3;
             warn->type = "CANBusUnreachable";
             warn->message = "No packets observed on CAN bus (possibly unreachable)";
             warn->detail = "Interface can0 has 0 transmitted/received packets";
@@ -352,7 +352,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
             double errorRate = (static_cast<double>(totalErrors) / totalPackets) * 100.0;
             if (errorRate > 5.0) {
                 auto warn = SystemProblemDto::createShared();
-                warn->id = 5;
+                warn->id = 4;
                 warn->type = "CANBusErrorRateHigh";
                 warn->message = "CAN bus error rate above threshold";
                 warn->detail = "Error rate at " + std::to_string(errorRate) + " % on CAN interface can0";
@@ -361,39 +361,11 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         }
     } catch (const std::exception& ex) {
         auto warn = SystemProblemDto::createShared();
-        warn->id = 4;
+        warn->id = 3;
         warn->type = "CANBusStatReadError";
         warn->message = "Failed to read CAN bus statistics";
         warn->detail = ex.what();
         warnings->push_back(warn);
-    }
-
-    // LowVoltageHighCurrentPower (ID=3) 
-    auto supply = waitFor(systemModule->coreModule()->getPowerSupplyType());
-
-    float voltage = 0.0f;
-    if (supply.isVIN) {
-        voltage = waitFor(systemModule->coreModule()->getVoltageVIN());
-    } else {
-        voltage = waitFor(systemModule->coreModule()->getVoltagePoE());
-    }
-    float current = waitFor(systemModule->coreModule()->getCurrentConsumption());
-    float power = waitFor(systemModule->coreModule()->getPowerDraw());
-
-    if (voltage < 11.0f || current > 3.0f || power > 36.0f) {
-        auto warning = SystemProblemDto::createShared();
-        warning->id = 3;
-        warning->type = "LowVoltageHighCurrentPower";
-        warning->message = "Low voltage, high current or high power consumption detected";
-
-        if (voltage < 11.0f) {
-            warning->detail = "Voltage is too low: " + std::to_string(voltage) + " V";
-        } else if (current > 3.0f) {
-            warning->detail = "Current is too high: " + std::to_string(current) + " A";
-        } else {
-            warning->detail = "Power draw is too high: " + std::to_string(power) + " W";
-        }
-        warnings->push_back(warning);
     }
 
     auto resp = SystemProblemResponseDto::createShared();

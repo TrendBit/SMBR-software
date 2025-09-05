@@ -176,7 +176,6 @@ public:
             "**Warning types:**\n"
             "  - Firmware version mismatch between modules of different types (excluding core modules)\n"
             "  - Dirty build firmware detected on a module\n"
-            "  - Low voltage, high current or high power consumption detected (<11 V, >3 A, >36 W)\n"
             "  - CAN bus unreachable or CAN error rate above threshold\n"
             "  - High ping time (>500 ms) detected for one of the three modules (core, sensor, control)";
         auto exampleOk = SystemProblemResponseDto::createShared();

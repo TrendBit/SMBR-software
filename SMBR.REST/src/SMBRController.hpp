@@ -2071,7 +2071,7 @@ public:
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
     }
     ADD_CORS(getSpectrophotometerEmitorTemperature)
-    ENDPOINT("GET", "/sensor/spectrophotometer/emitor_temperature", getSpectrophotometerEmitorTemperature);
+    ENDPOINT("GET", "/sensor/spectrophotometer/emitor/temperature", getSpectrophotometerEmitorTemperature);
 
 
     /**

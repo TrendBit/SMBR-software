@@ -17,6 +17,7 @@ add_library(${PROJECT_NAME}
   src/CanSystemModule.cpp
   src/CanModulesFactory.cpp
   src/OjipMeasurementStorage.cpp
+  src/ModuleIssues.cpp
 )
 
 target_include_directories(${PROJECT_NAME}

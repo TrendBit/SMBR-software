@@ -11,18 +11,22 @@
 #include <Poco/Thread.h>
 #include <Poco/Event.h>
 #include "CanBus.hpp"
+#include "CanRequest.hpp"
 
 class CanChannel : public ICanChannel {
 public:
+    using ResponseData = ::ResponseData; 
 
     CanChannel();
     virtual ~CanChannel();
 
     void send(const std::string & name, const CanRequest & canRequest, std::function <void(Response)>) override;
+    void setReceiveHandler(std::function<void(const ResponseData&)> handler);
 private:
     
     void runRead();
     void runWrite();
+    std::function<void(const ResponseData&)> receiveHandler_;
 
 public:
 

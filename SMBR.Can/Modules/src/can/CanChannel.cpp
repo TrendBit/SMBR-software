@@ -13,6 +13,7 @@
 #include <Poco/Message.h>   
 #include <Poco/Logger.h>   
 #include "SMBR/Log.hpp"
+#include "codes/codes.hpp"
 
 int nextUID() {
     static int uid = 0;
@@ -148,8 +149,27 @@ void CanChannel::runRead() {
                     {
                     }
                 }
-                if (!accepted)
-                {
+                if (!accepted) {
+                    CanID canid(response.id);
+
+                    if (canid.messageType() == static_cast<uint16_t>(Codes::Message_type::Module_issues)) {
+                        if (receiveHandler_) {
+                            receiveHandler_(response);
+                        } else {
+                            std::cout<<"receiveHandler_ not initiated"<<std::endl;
+                            std::ostringstream oss;
+                            oss << "Module issue from module " 
+                                << static_cast<int>(canid.moduleAddress())
+                                << " instance " << static_cast<int>(canid.instance())
+                                << " data:";
+                            for (auto b : response.data) {
+                                oss << " " << std::hex << static_cast<int>(b);
+                            }
+
+                            LERROR("CAN.ModuleIssue") << oss.str() << LE;
+                        }
+                    }
+                } else {
                     // std::cout << "      NOT ACCEPTED BY ANY OF " << activeRequests.size() << " LISTENERS" << std::endl;
                 }
             } catch (std::range_error &e) {
@@ -193,4 +213,8 @@ void CanChannel::runRead() {
             LERROR("CAN") << "Failed to receive CAN message (unknown error)" << LE;
         }
     }
+}
+
+void CanChannel::setReceiveHandler(std::function<void(const ResponseData&)> handler) {
+    receiveHandler_ = handler;
 }

@@ -52,5 +52,8 @@ std::set <ModuleID> VirtualSystemModule::existing() {
     return ret;
 }
 
+std::shared_ptr<IModuleIssues> VirtualSystemModule::issues() {
+        return nullptr; 
+    }
 
 

@@ -9,5 +9,5 @@ std::shared_ptr<ISystemModule> CanModulesFactory::create(){
 
     auto issues = std::make_shared<ModuleIssues>(channel);
 
-    return std::make_shared<CanSystemModule>(channel);
+    return std::make_shared<CanSystemModule>(channel, issues);
 }

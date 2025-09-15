@@ -7,7 +7,7 @@
 
 class CanSystemModule : public ISystemModule {
 public:
-    CanSystemModule(ICanChannel::Ptr channel);
+    CanSystemModule(ICanChannel::Ptr channel, std::shared_ptr<IModuleIssues> issues);
 
     std::future <AvailableModules> getAvailableModules() override;
     std::shared_ptr <ISensorModule> sensorModule() override;
@@ -16,6 +16,8 @@ public:
     std::shared_ptr <ICommonModule> commonModule(ModuleID module) override;
 
     std::set <ModuleID> existing() override;
+
+    std::shared_ptr<IModuleIssues> issues() override;
 private:
     
     std::mutex m;
@@ -29,6 +31,7 @@ private:
 
 private:
     ICanChannel::Ptr channel;
+    std::shared_ptr<IModuleIssues> issues_;
     
 };
 

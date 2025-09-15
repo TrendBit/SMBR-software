@@ -16,14 +16,16 @@
 #include "codes/messages/common/probe_modules_request.hpp"
 #include "codes/messages/common/probe_modules_response.hpp"
 
-CanSystemModule::CanSystemModule(ICanChannel::Ptr channel) : channel(channel) {
-    this->channel = channel;
+CanSystemModule::CanSystemModule(ICanChannel::Ptr channel,
+                                 std::shared_ptr<IModuleIssues> issues)
+    : channel(channel), issues_(issues) {
 
     std::lock_guard<std::mutex> lock(m);    
     refresh();
+}
 
-
-    
+std::shared_ptr<IModuleIssues> CanSystemModule::issues() {
+    return issues_;
 }
 
 void CanSystemModule::refresh(){

@@ -59,6 +59,8 @@
 #include "dto/RxDroppedDto.hpp"
 #include "dto/TxDroppedDto.hpp"
 #include "dto/CollisionsDto.hpp"
+#include "dto/ModuleIssueDto.hpp"
+#include "dto/ModuleIssuesListDto.hpp"
 #include "oatpp/data/mapping/ObjectMapper.hpp"
 
 #include <future>
@@ -127,10 +129,10 @@ public:
      * @brief Lists all detected system errors or confirms that the system is operating normally.
      */
     ENDPOINT_INFO(getSystemErrors) {
-    info->summary = "Lists all detected system errors or confirms that the system is operating normally";
+    info->summary = "Lists all detected system errors or confirms normal system operation";
     info->addTag("System");
     info->description =
-        "Returns all detected system errors. If no errors are present, responds with code 200 and a message indicating that the system is operating normally.\n\n"
+        "Returns all detected system errors.\n\n"
         "**Error types:**\n"
         "  - Multiple instances of the same numbered module instance (e.g., 2x Instance_1) or multiple exclusive modules (e.g., 2x Exclusive)\n"
         "  - Unknown module instance (All, Undefined, or Reserved)\n"
@@ -172,7 +174,7 @@ public:
         info->summary = "Lists all detected system warnings or confirms normal system operation";
         info->addTag("System");
         info->description =
-            "Returns all detected system warnings. If no warnings are present, responds with code 200 and a message indicating that no warnings were detected.\n\n"
+            "Returns all detected system warnings.\n\n"
             "**Warning types:**\n"
             "  - Firmware version mismatch between modules of different types (excluding core modules)\n"
             "  - Dirty build firmware detected on a module\n"
@@ -216,6 +218,55 @@ public:
     }
     ADD_CORS(getSystemWarnings)
     ENDPOINT("GET", "/system/warnings", getSystemWarnings);
+
+    /**
+    * @brief Lists all active module issues or confirms that the system is operating normally.
+    */
+    ENDPOINT_INFO(getModuleIssues) {
+        info->summary = "Lists all active module issues or confirms normal system operation";
+        info->addTag("System");
+        info->description =
+            "Returns all active module issues younger than 3 minutes.\n\n"
+            "**Fields per issue:**\n"
+            "  - `id`: Issue type ID\n"
+            "  - `name`: Issue type name\n"
+            "  - `severity`: Info/Warning/Error/Critical\n"
+            "  - `timestamp`: Last occurrence time (ISO8601)\n"
+            "  - `value`: Measured value related to issue\n"
+            "  - `module`: Module type\n"
+            "  - `instance`: Module instance";
+
+        auto exampleOk = ModuleIssuesListDto::createShared();
+        exampleOk->message = "No active module issues detected. System operating normally.";
+        exampleOk->issues = {};
+
+        auto exampleIssues = ModuleIssuesListDto::createShared();
+        exampleIssues->message = "Active issues detected. See 'issues' field for details.";
+        auto e1 = ModuleIssueDto::createShared();
+        e1->id = 1;
+        e1->name = "CoreOverTemp";
+        e1->severity = "Error";
+        e1->timestamp = "2025-09-10T14:35:12";
+        e1->value = 85.5f;
+        e1->module = "sensor";
+        e1->instance = "Exclusive";
+        auto e2 = ModuleIssueDto::createShared();
+        e2->id = 60;
+        e2->name = "LEDPanelOverTemp";
+        e2->severity = "Error";
+        e2->timestamp = "2025-09-10T14:38:03";
+        e2->value = 91.4f;
+        e2->module = "control";
+        e2->instance = "Exclusive";
+
+        exampleIssues->issues = { e1, e2 };
+
+        info->addResponse<Object<ModuleIssuesListDto>>(Status::CODE_200, "application/json")
+            .addExample("No Issues", exampleOk)
+            .addExample("Issues", exampleIssues);
+    }
+    ADD_CORS(getModuleIssues)
+    ENDPOINT("GET", "/system/module/issues", getModuleIssues);
 
     /**
      * @brief Returns the number of received CAN packets.

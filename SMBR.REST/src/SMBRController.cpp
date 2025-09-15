@@ -379,6 +379,30 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     return createDtoResponse(Status::CODE_200, resp);
 }
 
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getModuleIssues() {
+    auto listDto = ModuleIssuesListDto::createShared();
+    auto activeIssues = systemModule->issues()->getActiveIssuesData();
+    if (activeIssues.empty()) {
+        listDto->message = "No active module issues detected. System operating normally.";
+        listDto->issues = {};
+    } else {
+        listDto->message = "Active issues detected. See 'issues' field for details.";
+        listDto->issues = oatpp::List<oatpp::Object<ModuleIssueDto>>::createShared();
+        for (const auto& i : activeIssues) {
+            auto dto = ModuleIssueDto::createShared();
+            dto->id = i.error_type;
+            dto->name = i.name;
+            dto->severity = i.severity;
+            dto->timestamp = i.timestamp;
+            dto->value = i.value;
+            dto->module = moduleToString(i.module.type);
+            dto->instance = instanceToString(i.module.instance);
+            listDto->issues->push_back(dto);
+        }
+    }
+    return createDtoResponse(Status::CODE_200, listDto);
+}
+
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getCanRxPackets() {
     return process(__FUNCTION__, [&]() {
         return readCanStat<RxPacketsDto>("rx_packets", "rx_packets",

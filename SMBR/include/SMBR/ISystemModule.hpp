@@ -12,6 +12,7 @@
 #include "ICoreModule.hpp"
 #include "IControlModule.hpp"
 #include "ICommonModule.hpp"
+#include "IModuleIssues.hpp"
 
 
 class ISystemModule {
@@ -26,6 +27,7 @@ class ISystemModule {
         virtual std::shared_ptr <ISensorModule> sensorModule() = 0;
         virtual std::shared_ptr <IControlModule> controlModule() = 0;
         virtual std::shared_ptr <ICoreModule> coreModule() = 0;
+        virtual std::shared_ptr <IModuleIssues> issues() = 0;
 
         virtual std::shared_ptr <ICommonModule> commonModule(ModuleID module) = 0;
 

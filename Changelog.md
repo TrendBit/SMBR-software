@@ -17,11 +17,14 @@ The version number consists of MAJOR.MINOR identifiers.
   - `GET /system/can/collisions` – count of CAN bus collisions detected
 - Enhanced Swagger UI with more detailed API descriptions
 
-### Fixed
+### Changed
+- Rename endpoint emitor_temperature to emitor/temperature for consistency
 - Renamed parameters in `/sensor/fluorometer/ojip/capture`:
   - `Logarithmic` → `logarithmic`
   - `Linear` → `linear`
   - `timing` → `timebase`
+  
+### Fixed
 - Refactored ojip endpoint:
   - Moved input from query parameters to JSON body
   - Added input validation to prevent malformed requests

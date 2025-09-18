@@ -3,6 +3,8 @@
 #include <SMBR/ICommonModule.hpp>
 #include "can/CanChannel.hpp"
 #include "BaseModule.hpp"
+#include <sstream>
+#include <iomanip>
 
 class CanCommonModule : public ICommonModule {
 public:

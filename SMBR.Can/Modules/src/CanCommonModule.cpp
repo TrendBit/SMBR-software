@@ -121,7 +121,9 @@ std::future<ICommonModule::FwVersion> CanCommonModule::getFwVersion()
     >(
         App_messages::Common::FW_hash_request{},
         [](const App_messages::Common::FW_hash_response &res) -> std::string {
-            return std::to_string(res.hash);;
+            std::stringstream ss;
+            ss << std::hex << res.hash;
+            return ss.str();
         },
         default_timeout_ms
     );

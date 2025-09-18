@@ -2,6 +2,11 @@
 
 The version number consists of MAJOR.MINOR identifiers.
 
+## 0.3 WorkInProgress 
+
+### Changed
+- Change firmware hash output to hexadecimal format
+
 ## 0.2
 
 ### Added

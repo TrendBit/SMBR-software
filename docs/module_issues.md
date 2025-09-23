@@ -10,15 +10,8 @@ If something abnormal is detected, the module will automatically report an **iss
 Each issue message includes:
 
 - **ID** – a unique numeric code identifying the issue  
-- **Severity** – indicates how serious the issue is  
-- **Detail** – additional context (for example, the actual temperature value for an `OverTemp` issue)
-
-Severity is represented as a number from `0` to `15`, grouped into four levels:
-
-- **Info (0–3):** Informational only 
-- **Warning (4–7):** Something unusual 
-- **Error (8–11):** A problem occurred 
-- **Critical (12–15):** Serious fault
+- **Index** – additional numeric field, e.g. to indicate a channel/index or other integer parameter related to the issue  
+- **Value** – additional context, e.g. the actual temperature value for an `OverTemp` issue  
 
 Below are the possible issue types:
 

@@ -24,7 +24,6 @@ Affects all modules (Core, Control, Sensor).
 - **[0] HighLoad** – CPU load exceeds `90 %`.  
 - **[1] CoreOverTemp** – CPU temperature exceeds `70 °C`.  
 - **[2] BoardOverTemp** – Board temperature exceeds `70 °C`.  
-- **[3] LowEEPROMMemory** – Free EEPROM memory below `10 %`.  
 
 ---
 
@@ -45,13 +44,8 @@ Specific to the Core module.
 Specific to the Control module.
 
 - **[60] LEDPanelOverTemp** – LED panel temperature exceeds `70 °C`.  
-- **[61] HeaterOverTemp** – Heater plate temperature exceeds `80 °C`.  
-- **[62] PumpInvalidSpeed** – Pump speed out of range (`-1.0–1.0`).  
-- **[63] PumpInvalidFlowrate** – Pump flowrate out of range (`-1000–1000`). 
-- **[64] AeratorOverSpeed** – Aerator speed out of range (`0–1.0`).
-- **[65] AeratorInvalidFlowrate** – Aerator flowrate out of range (`10–5000`).   
-- **[66] MixerOverSpeed** – Mixer speed out of range (`0–1.0`). 
-- **[67] MixerOverRPM** – Mixer RPM exceeds `6000 RPM`.  
+- **[61] HeaterOverTemp** – Heater plate temperature exceeds `80 °C`.    
+- **[62] MixerOverRPM** – Mixer RPM exceeds `4000 RPM`.  
 
 ---
 

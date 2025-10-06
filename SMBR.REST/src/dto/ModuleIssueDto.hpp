@@ -15,7 +15,7 @@ class ModuleIssueDto : public oatpp::DTO {
     /**
      * @brief Unique identifier of the issue.
      */
-    DTO_FIELD(Int32, id);         
+    DTO_FIELD(UInt16, id);         
 
     /**
      * @brief Human-readable name or description of the issue.
@@ -25,7 +25,7 @@ class ModuleIssueDto : public oatpp::DTO {
     /**
      * @brief Severity level of the issue (e.g., "Warning", "Critical").
      */           
-    DTO_FIELD(String, severity);      
+    DTO_FIELD(Int16, index);      
 
     /**
      * @brief Timestamp indicating when the problem last occurred.

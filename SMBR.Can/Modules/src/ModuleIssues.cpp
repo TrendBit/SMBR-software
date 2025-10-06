@@ -14,7 +14,6 @@ std::string toString(IssueType type) {
         case IssueType::HighLoad:                return "HighLoad";
         case IssueType::CoreOverTemp:            return "CoreOverTemp";
         case IssueType::BoardOverTemp:           return "BoardOverTemp";
-        case IssueType::LowEEPROMMemory:         return "LowEEPROMMemory";
         case IssueType::Invalid5VSupply:         return "Invalid5VSupply";
         case IssueType::InvalidVinSupply:        return "InvalidVinSupply";
         case IssueType::InvalidPoESupply:        return "InvalidPoESupply";
@@ -22,11 +21,6 @@ std::string toString(IssueType type) {
         case IssueType::OverPowerDraw:           return "OverPowerDraw";
         case IssueType::LEDPanelOverTemp:        return "LEDPanelOverTemp";
         case IssueType::HeaterOverTemp:          return "HeaterOverTemp";
-        case IssueType::PumpInvalidSpeed:        return "PumpInvalidSpeed";
-        case IssueType::PumpInvalidFlowrate:     return "PumpInvalidFlowrate";
-        case IssueType::AeratorOverSpeed:        return "AeratorOverSpeed";
-        case IssueType::AeratorInvalidFlowrate:  return "AeratorInvalidFlowrate";
-        case IssueType::MixerOverSpeed:          return "MixerOverSpeed";
         case IssueType::MixerOverRPM:            return "MixerOverRPM";
         case IssueType::BottleOverTemp:          return "BottleOverTemp";
         case IssueType::BottleTopOverMeasTemp:   return "BottleTopOverMeasTemp";
@@ -36,16 +30,6 @@ std::string toString(IssueType type) {
         case IssueType::FluorometerDetectorOverTemp:return "FluorometerDetectorOverTemp";
         case IssueType::FluorometerEmitorOverTemp:return "FluorometerEmitorOverTemp";
         case IssueType::SpectrophotometerEmitorOverTemp:return "SpectrophotometerEmitorOverTemp";
-        default: return "Unknown";
-    }
-}
-
-std::string toString(Severity sev) {
-    switch(sev) {
-        case Severity::Info:     return "Info";
-        case Severity::Warning:  return "Warning";
-        case Severity::Error:    return "Error";
-        case Severity::Critical: return "Critical";
         default: return "Unknown";
     }
 }
@@ -99,7 +83,7 @@ void ModuleIssues::handleIssue(const CanChannel::ResponseData& response) {
 
     issues_[key] = IssueRecord{
         msg.error_type,
-        msg.severity,
+        msg.index,
         msg.value,
         module,
         std::chrono::steady_clock::now()
@@ -132,7 +116,7 @@ std::vector<IModuleIssues::ModuleIssueData> ModuleIssues::getActiveIssuesData() 
         IModuleIssues::ModuleIssueData data;
         data.error_type = issue.error_type;
         data.name = toString(static_cast<IssueType>(issue.error_type));
-        data.severity = toString(static_cast<Severity>(issue.severity));
+        data.index = issue.index;
         data.timestamp = toIso8601(issue.lastSeen);
         data.value = issue.value;
         data.module = issue.module;   
@@ -154,7 +138,7 @@ void ModuleIssues::printActiveIssues() {
         }
 
         oss << " issue=" << toString(static_cast<IssueType>(issue.error_type))
-            << " severity=" << toString(static_cast<Severity>(issue.severity))
+            << " index=" << issue.index
             << " value=" << issue.value
             << " timestamp=" << toIso8601(issue.lastSeen);
 

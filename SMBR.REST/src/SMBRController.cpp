@@ -392,7 +392,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
             auto dto = ModuleIssueDto::createShared();
             dto->id = i.error_type;
             dto->name = i.name;
-            dto->severity = i.severity;
+            dto->index = i.index;
             dto->timestamp = i.timestamp;
             dto->value = i.value;
             dto->module = moduleToString(i.module.type);

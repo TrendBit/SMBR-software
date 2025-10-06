@@ -230,7 +230,7 @@ public:
             "**Fields per issue:**\n"
             "  - `id`: Issue type ID\n"
             "  - `name`: Issue type name\n"
-            "  - `severity`: Info/Warning/Error/Critical\n"
+            "  - `index`: Additional numeric field - index, channel, etc.\n"
             "  - `timestamp`: Last occurrence time (ISO8601)\n"
             "  - `value`: Measured value related to issue\n"
             "  - `module`: Module type\n"
@@ -245,7 +245,7 @@ public:
         auto e1 = ModuleIssueDto::createShared();
         e1->id = 1;
         e1->name = "CoreOverTemp";
-        e1->severity = "Error";
+        e1->index = (short) 0;
         e1->timestamp = "2025-09-10T14:35:12";
         e1->value = 85.5f;
         e1->module = "sensor";
@@ -253,7 +253,7 @@ public:
         auto e2 = ModuleIssueDto::createShared();
         e2->id = 60;
         e2->name = "LEDPanelOverTemp";
-        e2->severity = "Error";
+        e2->index = 4;
         e2->timestamp = "2025-09-10T14:38:03";
         e2->value = 91.4f;
         e2->module = "control";

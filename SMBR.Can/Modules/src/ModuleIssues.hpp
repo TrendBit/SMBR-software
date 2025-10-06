@@ -21,8 +21,8 @@ public:
 
 private:
     struct IssueRecord {
-        uint8_t error_type;
-        uint8_t severity;
+        uint16_t error_type;
+        int16_t index;
         float value;
         ModuleID module;   
         std::chrono::steady_clock::time_point lastSeen;
@@ -30,7 +30,7 @@ private:
 
     struct IssueKey {
         ModuleID module;
-        uint8_t error_type;
+        uint16_t error_type;
 
         bool operator<(const IssueKey& other) const {
             return (module < other.module) || 

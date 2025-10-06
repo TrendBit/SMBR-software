@@ -15,9 +15,9 @@ public:
      * @brief Structure representing a single issue reported by a module.
      */
     struct ModuleIssueData {
-        uint8_t error_type;
+        uint16_t error_type;
         std::string name;
-        std::string severity;
+        int16_t index;
         std::string timestamp;
         float value;
         ModuleID module;

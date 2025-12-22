@@ -16,7 +16,7 @@ If everything is working correctly, the system will respond with:
 
 ## System Error Types
 
-If something goes wrong, the system will return an error message with code `422`, along with details about the error. 
+If something goes wrong, the system will return an error message with code `200`, along with details about the error. 
 Below are the possible error types:
 
 ---
@@ -52,29 +52,5 @@ The system detected one or more modules sharing the same instance identifier.
 **Example Message:**  
 > "Detected more than one Instance_1 in module type sensor"
 
----
 
-## Example Error Output
 
-```text
-[
-  {
-    "type": "ModuleUnavailable",
-    "id": 1,
-    "message": "One or more modules are unavailable",
-    "detail": "Module sensor not responding"
-  },
-  {
-    "type": "UnknownInstance",
-    "id": 2,
-    "message": "Unknown module instance detected: Reserved",
-    "detail": "Module control reported instance value Reserved"
-  },
-  {
-    "type": "DuplicateInstance",
-    "id": 3,
-    "message": "Multiple instances of the same module instance detected: Instance_1",
-    "detail": "Detected more than one Instance_1 in module type sensor"
-  }
-]
-```

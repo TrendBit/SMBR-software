@@ -8,7 +8,8 @@ enum Modules {
     Unknown = 0,
     Core = 1,
     Control = 2,
-    Sensor = 3
+    Sensor = 3,
+    Pump  = 4
 };
 
 enum Instance {

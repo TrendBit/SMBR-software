@@ -11,6 +11,9 @@ std::ostream& operator<<(std::ostream& os, const Modules& module){
         case Modules::Sensor:
             os << "Sensor";
             break;
+        case Modules::Pump:
+            os << "Pump";
+            break;
         default:
             os << "Unknown";
             break;

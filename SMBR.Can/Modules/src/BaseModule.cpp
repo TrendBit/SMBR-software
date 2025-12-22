@@ -12,6 +12,8 @@ static Codes::Module module2raw(Modules module){
             return Codes::Module::Control_module;
         case Modules::Sensor:
             return Codes::Module::Sensor_module;
+        case Modules::Pump:
+            return Codes::Module::Pump_module;
         default:
             return Codes::Module::Undefined;
     }

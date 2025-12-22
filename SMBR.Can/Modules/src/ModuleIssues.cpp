@@ -70,6 +70,7 @@ void ModuleIssues::handleIssue(const CanChannel::ResponseData& response) {
         case CanID::Core_module:    moduleType = Modules::Core; break;
         case CanID::Control_module: moduleType = Modules::Control; break;
         case CanID::Sensor_module:  moduleType = Modules::Sensor; break;
+        case CanID::Pump_module:  moduleType = Modules::Pump; break;
         default:                    moduleType = Modules::Unknown; break;
     }
 

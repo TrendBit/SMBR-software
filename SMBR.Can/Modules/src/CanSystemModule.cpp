@@ -114,6 +114,9 @@ std::future <ISystemModule::AvailableModules> CanSystemModule::getAvailableModul
                             case CanID::Sensor_module:
                                 module = ::Modules::Sensor;
                                 break;
+                            case CanID::Pump_module:
+                                module = ::Modules::Pump;
+                                break;
                             default:
                                 break;
                         }

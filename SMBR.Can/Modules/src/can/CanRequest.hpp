@@ -28,7 +28,8 @@ struct CanID {
         Test_module = 0x03,
         Core_module = 0x04,
         Control_module = 0x05,
-        Sensor_module = 0x06,        
+        Sensor_module = 0x06,    
+        Pump_module = 0x07,     
     };
 
     bool forAll() const {

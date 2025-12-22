@@ -156,6 +156,8 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
             moduleInfoDto->module_type = "control";
         } else if (m.type == Modules::Sensor) {
             moduleInfoDto->module_type = "sensor";
+        } else if (m.type == Modules::Pump) {
+            moduleInfoDto->module_type = "pump";
         } else {
             moduleInfoDto->module_type = "unknown";
         }
@@ -196,6 +198,7 @@ std::string SMBRController::moduleToString(Modules module) {
         case Modules::Core: return "core";
         case Modules::Control: return "control";
         case Modules::Sensor: return "sensor";
+        case Modules::Pump: return "pump";
         case Modules::Unknown: return "Unknown";
         default: return "Invalid";
     }
@@ -279,10 +282,15 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
         dto::ModuleEnum moduleEnum;
         switch(m.type) {
-        case Modules::Core:    moduleEnum = dto::ModuleEnum::core; break;
-        case Modules::Control: moduleEnum = dto::ModuleEnum::control; break;
-        case Modules::Sensor:  moduleEnum = dto::ModuleEnum::sensor; break;
-        default: throw std::runtime_error("Unknown module");
+        case Modules::Core:    
+            moduleEnum = dto::ModuleEnum::core; break;
+        case Modules::Control: 
+            moduleEnum = dto::ModuleEnum::control; break;
+        case Modules::Sensor:  
+            moduleEnum = dto::ModuleEnum::sensor; break;
+        default:
+            // OATPP_LOGw("SMBRController", ("Unknown module type: " + std::to_string((int)m.type)).c_str());
+            continue;
         }
 
         auto fwDto = waitFor(getModule(oatpp::Enum<dto::ModuleEnum>::AsString(moduleEnum))->getFwVersion());

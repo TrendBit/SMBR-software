@@ -8,6 +8,7 @@ The version number consists of MAJOR.MINOR identifiers.
 - New endpoints:
   - `GET /system/errors` – returns a list of current system errors
   - `GET /system/warnings` – returns a list of current system warnings
+  - `GET /system/module/issues` – returns a list of current active module issues
   - `GET /system/can/rx_packets` – number of received CAN packets
   - `GET /system/can/tx_packets` – number of transmitted CAN packets
   - `GET /system/can/rx_errors` – count of errors during CAN packet reception

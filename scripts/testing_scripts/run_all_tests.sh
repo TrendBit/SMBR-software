@@ -45,7 +45,7 @@ run_test_suite() {
 
 # Run all test scripts
 run_test_suite "test_printCustomText.sh"
-#run_test_suite "test_setIntensities.sh"
+run_test_suite "test_setIntensities.sh"
 
 # Print final summary
 echo -e "${CYAN}║════════════Overall Test Summary════════════║${NC}"

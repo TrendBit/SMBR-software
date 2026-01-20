@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Get the directory where this script is located
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# Load configuration
+source "$SCRIPT_DIR/test_config.sh"
+
 # Colors for output
 GREEN='\033[0;32m'
 RED='\033[0;31m'
@@ -7,7 +13,7 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-ENDPOINT="http://192.168.0.244:8089/sensor/oled/print_custom_text"
+ENDPOINT="${BASE_URL}/sensor/oled/print_custom_text"
 
 echo -e "${BLUE}========================================${NC}"
 echo -e "${BLUE}Testing: POST /sensor/oled/print_custom_text${NC}"

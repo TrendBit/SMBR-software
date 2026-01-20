@@ -32,3 +32,21 @@ build/*
 *.app
 
 TBS
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+.tox/
+.hypothesis/

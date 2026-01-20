@@ -207,16 +207,10 @@ curl -X POST -H 'Content-Type: application/json' \
   http://192.168.0.244:8089/control/led_panel/intensity
 ```
 
----
-
-## 🧪 Automated Testing
-
-Run the automated test script:
+### Boolean values converted to numbers
 ```bash
-bash scripts/testing_scripts/test_setIntensities.sh
-```
-
-Or run all endpoint tests:
-```bash
-bash scripts/testing_scripts/run_all_tests.sh
+# oatpp converts false->0 and true->1
+curl -X POST -H 'Content-Type: application/json' \
+  -d '{"intensity": [false, true, true, false]}' \
+  http://192.168.0.244:8089/control/led_panel/intensity
 ```

@@ -32,6 +32,13 @@ curl -X POST -H 'Content-Type: application/json' \
   http://192.168.0.244:8089/sensor/oled/print_custom_text
 ```
 
+### Spaces only
+```bash
+curl -X POST -H 'Content-Type: application/json' \
+  -d '{"text": "   "}' \
+  http://192.168.0.244:8089/sensor/oled/print_custom_text
+```
+
 ### Special characters
 ```bash
 curl -X POST -H 'Content-Type: application/json' \
@@ -39,10 +46,24 @@ curl -X POST -H 'Content-Type: application/json' \
   http://192.168.0.244:8089/sensor/oled/print_custom_text
 ```
 
-### Unicode characters
+### Extended special characters
+```bash
+curl -X POST -H 'Content-Type: application/json' \
+  -d '{"text": "Special: @#$%^&*()"}' \
+  http://192.168.0.244:8089/sensor/oled/print_custom_text
+```
+
+### Unicode characters (Czech diacritics)
 ```bash
 curl -X POST -H 'Content-Type: application/json' \
   -d '{"text": "Příliš žluťoučký kůň"}' \
+  http://192.168.0.244:8089/sensor/oled/print_custom_text
+```
+
+### International Unicode (Chinese, emoji)
+```bash
+curl -X POST -H 'Content-Type: application/json' \
+  -d '{"text": "Unicode: 你好世界 🌍"}' \
   http://192.168.0.244:8089/sensor/oled/print_custom_text
 ```
 
@@ -53,10 +74,24 @@ curl -X POST -H 'Content-Type: application/json' \
   http://192.168.0.244:8089/sensor/oled/print_custom_text
 ```
 
+### Text with multiple newlines
+```bash
+curl -X POST -H 'Content-Type: application/json' \
+  -d '{"text": "Line1\nLine2\nLine3"}' \
+  http://192.168.0.244:8089/sensor/oled/print_custom_text
+```
+
 ### Long text
 ```bash
 curl -X POST -H 'Content-Type: application/json' \
   -d '{"text": "This is a very long text that might overflow the display but should still be accepted by the API"}' \
+  http://192.168.0.244:8089/sensor/oled/print_custom_text
+```
+
+### Very long text (1000 chars)
+```bash
+curl -X POST -H 'Content-Type: application/json' \
+  -d '{"text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}' \
   http://192.168.0.244:8089/sensor/oled/print_custom_text
 ```
 
@@ -162,16 +197,3 @@ curl -X POST -H 'Content-Type: application/json' \
   http://192.168.0.244:8089/sensor/oled/print_custom_text
 ```
 
----
-
-## Automated Testing
-
-Run the automated test script:
-```bash
-./scripts/testing_scripts/test_printCustomText.sh
-```
-
-Or run all endpoint tests:
-```bash
-./scripts/testing_scripts/run_all_tests.sh
-```

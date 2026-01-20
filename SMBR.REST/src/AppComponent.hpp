@@ -8,6 +8,7 @@
 #include "oatpp-swagger/Model.hpp"
 #include "oatpp-swagger/Resources.hpp"
 #include "interceptors/ResponseInterceptor.hpp"
+#include "interceptors/ErrorHandler.hpp"
 
 /**
  * @class AppComponent
@@ -63,18 +64,6 @@ public:
   }());
   
   /**
-   * @brief Create ConnectionHandler component which uses the Router component to route requests.
-   * 
-   * This component handles incoming connections and delegates the requests to the appropriate route.
-   */
-  OATPP_CREATE_COMPONENT(std::shared_ptr<oatpp::network::ConnectionHandler>, serverConnectionHandler)([] {
-    OATPP_COMPONENT(std::shared_ptr<oatpp::web::server::HttpRouter>, router); 
-  
-    auto connectionHandler = oatpp::web::server::HttpConnectionHandler::createShared(router);
-    return connectionHandler;
-  }());
-
-  /**
    * @brief Create ObjectMapper component to serialize/deserialize DTOs in Controller's API.
    * 
    * This component is responsible for converting between JSON and C++ objects.
@@ -89,6 +78,22 @@ public:
 
     return mappers;
 
+  }());
+
+  /**
+   * @brief Create ConnectionHandler component which uses the Router component to route requests.
+   * 
+   * This component handles incoming connections and delegates the requests to the appropriate route.
+   */
+  OATPP_CREATE_COMPONENT(std::shared_ptr<oatpp::network::ConnectionHandler>, serverConnectionHandler)([] {
+    OATPP_COMPONENT(std::shared_ptr<oatpp::web::server::HttpRouter>, router);
+    OATPP_COMPONENT(std::shared_ptr<oatpp::web::mime::ContentMappers>, apiContentMappers);
+    
+    auto mapper = apiContentMappers->getMapper("application/json");
+    
+    auto connectionHandler = oatpp::web::server::HttpConnectionHandler::createShared(router);
+    connectionHandler->setErrorHandler(std::make_shared<CustomErrorHandler>(mapper));
+    return connectionHandler;
   }());
 
   /**

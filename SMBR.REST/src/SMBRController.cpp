@@ -30,6 +30,11 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         dto->message = name + " not found: " + std::string(e.what());
         LWARNING("API") << "Api " << name << " failed with NotFoundException " << std::string(e.what()) << LE;
         return createDtoResponse(Status::CODE_404, dto);
+    } catch (ArgumentException & e){
+        auto dto = MessageDto::createShared();
+        dto->message = "Invalid request body: " + std::string(e.what());
+        LWARNING("API") << "Api " << name << " failed with ArgumentException " << std::string(e.what()) << LE;
+        return createDtoResponse(Status::CODE_400, dto);
     } catch (std::exception & e){
         auto dto = MessageDto::createShared();
         dto->message = "Failed to retrieve " + name + ": " + std::string(e.what());
@@ -65,6 +70,11 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         dto->message = name + " not found: " + std::string(e.what());
         LWARNING("API") << "Api " << name << " failed with NotFoundException " << std::string(e.what()) << LE;
         return createDtoResponse(Status::CODE_404, dto);
+    } catch (ArgumentException & e){
+        auto dto = MessageDto::createShared();
+        dto->message = "Invalid request body: " + std::string(e.what());
+        LWARNING("API") << "Api " << name << " failed with ArgumentException " << std::string(e.what()) << LE;
+        return createDtoResponse(Status::CODE_400, dto);
     } catch (std::exception & e){
         auto dto = MessageDto::createShared();
         dto->message = "Failed to retrieve " + name + ": " + std::string(e.what());
@@ -771,13 +781,11 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 // Control module
 // ==========================================
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::setIntensities(const oatpp::Object<IntensitiesDto>& body) {
-    if (!body->intensity || body->intensity->size() != 4) {
-        auto error = MessageDto::createShared();
-        error->message = "Invalid request body: intensity array must contain exactly 4 values";
-        return createDtoResponse(Status::CODE_400, error);
-    }
-
     return processBool(__FUNCTION__, [&](){
+        if (!body->intensity || body->intensity->size() != 4) {
+            throw ArgumentException("intensity array must contain exactly 4 values");
+        }
+
         float ii0, ii1, ii2, ii3;
 
         auto processIntensity = [](float & i, const oatpp::Float32 & intensity){
@@ -1258,13 +1266,10 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response>
 SMBRController::printCustomText(const oatpp::Object<TextDto>& body) {
-    if (!body->text) {
-        auto error = MessageDto::createShared();
-        error->message = "Invalid request body: missing or invalid field";
-        return createDtoResponse(Status::CODE_400, error);
-    }
-
     return processBool(__FUNCTION__, [&](){
+        if (!body->text) {
+            throw ArgumentException("missing or invalid field");
+        }
         return waitFor(systemModule->sensorModule()->printCustomText(body->text));
     });
 }

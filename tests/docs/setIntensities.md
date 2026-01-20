@@ -141,10 +141,6 @@ curl -X POST -H 'Content-Type: application/json' \
   http://192.168.0.244:8089/control/led_panel/intensity
 ```
 
----
-
-## Input Validation Errors (Expected: 500)
-
 ### Null element in array (correct size, but null value)
 ```bash
 curl -X POST -H 'Content-Type: application/json' \

@@ -71,10 +71,10 @@ public:
                 return response;
             }
             
-            error->message = message;
+            error->message = "Invalid request: " + message;
             auto jsonBody = m_objectMapper->writeToString(error);
             auto response = OutgoingResponse::createShared(
-                Status::CODE_500,
+                Status::CODE_400,
                 oatpp::web::protocol::http::outgoing::BufferBody::createShared(jsonBody)
             );
             response->putHeader("Content-Type", "application/json");

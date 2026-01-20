@@ -92,25 +92,23 @@ class TestSetIntensities:
         response = requests.post(ENDPOINT, json={"intensity": intensities})
         assert response.status_code == 400
     
-    # Business Logic Errors (Expected: 500)
-    
     def test_null_element_in_array(self):
-        """Business Logic Error: Null element in array (correct size, but null value)"""
+        """Error: Null element in array (correct size, but null value)"""
         response = requests.post(
             ENDPOINT,
             data='{"intensity": [null, 1, 0, 0.2]}',
             headers={"Content-Type": "application/json"}
         )
-        assert response.status_code == 500
+        assert response.status_code == 400
     
     def test_all_nulls(self):
-        """Business Logic Error: All nulls"""
+        """Error: All nulls"""
         response = requests.post(
             ENDPOINT,
             data='{"intensity": [null, null, null, null]}',
             headers={"Content-Type": "application/json"}
         )
-        assert response.status_code == 500
+        assert response.status_code == 400
     
     @pytest.mark.parametrize("intensities", [
         [-0.1, 1, 0, 0.2],      # negative value
@@ -118,9 +116,9 @@ class TestSetIntensities:
         [-1, 2, -0.5, 1.5],     # all out of range
     ])
     def test_values_out_of_range(self, intensities):
-        """Business Logic Error: Values outside 0-1 range"""
+        """Error: Values outside 0-1 range"""
         response = requests.post(ENDPOINT, json={"intensity": intensities})
-        assert response.status_code == 500
+        assert response.status_code == 400
     
     # Framework Limitations (Expected: 200 OK)
     

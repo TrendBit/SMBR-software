@@ -1255,7 +1255,14 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     });
 }
 
-std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::printCustomText(const oatpp::Object<TextDto>& body) {
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response>
+SMBRController::printCustomText(const oatpp::Object<TextDto>& body) {
+    if (!body->text) {
+        auto error = MessageDto::createShared();
+        error->message = "Invalid request body: missing or invalid field";
+        return createDtoResponse(Status::CODE_400, error);
+    }
+
     return processBool(__FUNCTION__, [&](){
         return waitFor(systemModule->sensorModule()->printCustomText(body->text));
     });

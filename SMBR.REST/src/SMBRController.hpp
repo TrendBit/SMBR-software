@@ -1721,7 +1721,7 @@ public:
      */
     ENDPOINT_INFO(printCustomText) {
         info->summary = "Print custom text on Mini OLED display";
-        info->description = "Use last line of Mini OLED display to print custom text. Text will be appended to existing text.";
+        info->description = "Use last line of Mini OLED display to print custom text. Text will be appended to existing text. Note: Additional properties beyond 'text' are not allowed.";
         info->addTag("Sensor module");
         auto example = TextDto::createShared();
         example->text = "text to printed"; 
@@ -1729,6 +1729,8 @@ public:
             .addExample("application/json", example);
         info->addResponse<Object<MessageDto>>(Status::CODE_200, "application/json", "Successfully printed custom text on Mini OLED display")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Successfully printed custom text on Mini OLED display"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_400, "application/json", "Invalid request body")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Invalid request body: malformed JSON or unexpected structure"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to print custom text")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to print custom text"}}));
     }

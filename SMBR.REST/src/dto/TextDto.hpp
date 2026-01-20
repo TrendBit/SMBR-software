@@ -14,6 +14,9 @@ class TextDto : public oatpp::DTO {
      * @brief The custom text to be displayed on Mini OLED.
      */
     DTO_FIELD(String, text);
+    DTO_FIELD_INFO(text) {
+        info->required = true;
+    }
 };
 
 #include OATPP_CODEGEN_END(DTO)

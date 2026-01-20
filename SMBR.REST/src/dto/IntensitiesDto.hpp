@@ -14,7 +14,10 @@ class IntensitiesDto : public oatpp::DTO {
     /**
      * @brief The intensities for all channels (0-3).
      */
-    DTO_FIELD(Vector<Float32>::ObjectWrapper, intensity); 
+    DTO_FIELD(Vector<Float32>::ObjectWrapper, intensity);
+    DTO_FIELD_INFO(intensity) {
+        info->required = true;
+    }
 };
 
 #include OATPP_CODEGEN_END(DTO)

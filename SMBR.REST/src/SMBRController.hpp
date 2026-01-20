@@ -867,7 +867,7 @@ public:
     */
     ENDPOINT_INFO(setIntensities) {
         info->summary = "Sets all channels of LED panel to given intensity";
-        info->description = "In format: {\"intensity\": [0.5,1,0,0.2] }";
+        info->description = "Sets intensity for all 4 LED channels. Format: {\"intensity\": [0.5, 1.0, 0.0, 0.2]}. Array must contain exactly 4 values, each between 0.0 and 1.0.";
         info->addTag("Control module");  
 
         auto example = IntensitiesDto::createShared();
@@ -879,8 +879,8 @@ public:
             .addExample("application/json", example);  
         info->addResponse<Object<MessageDto>>(Status::CODE_200, "application/json", "Intensity set successfully")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Intensity set successfully"}}));
-        info->addResponse<Object<MessageDto>>(Status::CODE_400, "application/json", "Invalid intensity value")
-            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Invalid intensity value"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_400, "application/json", "Invalid request body")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Invalid request body: malformed JSON or unexpected structure"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to set intensity")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to set intensity"}}));
     }

@@ -771,12 +771,13 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 // Control module
 // ==========================================
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::setIntensities(const oatpp::Object<IntensitiesDto>& body) {
+    if (!body->intensity || body->intensity->size() != 4) {
+        auto error = MessageDto::createShared();
+        error->message = "Invalid request body: intensity array must contain exactly 4 values";
+        return createDtoResponse(Status::CODE_400, error);
+    }
 
     return processBool(__FUNCTION__, [&](){
-        if (!body || !body->intensity || body->intensity->size() != 4) {
-            throw ArgumentException("Invalid intensity array. Must contain exactly 4 values.");
-        }
-
         float ii0, ii1, ii2, ii3;
 
         auto processIntensity = [](float & i, const oatpp::Float32 & intensity){

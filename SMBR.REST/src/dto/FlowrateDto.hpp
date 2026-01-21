@@ -14,7 +14,10 @@ class FlowrateDto : public oatpp::DTO {
     /**
      * @brief The flowrate value in ml/min.
      */
-    DTO_FIELD(Float32, flowrate); 
+    DTO_FIELD(Float32, flowrate);
+    DTO_FIELD_INFO(flowrate) {
+        info->required = true;
+    } 
 };
 
 #include OATPP_CODEGEN_END(DTO)

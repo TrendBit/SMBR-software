@@ -986,11 +986,20 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::setCuvettePumpFlowrate(const oatpp::Object<FlowrateDto>& body) {
 
     return processBool(__FUNCTION__, [&](){
-        if (!body || body->flowrate < -1000.0f || body->flowrate > 1000.0f) {
+        if (!body) {
+            throw ArgumentException("Request body is required.");
+        }
+        
+        if (!body->flowrate) {
+            throw ArgumentException("Flowrate field is required.");
+        }
+        
+        float flowrateValue = body->flowrate;
+        if (flowrateValue < -1000.0f || flowrateValue > 1000.0f) {
             throw ArgumentException("Invalid flowrate value. Must be between -1000.0 and 1000.0.");
         }
 
-        return waitFor(systemModule->controlModule()->setCuvettePumpFlowrate(body->flowrate));
+        return waitFor(systemModule->controlModule()->setCuvettePumpFlowrate(flowrateValue));
     });
 }
 

@@ -869,11 +869,20 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::setHeaterIntensity(const oatpp::Object<IntensityDto>& body) {
 
     return processBool(__FUNCTION__, [&](){
-        if (!body || body->intensity < -1.0f || body->intensity > 1.0f) {
-            throw ArgumentException("Invalid intensity value. Must be between -1.0 and 1.0.");
+        if (!body) {
+            throw ArgumentException("Request body is required.");
+        }
+        
+        if (!body->intensity) {
+            throw ArgumentException("Intensity field is required.");
+        }
+        
+        float intensityValue = body->intensity;
+        if (intensityValue < -1.0 || intensityValue > 1.0) {
+            throw ArgumentException("Invalid intensity. Must be between -1.0 and 1.0.");
         }
 
-        return waitFor(systemModule->controlModule()->setHeaterIntensity(body->intensity));
+        return waitFor(systemModule->controlModule()->setHeaterIntensity(intensityValue));
     });
 }
 

@@ -11,6 +11,7 @@ All endpoints share the same test structure - only the URL, field name, and vali
 | Endpoint | URL | Field | Min | Max |
 |----------|-----|-------|-----|-----|
 | setHeaterIntensity | `/control/heater/intensity` | `intensity` | -1.0 | 1.0 |
+| setCuvettePumpSpeed | `/control/cuvette_pump/speed` | `speed` | -1.0 | 1.0 |
 
 **Note**: Configuration is in `tests/unit/single_field_endpoints_config.py`
 

@@ -11,4 +11,11 @@ SINGLE_FIELD_ENDPOINTS = [
         "min": -1.0,
         "max": 1.0,
     },
+    {
+        "name": "setCuvettePumpSpeed",
+        "url": "/control/cuvette_pump/speed",
+        "field": "speed",
+        "min": -1.0,
+        "max": 1.0,
+    },
 ]

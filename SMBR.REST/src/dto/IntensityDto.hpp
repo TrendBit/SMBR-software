@@ -15,6 +15,9 @@ class IntensityDto : public oatpp::DTO {
      * @brief The intensity value between 0 and 1.
      */
     DTO_FIELD(Float32, intensity); 
+    DTO_FIELD_INFO(intensity) {
+        info->required = true;
+    } 
 
 };
 

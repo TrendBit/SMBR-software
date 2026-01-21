@@ -823,17 +823,25 @@ int SMBRController::getChannel(const dto::ChannelEnum& channel) {
 }
 
 
-std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::setIntensity(
-    const oatpp::Enum<dto::ChannelEnum>::AsString& channel,
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::setIntensity(const oatpp::Enum<dto::ChannelEnum>::AsString& channel,
     const oatpp::Object<IntensityDto>& body
 ) {
 
     return processBool(__FUNCTION__, [&](){
-        if (body->intensity < 0 || body->intensity > 1) {
+        if (!body) {
+            throw ArgumentException("Request body is required.");
+        }
+        
+        if (!body->intensity) {
+            throw ArgumentException("Intensity field is required.");
+        }
+        
+        float intensityValue = body->intensity;
+        if (intensityValue < 0 || intensityValue > 1) {
             throw ArgumentException("Invalid intensity. Must be between 0 and 1.");
         }
 
-        return waitFor(systemModule->controlModule()->setIntensity(body->intensity, getChannel(channel)));
+        return waitFor(systemModule->controlModule()->setIntensity(intensityValue, getChannel(channel)));
     });
 }
 

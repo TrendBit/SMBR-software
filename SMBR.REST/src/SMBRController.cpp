@@ -956,11 +956,20 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::setCuvettePumpSpeed(const oatpp::Object<SpeedDto>& body) {
 
     return processBool(__FUNCTION__, [&](){
-        if (!body || body->speed < -1.0f || body->speed > 1.0f) {
+        if (!body) {
+            throw ArgumentException("Request body is required.");
+        }
+        
+        if (!body->speed) {
+            throw ArgumentException("Speed field is required.");
+        }
+        
+        float speedValue = body->speed;
+        if (speedValue < -1.0f || speedValue > 1.0f) {
             throw ArgumentException("Invalid speed value. Must be between -1.0 and 1.0.");
         }
 
-        return waitFor(systemModule->controlModule()->setCuvettePumpSpeed(body->speed));
+        return waitFor(systemModule->controlModule()->setCuvettePumpSpeed(speedValue));
     });
 }
 

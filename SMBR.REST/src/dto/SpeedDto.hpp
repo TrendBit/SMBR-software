@@ -14,7 +14,10 @@ class SpeedDto : public oatpp::DTO {
     /**
      * @brief The speed value between -1.0 and 1.0.
      */
-    DTO_FIELD(Float32, speed); 
+    DTO_FIELD(Float32, speed);
+    DTO_FIELD_INFO(speed) {
+        info->required = true;
+    }; 
 };
 
 #include OATPP_CODEGEN_END(DTO)

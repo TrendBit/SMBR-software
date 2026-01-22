@@ -25,4 +25,11 @@ SINGLE_FIELD_ENDPOINTS = [
         "min": -1000.0,
         "max": 1000.0,
     },
+    {
+        "name": "setAeratorSpeed",
+        "url": "/control/aerator/speed",
+        "field": "speed",
+        "min": 0.0,
+        "max": 1.0,
+    },
 ]

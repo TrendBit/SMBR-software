@@ -1083,11 +1083,20 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::setAeratorSpeed(const oatpp::Object<SpeedDto>& body) {
 
     return processBool(__FUNCTION__, [&](){
-        if (!body || body->speed < 0.0f || body->speed > 1.0f) {
+        if (!body) {
+            throw ArgumentException("Request body is required.");
+        }
+        
+        if (!body->speed) {
+            throw ArgumentException("Speed field is required.");
+        }
+        
+        float speedValue = body->speed;
+        if (speedValue < 0.0f || speedValue > 1.0f) {
             throw ArgumentException("Invalid speed value. Must be between 0.0 and 1.0.");
         }
 
-        return waitFor(systemModule->controlModule()->setAeratorSpeed(body->speed));
+        return waitFor(systemModule->controlModule()->setAeratorSpeed(speedValue));
     });
 }
 

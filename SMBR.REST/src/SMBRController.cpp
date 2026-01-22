@@ -1113,11 +1113,20 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::setAeratorFlowrate(const oatpp::Object<FlowrateDto>& body) {
 
     return processBool(__FUNCTION__, [&](){
-        if (!body || body->flowrate < 10.0f || body->flowrate > 5000.0f) {
+        if (!body) {
+            throw ArgumentException("Request body is required.");
+        }
+        
+        if (!body->flowrate) {
+            throw ArgumentException("Flowrate field is required.");
+        }
+        
+        float flowrateValue = body->flowrate;
+        if (flowrateValue < 10.0f || flowrateValue > 5000.0f) {
             throw ArgumentException("Invalid flowrate value. Must be between 10.0 and 5000.0 ml/min.");
         }
 
-        return waitFor(systemModule->controlModule()->setAeratorFlowrate(body->flowrate));
+        return waitFor(systemModule->controlModule()->setAeratorFlowrate(flowrateValue));
     });
 }
 

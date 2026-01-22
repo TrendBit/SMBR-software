@@ -36,4 +36,12 @@ SINGLE_FIELD_ENDPOINTS = [
         "max": 1.0,
         "cleanup_url": "/control/aerator/stop",
     },
+    {
+        "name": "setAeratorFlowrate",
+        "url": "/control/aerator/flowrate",
+        "field": "flowrate",
+        "min": 10.0,
+        "max": 5000.0,
+        "cleanup_url": "/control/aerator/stop",
+    },
 ]

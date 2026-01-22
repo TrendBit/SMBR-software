@@ -28,6 +28,7 @@ def post_with_delay(*args, **kwargs):
 def cleanup_endpoint(base_url, endpoint):
     """Reset endpoint to safe state"""
     try:
+        # Primary cleanup: set to safe value
         safe_value = (endpoint["min"] + endpoint["max"]) / 2
         if endpoint["min"] <= 0 <= endpoint["max"]:
             safe_value = 0.0
@@ -37,6 +38,15 @@ def cleanup_endpoint(base_url, endpoint):
             json={endpoint["field"]: safe_value},
             timeout=1
         )
+        time.sleep(REQUEST_DELAY)
+        
+        # Additional cleanup: use dedicated cleanup endpoint if available
+        if "cleanup_url" in endpoint:
+            requests.get(
+                f"{base_url}{endpoint['cleanup_url']}",
+                timeout=1
+            )
+            time.sleep(REQUEST_DELAY)
     except Exception:
         pass  
 

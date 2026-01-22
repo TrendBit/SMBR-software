@@ -10,6 +10,7 @@ SINGLE_FIELD_ENDPOINTS = [
         "field": "intensity",
         "min": -1.0,
         "max": 1.0,
+        "cleanup_url": "/control/heater/turn_off",
     },
     {
         "name": "setCuvettePumpSpeed",
@@ -17,6 +18,7 @@ SINGLE_FIELD_ENDPOINTS = [
         "field": "speed",
         "min": -1.0,
         "max": 1.0,
+        "cleanup_url": "/control/cuvette_pump/stop",
     },
     {
         "name": "setCuvettePumpFlowrate",
@@ -24,6 +26,7 @@ SINGLE_FIELD_ENDPOINTS = [
         "field": "flowrate",
         "min": -1000.0,
         "max": 1000.0,
+        "cleanup_url": "/control/cuvette_pump/stop",
     },
     {
         "name": "setAeratorSpeed",
@@ -31,5 +34,6 @@ SINGLE_FIELD_ENDPOINTS = [
         "field": "speed",
         "min": 0.0,
         "max": 1.0,
+        "cleanup_url": "/control/aerator/stop",
     },
 ]

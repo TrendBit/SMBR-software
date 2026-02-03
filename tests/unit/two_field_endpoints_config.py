@@ -15,4 +15,15 @@ TWO_FIELD_ENDPOINTS = [
         "field2_max": 1000.0,
         "cleanup_url": "/control/cuvette_pump/stop",
     },
+    {
+        "name": "moveAerator",
+        "url": "/control/aerator/move",
+        "field1": "volume",
+        "field1_min": 0.0,
+        "field1_max": 1000.0,
+        "field2": "flowrate",
+        "field2_min": 10.0,
+        "field2_max": 5000.0,
+        "cleanup_url": "/control/aerator/stop",
+    },
 ]

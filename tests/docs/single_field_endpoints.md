@@ -16,6 +16,7 @@ All endpoints share the same test structure - only the URL, field name, and vali
 | setAeratorSpeed | `/control/aerator/speed` | `speed` | 0.0 | 1.0 |
 | setAeratorFlowrate | `/control/aerator/flowrate` | `flowrate` | 10.0 | 5000.0 |
 | setMixerSpeed | `/control/mixer/speed` | `speed` | 0.0 | 1.0 |
+| setMixerRpm | `/control/mixer/rpm` | `rpm` | 0 | 1000 |
 
 **Note**: Configuration is in `tests/unit/single_field_endpoints_config.py`
 

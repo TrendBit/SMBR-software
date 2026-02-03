@@ -52,4 +52,12 @@ SINGLE_FIELD_ENDPOINTS = [
         "max": 1.0,
         "cleanup_url": "/control/mixer/stop",
     },
+    {
+        "name": "setMixerRpm",
+        "url": "/control/mixer/rpm",
+        "field": "rpm",
+        "min": 0.0,
+        "max": 10000.0,
+        "cleanup_url": "/control/mixer/stop",
+    },
 ]

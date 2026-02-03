@@ -215,186 +215,186 @@ std::string SMBRController::moduleToString(Modules module) {
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getSystemErrors() {
+    return process(__FUNCTION__, [&](){
+        auto result = waitFor(systemModule->getAvailableModules());
+        auto errors = oatpp::List<oatpp::Object<SystemProblemDto>>::createShared();
 
-    auto result = waitFor(systemModule->getAvailableModules());
-    auto errors = oatpp::List<oatpp::Object<SystemProblemDto>>::createShared();
-
-    // ModuleUnavailable (ID=1)
-    std::unordered_set<std::string> foundModules;
-    for (auto &m : result) {
-        foundModules.insert(moduleToString(m.type));
-    }
-    std::vector<std::string> requiredModules = {"core", "sensor", "control"};
-    for (auto &req : requiredModules) {
-        if (foundModules.find(req) == foundModules.end()) {
-            auto err = SystemProblemDto::createShared();
-            err->type = "ModuleUnavailable";
-            err->id = 1;
-            err->message = "One or more modules are unavailable";
-            err->detail = "Module " + req + " not responding.";
-            errors->push_back(err);
+        // ModuleUnavailable (ID=1)
+        std::unordered_set<std::string> foundModules;
+        for (auto &m : result) {
+            foundModules.insert(moduleToString(m.type));
         }
-    }
-
-    // UnknownInstance (ID=2)
-    for (auto &m : result) {
-        std::string inst = instanceToString(m.instance);
-        if (inst == "All" || inst == "Undefined" || inst == "Reserved") {
-            auto err = SystemProblemDto::createShared();
-            err->type = "UnknownInstance";
-            err->id = 2;
-            err->message = "Unknown module instance detected: " + inst;
-            err->detail = "Module " + moduleToString(m.type) + " reported instance value " + inst + ".";
-            errors->push_back(err);
-        }
-    } 
-
-    // DuplicateInstance (ID=3) 
-    std::unordered_map<std::string, std::unordered_map<std::string, int>> moduleInstanceCount;
-    for (auto &m : result) {
-        std::string moduleType = moduleToString(m.type);
-        std::string inst = instanceToString(m.instance);
-        moduleInstanceCount[moduleType][inst]++;
-    }
-    for (const auto &modPair : moduleInstanceCount) {
-        for (const auto &kv : modPair.second) {
-            if (kv.second > 1) {
+        std::vector<std::string> requiredModules = {"core", "sensor", "control"};
+        for (auto &req : requiredModules) {
+            if (foundModules.find(req) == foundModules.end()) {
                 auto err = SystemProblemDto::createShared();
-                err->type = "DuplicateInstance";
-                err->id = 3;
-                err->message = "Multiple instances of the same module instance detected: " + kv.first;
-                err->detail = "Detected " + std::to_string(kv.second) + "x " + kv.first +
-                              " in module type " + modPair.first + ".";
+                err->type = "ModuleUnavailable";
+                err->id = 1;
+                err->message = "One or more modules are unavailable";
+                err->detail = "Module " + req + " not responding.";
                 errors->push_back(err);
             }
         }
-    } 
 
-    auto resp = SystemProblemResponseDto::createShared();
-    if (errors->empty()) {
-        resp->message = "System is operating normally. No errors detected.";
-        resp->problems = {};
-    } else {
-        resp->message = "System errors detected. See details in 'problems'.";
-        resp->problems = errors;
-    }
-    return createDtoResponse(Status::CODE_200, resp);
+        // UnknownInstance (ID=2)
+        for (auto &m : result) {
+            std::string inst = instanceToString(m.instance);
+            if (inst == "All" || inst == "Undefined" || inst == "Reserved") {
+                auto err = SystemProblemDto::createShared();
+                err->type = "UnknownInstance";
+                err->id = 2;
+                err->message = "Unknown module instance detected: " + inst;
+                err->detail = "Module " + moduleToString(m.type) + " reported instance value " + inst + ".";
+                errors->push_back(err);
+            }
+        } 
 
+        // DuplicateInstance (ID=3) 
+        std::unordered_map<std::string, std::unordered_map<std::string, int>> moduleInstanceCount;
+        for (auto &m : result) {
+            std::string moduleType = moduleToString(m.type);
+            std::string inst = instanceToString(m.instance);
+            moduleInstanceCount[moduleType][inst]++;
+        }
+        for (const auto &modPair : moduleInstanceCount) {
+            for (const auto &kv : modPair.second) {
+                if (kv.second > 1) {
+                    auto err = SystemProblemDto::createShared();
+                    err->type = "DuplicateInstance";
+                    err->id = 3;
+                    err->message = "Multiple instances of the same module instance detected: " + kv.first;
+                    err->detail = "Detected " + std::to_string(kv.second) + "x " + kv.first +
+                                  " in module type " + modPair.first + ".";
+                    errors->push_back(err);
+                }
+            }
+        } 
+
+        auto resp = SystemProblemResponseDto::createShared();
+        if (errors->empty()) {
+            resp->message = "System is operating normally. No errors detected.";
+            resp->problems = {};
+        } else {
+            resp->message = "System errors detected. See details in 'problems'.";
+            resp->problems = errors;
+        }
+        return createDtoResponse(Status::CODE_200, resp);
+    });
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getSystemWarnings() {
-    auto result = waitFor(systemModule->getAvailableModules());
-    auto warnings = oatpp::List<oatpp::Object<SystemProblemDto>>::createShared();
+    return process(__FUNCTION__, [&](){
+        auto result = waitFor(systemModule->getAvailableModules());
+        auto warnings = oatpp::List<oatpp::Object<SystemProblemDto>>::createShared();
 
-    static std::optional<std::string> nonCoreFwRef;
-    for (auto &m : result) {
-        std::string moduleType = moduleToString(m.type);
+        static std::optional<std::string> nonCoreFwRef;
+        for (auto &m : result) {
+            std::string moduleType = moduleToString(m.type);
+            dto::ModuleEnum moduleEnum;
+            switch(m.type) {
+            case Modules::Core:    
+                moduleEnum = dto::ModuleEnum::core; break;
+            case Modules::Control: 
+                moduleEnum = dto::ModuleEnum::control; break;
+            case Modules::Sensor:  
+                moduleEnum = dto::ModuleEnum::sensor; break;
+            default:
+                // OATPP_LOGw("SMBRController", ("Unknown module type: " + std::to_string((int)m.type)).c_str());
+                continue;
+            }
+            auto fwDto = waitFor(getModule(oatpp::Enum<dto::ModuleEnum>::AsString(moduleEnum))->getFwVersion());
 
-        dto::ModuleEnum moduleEnum;
-        switch(m.type) {
-        case Modules::Core:    
-            moduleEnum = dto::ModuleEnum::core; break;
-        case Modules::Control: 
-            moduleEnum = dto::ModuleEnum::control; break;
-        case Modules::Sensor:  
-            moduleEnum = dto::ModuleEnum::sensor; break;
-        default:
-            // OATPP_LOGw("SMBRController", ("Unknown module type: " + std::to_string((int)m.type)).c_str());
-            continue;
-        }
+            std::string fwVersion = fwDto.version;
+            bool isDirty = fwDto.dirty;
 
-        auto fwDto = waitFor(getModule(oatpp::Enum<dto::ModuleEnum>::AsString(moduleEnum))->getFwVersion());
+            // FirmwareVersionMismatc (ID=1) 
+            if (m.type != Modules::Core) {
+                if (!nonCoreFwRef.has_value()) {
+                    nonCoreFwRef = fwVersion;
+                } 
+                else if (nonCoreFwRef.value() != fwVersion) {
+                    auto warn = SystemProblemDto::createShared();
+                    warn->type = "FirmwareVersionMismatch";
+                    warn->id = 1;
+                    warn->message = "Firmware versions differ between modules of different types (excluding core modules)";
+                    warn->detail = "Expected " + nonCoreFwRef.value() + 
+                                " but got " + fwVersion + " for " + moduleType;
+                    warnings->push_back(warn);
+                }
+            }
 
-        std::string fwVersion = fwDto.version;
-        bool isDirty = fwDto.dirty;
-
-        // FirmwareVersionMismatc (ID=1) 
-        if (m.type != Modules::Core) {
-            if (!nonCoreFwRef.has_value()) {
-                nonCoreFwRef = fwVersion;
-            } 
-            else if (nonCoreFwRef.value() != fwVersion) {
+            // DirtyBuildFirmware (ID=2) 
+            if (isDirty) {
                 auto warn = SystemProblemDto::createShared();
-                warn->type = "FirmwareVersionMismatch";
-                warn->id = 1;
-                warn->message = "Firmware versions differ between modules of different types (excluding core modules)";
-                warn->detail = "Expected " + nonCoreFwRef.value() + 
-                            " but got " + fwVersion + " for " + moduleType;
+                warn->type = "DirtyBuildFirmware";
+                warn->id = 2;
+                warn->message = "Dirty build firmware detected on a module";
+                warn->detail = "Module " + moduleType + " flagged as dirty build";
+                warnings->push_back(warn);
+            }
+
+            // ModuleHighPing (ID=5) 
+            float pingTime = waitFor(getModule(oatpp::Enum<dto::ModuleEnum>::AsString(moduleEnum))->ping());
+            if (pingTime > 500.0f) {
+                auto warn = SystemProblemDto::createShared();
+                warn->id = 5;
+                warn->type = "ModuleHighPing";
+                warn->message = "High ping time detected on a module";
+                warn->detail = "Module " + moduleType + " responded in " + std::to_string(pingTime) + " ms";
                 warnings->push_back(warn);
             }
         }
 
-        // DirtyBuildFirmware (ID=2) 
-        if (isDirty) {
-            auto warn = SystemProblemDto::createShared();
-            warn->type = "DirtyBuildFirmware";
-            warn->id = 2;
-            warn->message = "Dirty build firmware detected on a module";
-            warn->detail = "Module " + moduleType + " flagged as dirty build";
-            warnings->push_back(warn);
-        }
+        // CANBusErrorRateHigh (ID=3, ID=4) 
+        try {
+            uint64_t rxPackets = readCanValue("rx_packets");
+            uint64_t txPackets = readCanValue("tx_packets");
+            uint64_t rxErrors  = readCanValue("rx_errors");
+            uint64_t txErrors  = readCanValue("tx_errors");
+            uint64_t rxDropped = readCanValue("rx_dropped");
+            uint64_t txDropped = readCanValue("tx_dropped");
+            uint64_t collisions= readCanValue("collisions");
 
-        // ModuleHighPing (ID=5) 
-        float pingTime = waitFor(getModule(oatpp::Enum<dto::ModuleEnum>::AsString(moduleEnum))->ping());
-        if (pingTime > 500.0f) {
-            auto warn = SystemProblemDto::createShared();
-            warn->id = 5;
-            warn->type = "ModuleHighPing";
-            warn->message = "High ping time detected on a module";
-            warn->detail = "Module " + moduleType + " responded in " + std::to_string(pingTime) + " ms";
-            warnings->push_back(warn);
-        }
-    }
+            uint64_t totalPackets = rxPackets + txPackets;
+            uint64_t totalErrors  = rxErrors + txErrors + rxDropped + txDropped + collisions;
 
-    // CANBusErrorRateHigh (ID=3, ID=4) 
-    try {
-        uint64_t rxPackets = readCanValue("rx_packets");
-        uint64_t txPackets = readCanValue("tx_packets");
-        uint64_t rxErrors  = readCanValue("rx_errors");
-        uint64_t txErrors  = readCanValue("tx_errors");
-        uint64_t rxDropped = readCanValue("rx_dropped");
-        uint64_t txDropped = readCanValue("tx_dropped");
-        uint64_t collisions= readCanValue("collisions");
-
-        uint64_t totalPackets = rxPackets + txPackets;
-        uint64_t totalErrors  = rxErrors + txErrors + rxDropped + txDropped + collisions;
-
-        if (totalPackets == 0) {
+            if (totalPackets == 0) {
+                auto warn = SystemProblemDto::createShared();
+                warn->id = 3;
+                warn->type = "CANBusUnreachable";
+                warn->message = "No packets observed on CAN bus (possibly unreachable)";
+                warn->detail = "Interface can0 has 0 transmitted/received packets";
+                warnings->push_back(warn);
+            } else {
+                double errorRate = (static_cast<double>(totalErrors) / totalPackets) * 100.0;
+                if (errorRate > 5.0) {
+                    auto warn = SystemProblemDto::createShared();
+                    warn->id = 4;
+                    warn->type = "CANBusErrorRateHigh";
+                    warn->message = "CAN bus error rate above threshold";
+                    warn->detail = "Error rate at " + std::to_string(errorRate) + " % on CAN interface can0";
+                    warnings->push_back(warn);
+                }
+            }
+        } catch (const std::exception& ex) {
             auto warn = SystemProblemDto::createShared();
             warn->id = 3;
-            warn->type = "CANBusUnreachable";
-            warn->message = "No packets observed on CAN bus (possibly unreachable)";
-            warn->detail = "Interface can0 has 0 transmitted/received packets";
+            warn->type = "CANBusStatReadError";
+            warn->message = "Failed to read CAN bus statistics";
+            warn->detail = ex.what();
             warnings->push_back(warn);
-        } else {
-            double errorRate = (static_cast<double>(totalErrors) / totalPackets) * 100.0;
-            if (errorRate > 5.0) {
-                auto warn = SystemProblemDto::createShared();
-                warn->id = 4;
-                warn->type = "CANBusErrorRateHigh";
-                warn->message = "CAN bus error rate above threshold";
-                warn->detail = "Error rate at " + std::to_string(errorRate) + " % on CAN interface can0";
-                warnings->push_back(warn);
-            }
         }
-    } catch (const std::exception& ex) {
-        auto warn = SystemProblemDto::createShared();
-        warn->id = 3;
-        warn->type = "CANBusStatReadError";
-        warn->message = "Failed to read CAN bus statistics";
-        warn->detail = ex.what();
-        warnings->push_back(warn);
-    }
 
-    auto resp = SystemProblemResponseDto::createShared();
-        if (warnings->empty()) {
-        resp->message = "System is operating normally. No errors detected.";
-        resp->problems = {};
-    } else {
-        resp->message = "System warnings detected. See details in 'problems'.";
-        resp->problems = warnings;
-    }
-    return createDtoResponse(Status::CODE_200, resp);
+        auto resp = SystemProblemResponseDto::createShared();
+            if (warnings->empty()) {
+            resp->message = "System is operating normally. No errors detected.";
+            resp->problems = {};
+        } else {
+            resp->message = "System warnings detected. See details in 'problems'.";
+            resp->problems = warnings;
+        }
+        return createDtoResponse(Status::CODE_200, resp);
+    });
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getModuleIssues() {

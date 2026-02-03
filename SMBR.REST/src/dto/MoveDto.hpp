@@ -12,7 +12,14 @@ class MoveDto : public oatpp::DTO {
     DTO_INIT(MoveDto, DTO)
 
     DTO_FIELD(Float32, volume, "volume"); 
+    DTO_FIELD_INFO(volume) {
+        info->required = true;
+    };
+
     DTO_FIELD(Float32, flowrate, "flowrate"); 
+    DTO_FIELD_INFO(flowrate) {
+        info->required = true;
+    };
 };
 
 

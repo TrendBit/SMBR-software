@@ -1282,14 +1282,29 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::stirMixer(const oatpp::Object<StirDto>& body) {
 
     return processBool(__FUNCTION__, [&](){
-        if (!body->rpm || !body->time) {
-            throw ArgumentException("Missing required parameters.");
+        if (!body) {
+            throw ArgumentException("Request body is required.");
         }
-        if (!body || body->rpm < 0.0f || body->rpm > 10000.0f || body->time < 0.0f || body->time > 3600.0f) {
-            throw ArgumentException("Invalid RPM or time value. RPM must be between 0 and 10000, and time must be between 0 and 3600 seconds.");
+        
+        if (!body->rpm) {
+            throw ArgumentException("RPM field is required.");
+        }
+        
+        if (!body->time) {
+            throw ArgumentException("Time field is required.");
+        }
+        
+        float rpmValue = body->rpm;
+        if (rpmValue < 0.0f || rpmValue > 10000.0f) {
+            throw ArgumentException("Invalid RPM value. RPM must be between 0 and 10000.");
+        }
+        
+        float timeValue = body->time;
+        if (timeValue < 0.0f || timeValue > 3600.0f) {
+            throw ArgumentException("Invalid time value. Must be between 0 and 3600 seconds.");
         }
 
-        return waitFor(systemModule->controlModule()->stirMixer(body->rpm, body->time));
+        return waitFor(systemModule->controlModule()->stirMixer(rpmValue, timeValue));
     });
 }
 

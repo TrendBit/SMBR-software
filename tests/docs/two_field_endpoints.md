@@ -10,7 +10,7 @@ All endpoints share the same test structure - only the URL, field names, and val
 
 | Endpoint | URL | Field 1 | Min | Max | Field 2 | Min | Max |
 |----------|-----|---------|-----|-----|---------|-----|-----|
-
+| moveCuvettePump | `/control/cuvette_pump/move` | `volume` | 0.0 | 1000.0 | `flowrate` | -1000.0 | 1000.0 |
 
 **Note**: Configuration is in `tests/unit/two_field_endpoints_config.py`
 

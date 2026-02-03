@@ -1176,17 +1176,29 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::moveAerator(const oatpp::Object<MoveDto>& body) {
 
     return processBool(__FUNCTION__, [&](){
-        if (!body->volume || !body->flowrate) {
-            throw ArgumentException("Missing required parameters.");
+        if (!body) {
+            throw ArgumentException("Request body is required.");
         }
-        if (!body || body->volume < 1.0f || body->volume > 10000.0f) {
-            throw ArgumentException("Invalid volume value. Must be between 1.0 and 10000.0.");
+        
+        if (!body->volume) {
+            throw ArgumentException("Volume field is required.");
         }
-        if (!body || body->flowrate < 10.0f || body->flowrate > 5000.0f) {
+        
+        if (!body->flowrate) {
+            throw ArgumentException("Flowrate field is required.");
+        }
+        
+        float volumeValue = body->volume;
+        if (volumeValue < 0.0f || volumeValue > 1000.0f) {
+            throw ArgumentException("Invalid volume value. Must be between 0.0 and 1000.0.");
+        }
+        
+        float flowrateValue = body->flowrate;
+        if (flowrateValue < 10.0f || flowrateValue > 5000.0f) {
             throw ArgumentException("Invalid flowrate value. Must be between 10.0 and 5000.0 ml/min.");
         }
 
-        return waitFor(systemModule->controlModule()->moveAerator(body->volume, body->flowrate));
+        return waitFor(systemModule->controlModule()->moveAerator(volumeValue, flowrateValue));
     });
 }
 

@@ -1227,11 +1227,20 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::setMixerRpm(const oatpp::Object<RpmDto>& body) {
 
     return processBool(__FUNCTION__, [&](){
-        if (!body || body->rpm < 0.0f || body->rpm > 10000.0f) {
+        if (!body) {
+            throw ArgumentException("Request body is required.");
+        }
+        
+        if (!body->rpm) {
+            throw ArgumentException("RPM field is required.");
+        }
+        
+        float rpmValue = body->rpm;
+        if (rpmValue < 0.0f || rpmValue > 10000.0f) {
             throw ArgumentException("Invalid RPM value. Must be between 0 and 10000.");
         }
 
-        return waitFor(systemModule->controlModule()->setMixerRpm(body->rpm));
+        return waitFor(systemModule->controlModule()->setMixerRpm(rpmValue));
     });
 }
 

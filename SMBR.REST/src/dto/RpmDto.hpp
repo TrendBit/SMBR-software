@@ -15,6 +15,9 @@ class RpmDto : public oatpp::DTO {
      * @brief The RPM value, expected to be between 0 and 10000.
      */
     DTO_FIELD(Float32, rpm); 
+    DTO_FIELD_INFO(rpm) {
+        info->required = true;
+    }; 
 };
 
 #include OATPP_CODEGEN_END(DTO)

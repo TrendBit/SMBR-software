@@ -26,4 +26,15 @@ TWO_FIELD_ENDPOINTS = [
         "field2_max": 5000.0,
         "cleanup_url": "/control/aerator/stop",
     },
+    {
+        "name": "stirMixer",
+        "url": "/control/mixer/stir",
+        "field1": "rpm",
+        "field1_min": 0.0,
+        "field1_max": 10000.0,
+        "field2": "time",
+        "field2_min": 0.0,
+        "field2_max": 3600.0,
+        "cleanup_url": "/control/mixer/stop",
+    },
 ]

@@ -44,4 +44,12 @@ SINGLE_FIELD_ENDPOINTS = [
         "max": 5000.0,
         "cleanup_url": "/control/aerator/stop",
     },
+    {
+        "name": "setMixerSpeed",
+        "url": "/control/mixer/speed",
+        "field": "speed",
+        "min": 0.0,
+        "max": 1.0,
+        "cleanup_url": "/control/mixer/stop",
+    },
 ]

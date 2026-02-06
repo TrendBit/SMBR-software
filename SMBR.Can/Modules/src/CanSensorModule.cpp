@@ -1,5 +1,6 @@
 #include "CanSensorModule.hpp"
 #include "SMBR/Log.hpp"
+#include "SMBR/Exceptions.hpp"
 #include "codes/messages/bottle_temperature/temperature_request.hpp"
 #include "codes/messages/bottle_temperature/temperature_response.hpp"
 #include "codes/messages/bottle_temperature/top_measured_temperature_request.hpp"
@@ -278,7 +279,7 @@ void CanSensorModule::sendCanRequest(uint32_t timeoutMs, std::shared_ptr<std::pr
         if (response.status == CanRequestStatus::Success || response.status == CanRequestStatus::Timeout) {
             if (context->result.samples.empty()) {
                 promise->set_exception(std::make_exception_ptr(
-                    std::runtime_error("No measurement data available on the device")));
+                    NotFoundException("No measurement data available on the device")));
                 return;
             }
 

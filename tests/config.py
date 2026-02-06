@@ -10,3 +10,7 @@ BASE_URL = f"http://{DEVICE_IP}:{DEVICE_PORT}"
 # Test execution settings
 REQUEST_TIMEOUT = 10  # Default timeout for all requests in seconds
 REQUEST_DELAY = 1  # Delay between requests in seconds
+
+if __name__ == "__main__":
+    print(BASE_URL)
+

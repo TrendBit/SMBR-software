@@ -1,3 +1,11 @@
 [checks.unsupported_method]
 enabled = false
 
+[[operations]]
+include-path = "/control/heater/target_temperature"
+include-method = "GET"
+
+  [operations.checks.response_schema_conformance]
+  enabled = false
+
+

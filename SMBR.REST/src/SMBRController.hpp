@@ -18,6 +18,7 @@
 #include "dto/FlowrateDto.hpp"
 #include "dto/CuvettePumpInfoDto.hpp"
 #include "dto/PumpCountDto.hpp"
+#include "dto/PumpInfoDto.hpp"
 #include "dto/MoveDto.hpp"
 #include "dto/AeratorInfoDto.hpp"
 #include "dto/RpmDto.hpp"
@@ -2242,6 +2243,31 @@ public:
     }
     ADD_CORS(getPumpCount)
     ENDPOINT("GET", "/pumps/{instance_index}/pump_count", getPumpCount, PATH(UInt8, instance_index));
+
+    /**
+     * @brief Get information about a specific pump.
+     */
+    ENDPOINT_INFO(getPumpInfo) {
+        info->summary = "Get information about a specific pump";
+        info->description = 
+            "Retrieve information about a specific pump by its index.\n";
+        info->addTag("Pumps module");
+        
+        auto example = PumpInfoDto::createShared();
+        example->max_flowrate = 200.0f;
+        example->min_flowrate = 10.0f;
+        
+        info->addResponse<Object<PumpInfoDto>>(Status::CODE_200, "application/json")
+            .addExample("application/json", example);
+        info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Pump module not available")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Pump module not available"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve pump info")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve pump info"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_504, "application/json", "Request timed out")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
+    }
+    ADD_CORS(getPumpInfo)
+    ENDPOINT("GET", "/pumps/{instance_index}/info/{pump_index}", getPumpInfo, PATH(UInt8, instance_index), PATH(UInt8, pump_index));
 
 // ==========================================
 // Recipes

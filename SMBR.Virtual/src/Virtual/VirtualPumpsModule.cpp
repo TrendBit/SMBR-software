@@ -16,3 +16,13 @@ std::future<uint8_t> VirtualPumpsModule::getPumpCount() {
         return static_cast<uint8_t>(4);
     });
 }
+
+std::future<IPumpsModule::PumpInfo> VirtualPumpsModule::getPumpInfo(uint8_t pump_index) {
+    return std::async(std::launch::async, [pump_index]() {
+        Random::randomDelay();
+        return IPumpsModule::PumpInfo{
+            200.0f,  
+            10.0f    
+        };
+    });
+}

@@ -26,6 +26,12 @@ class BaseModule {
 
         static CanID createId(Codes::Message_type messageType, Modules module, Codes::Instance instance, bool emergencyFlag);
         static CanID createId(Codes::Message_type messageType, Codes::Module module, Codes::Instance instance, bool emergencyFlag);
+        
+        Codes::Instance getCanInstance() const {
+            return (id_.instance == Instance::Undefined) 
+                ? Codes::Instance::Exclusive 
+                : static_cast<Codes::Instance>(id_.instance);
+        }
 
         template <class Request, class Response, class Result>
         std::future <Result> get(std::function <Result(Response)> interpret, int timeoutMs){     
@@ -44,8 +50,9 @@ class BaseModule {
             
             try {
                 Response rt;
-                auto requestId = createRequestId(rawRequest.Type(), Codes::Instance::Exclusive, false);
-                auto responseId = createRequestId(rt.Type(), Codes::Instance::Exclusive, false);
+                auto instance = getCanInstance();
+                auto requestId = createRequestId(rawRequest.Type(), instance, false);
+                auto responseId = createRequestId(rt.Type(), instance, false);
                 
                 RequestData requestData(requestId, rawRequest.Export_data());
                 ResponseInfo responseInfo(responseId, timeoutMs);
@@ -91,8 +98,9 @@ class BaseModule {
         template <class Request, class Response, class Result>
         std::future<Result> getWithSeq(Request rawRequest, std::function<Result(Response)> interpret, int timeoutMs, uint8_t sequenceNumber) {
             Response rt;
-            auto requestId = createRequestId(rawRequest.Type(), Codes::Instance::Exclusive, false);
-            auto responseId = createRequestId(rt.Type(), Codes::Instance::Exclusive, false);
+            auto instance = getCanInstance();
+            auto requestId = createRequestId(rawRequest.Type(), instance, false);
+            auto responseId = createRequestId(rt.Type(), instance, false);
 
             RequestData requestData(requestId, rawRequest.Export_data());
             ResponseInfo responseInfo(responseId, timeoutMs);
@@ -168,7 +176,8 @@ class BaseModule {
 
         template <class Request>
         CanRequest createRequest(Request rawRequest){
-            auto requestId = createRequestId(rawRequest.Type(), Codes::Instance::Exclusive, false);
+            auto instance = getCanInstance();
+            auto requestId = createRequestId(rawRequest.Type(), instance, false);
             RequestData requestData(requestId, rawRequest.Export_data());
             CanRequest canRequest(requestData);
             return canRequest;
@@ -190,7 +199,8 @@ class BaseModule {
             auto promise = std::make_shared<std::promise<Result>>();
             
             Request rawRequest(channelNumber);
-            auto requestId = createRequestId(rawRequest.Type(), Codes::Instance::Exclusive, false);
+            auto instance = getCanInstance();
+            auto requestId = createRequestId(rawRequest.Type(), instance, false);
             
             RequestData requestData(requestId, rawRequest.Export_data());
             ResponseInfo responseInfo;

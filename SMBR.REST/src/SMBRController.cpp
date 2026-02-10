@@ -1626,6 +1626,26 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 }
 
 // ==========================================
+// Pumps module
+// ==========================================
+
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getPumpCount(const UInt8& instance_index) {
+    return process(__FUNCTION__, [&](){
+        if (instance_index < 1 || instance_index > 12) {
+            throw ArgumentException("Invalid instance_index. Must be between 1 and 12.");
+        }
+        
+        Instance instance = static_cast<Instance>(static_cast<uint8_t>(Instance::Instance_1) + (instance_index - 1));
+        
+        auto pumpCount = waitFor(systemModule->pumpsModule(instance)->getPumpCount());
+        
+        auto responseDto = PumpCountDto::createShared();
+        responseDto->pump_count = pumpCount;
+        return createDtoResponse(Status::CODE_200, responseDto);
+    });
+}
+
+// ==========================================
 // Recipes
 // ==========================================
 

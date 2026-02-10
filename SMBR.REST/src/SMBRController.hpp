@@ -17,6 +17,7 @@
 #include "dto/SpeedDto.hpp"
 #include "dto/FlowrateDto.hpp"
 #include "dto/CuvettePumpInfoDto.hpp"
+#include "dto/PumpCountDto.hpp"
 #include "dto/MoveDto.hpp"
 #include "dto/AeratorInfoDto.hpp"
 #include "dto/RpmDto.hpp"
@@ -2214,19 +2215,33 @@ public:
     ADD_CORS(calibrateSpectrophotometer)
     ENDPOINT("POST", "/sensor/spectrophotometer/calibrate", calibrateSpectrophotometer, BODY_STRING(String, requestBody));
 
+// ==========================================
+// Pumps module
+// ==========================================
+
     /**
-    * @brief Measures API response time without communication with RPI/CAN bus.
-    */
-   /*
-    ENDPOINT_INFO(pingDirect) {
-        info->summary = "Measure API response time. Used for testing.";
-        info->addTag("Test");
-        info->description = "Measures the time it takes for the API to respond without communication with RPI/CAN bus.";
-        info->addResponse<String>(Status::CODE_200, "application/json");
-    }   
-    ADD_CORS(pingDirect)
-    ENDPOINT("GET", "/ping-direct", pingDirect);
-    */
+     * @brief Get information about how many pumps are available in a specific instance of module.
+     */
+    ENDPOINT_INFO(getPumpCount) {
+        info->summary = "Get information about how many pumps are available in a specific instance of module";
+        info->description = 
+            "Retrieve information about how many pumps are available in a specific instance of module.\n";
+        info->addTag("Pumps module");
+        
+        auto example = PumpCountDto::createShared();
+        example->pump_count = 4;
+        
+        info->addResponse<Object<PumpCountDto>>(Status::CODE_200, "application/json")
+            .addExample("application/json", example);
+        info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Pump module not available")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Pump module not available"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve pump count")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve pump count"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_504, "application/json", "Request timed out")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
+    }
+    ADD_CORS(getPumpCount)
+    ENDPOINT("GET", "/pumps/{instance_index}/pump_count", getPumpCount, PATH(UInt8, instance_index));
 
 // ==========================================
 // Recipes

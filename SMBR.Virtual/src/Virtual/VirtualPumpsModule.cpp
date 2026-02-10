@@ -1,0 +1,18 @@
+#include "VirtualPumpsModule.hpp"
+#include "Random.hpp"
+#include <future>
+
+VirtualPumpsModule::VirtualPumpsModule(Instance instance)
+    : moduleId_(Modules::Pump, "0x04", instance) {
+}
+
+ModuleID VirtualPumpsModule::id() const {
+    return moduleId_;
+}
+
+std::future<uint8_t> VirtualPumpsModule::getPumpCount() {
+    return std::async(std::launch::async, [&]() {
+        Random::randomDelay();
+        return static_cast<uint8_t>(4);
+    });
+}

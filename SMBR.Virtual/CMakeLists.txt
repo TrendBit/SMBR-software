@@ -9,6 +9,7 @@ add_library(${PROJECT_NAME}
   src/Virtual/VirtualCoreModule.cpp
   src/Virtual/VirtualControlModule.cpp
   src/Virtual/VirtualSensorModule.cpp
+  src/Virtual/VirtualPumpsModule.cpp
   src/Virtual/VirtualSystemModule.cpp
   src/Virtual/VirtualModulesFactory.cpp
 )

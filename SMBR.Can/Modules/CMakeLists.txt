@@ -13,6 +13,7 @@ add_library(${PROJECT_NAME}
   src/CanSensorModule.cpp
   src/CanControlModule.cpp
   src/CanCoreModule.cpp
+  src/CanPumpsModule.cpp
   src/CanCommonModule.cpp
   src/CanSystemModule.cpp
   src/CanModulesFactory.cpp

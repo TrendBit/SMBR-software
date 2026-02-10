@@ -10,6 +10,7 @@
 #include "CanCoreModule.hpp"
 #include "CanControlModule.hpp"
 #include "CanSensorModule.hpp"
+#include "CanPumpsModule.hpp"
 #include "CanCommonModule.hpp"
 
 #include "codes/codes.hpp"
@@ -47,6 +48,11 @@ void CanSystemModule::refresh(){
             case Modules::Sensor:
                 if (!sensor){
                     sensor = std::make_shared<CanSensorModule>(mm.uidHex, channel);
+                }
+                break;
+            case Modules::Pump:
+                if (pumps.find(mm.instance) == pumps.end()) {
+                    pumps[mm.instance] = std::make_shared<CanPumpsModule>(mm, channel);
                 }
                 break;
             default:
@@ -171,6 +177,22 @@ std::shared_ptr <ICoreModule> CanSystemModule::coreModule() {
         }
     }
     return core;
+}
+
+std::shared_ptr <IPumpsModule> CanSystemModule::pumpsModule(Instance instance) {
+    std::lock_guard<std::mutex> lock(m);
+    
+    auto it = pumps.find(instance);
+    if (it == pumps.end()) {
+        refresh();
+        it = pumps.find(instance);
+        if (it == pumps.end()) {
+            std::stringstream ss;
+            ss << "Pumps module with instance " << instance << " not available";
+            throw NotFoundException(ss.str());
+        }
+    }
+    return it->second;
 }
 
 std::shared_ptr<ICommonModule> CanSystemModule::commonModule(ModuleID module) {

@@ -13,6 +13,7 @@ public:
     std::shared_ptr <ISensorModule> sensorModule() override;
     std::shared_ptr <IControlModule> controlModule() override;
     std::shared_ptr <ICoreModule> coreModule() override;
+    std::shared_ptr <IPumpsModule> pumpsModule(Instance instance) override;
     std::shared_ptr <ICommonModule> commonModule(ModuleID module) override; 
     std::set <ModuleID> existing() override;
     std::shared_ptr <IModuleIssues> issues() override;
@@ -20,6 +21,7 @@ private:
     std::shared_ptr <ISensorModule> sensor;
     std::shared_ptr <IControlModule> control;
     std::shared_ptr <ICoreModule> core;
+    std::map <Instance, std::shared_ptr <IPumpsModule> > pumps;
     std::map <ModuleID, std::shared_ptr<ICommonModule> > common;
 };
 

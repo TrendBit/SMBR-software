@@ -2409,6 +2409,27 @@ public:
     ADD_CORS(movePump)
     ENDPOINT("POST", "/pumps/{instance_index}/move/{pump_index}", movePump, PATH(UInt8, instance_index), PATH(UInt8, pump_index), BODY_DTO(Object<MoveDto>, body));
 
+    /**
+     * @brief Stops the given pump.
+     */
+    ENDPOINT_INFO(stopPump) {
+        info->summary = "Stops the given pump";
+        info->description = 
+            "Stops the given pump.\n";
+        info->addTag("Pumps module");
+        
+        info->addResponse<Object<MessageDto>>(Status::CODE_200, "application/json", "Successfully stopped pump")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Successfully stopped pump"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Pump module not available")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Pump module not available"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to stop pump")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to stop pump"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_504, "application/json", "Request timed out")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
+    }
+    ADD_CORS(stopPump)
+    ENDPOINT("GET", "/pumps/{instance_index}/stop/{pump_index}", stopPump, PATH(UInt8, instance_index), PATH(UInt8, pump_index));
+
 // ==========================================
 // Recipes
 // ========================================== 

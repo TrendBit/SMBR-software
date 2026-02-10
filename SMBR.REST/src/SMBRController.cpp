@@ -1778,6 +1778,18 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     });
 }
 
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::stopPump(const UInt8& instance_index, const UInt8& pump_index) {
+    return processBool(__FUNCTION__, [&](){
+        if (instance_index < 1 || instance_index > 12) {
+            throw ArgumentException("Invalid instance_index. Must be between 1 and 12.");
+        }
+        
+        Instance instance = static_cast<Instance>(static_cast<uint8_t>(Instance::Instance_1) + (instance_index - 1));
+        
+        return waitFor(systemModule->pumpsModule(instance)->stop(pump_index));
+    });
+}
+
 // ==========================================
 // Recipes
 // ==========================================

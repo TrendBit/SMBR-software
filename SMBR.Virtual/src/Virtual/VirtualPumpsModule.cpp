@@ -61,3 +61,10 @@ std::future<bool> VirtualPumpsModule::move(uint8_t pump_index, float volume, flo
         return true;
     });
 }
+
+std::future<bool> VirtualPumpsModule::stop(uint8_t pump_index) {
+    return std::async(std::launch::async, [pump_index]() {
+        Random::randomDelay();
+        return true;
+    });
+}

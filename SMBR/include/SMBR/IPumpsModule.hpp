@@ -63,4 +63,9 @@ public:
      * @brief Moves a specific volume of liquid with a specific pump.
      */
     virtual std::future<bool> move(uint8_t pump_index, float volume, float flowrate) = 0;
+    
+    /**
+     * @brief Stops a specific pump.
+     */
+    virtual std::future<bool> stop(uint8_t pump_index) = 0;
 };

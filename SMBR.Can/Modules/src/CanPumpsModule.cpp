@@ -10,6 +10,7 @@
 #include "codes/messages/pumps/get_flowrate_response.hpp"
 #include "codes/messages/pumps/set_flowrate.hpp"
 #include "codes/messages/pumps/move.hpp"
+#include "codes/messages/pumps/stop.hpp"
 #include <SMBR/Log.hpp>
 
 using namespace Codes;
@@ -85,4 +86,9 @@ std::future<bool> CanPumpsModule::setFlowrate(uint8_t pump_index, float flowrate
 std::future<bool> CanPumpsModule::move(uint8_t pump_index, float volume, float flowrate) {
     App_messages::Pumps::Move request(pump_index, volume, flowrate);
     return base.set<App_messages::Pumps::Move>(request);
+}
+
+std::future<bool> CanPumpsModule::stop(uint8_t pump_index) {
+    App_messages::Pumps::Stop request(pump_index);
+    return base.set<App_messages::Pumps::Stop>(request);
 }

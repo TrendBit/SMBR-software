@@ -1678,6 +1678,31 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     });
 }
 
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::setPumpSpeed(const UInt8& instance_index, const UInt8& pump_index, const oatpp::Object<SpeedDto>& body) {
+    return processBool(__FUNCTION__, [&](){
+        if (instance_index < 1 || instance_index > 12) {
+            throw ArgumentException("Invalid instance_index. Must be between 1 and 12.");
+        }
+        
+        if (!body) {
+            throw ArgumentException("Request body is required.");
+        }
+        
+        if (!body->speed) {
+            throw ArgumentException("Speed field is required.");
+        }
+        
+        float speedValue = body->speed;
+        if (speedValue < -1.0f || speedValue > 1.0f) {
+            throw ArgumentException("Invalid speed value. Must be between -1.0 and 1.0.");
+        }
+        
+        Instance instance = static_cast<Instance>(static_cast<uint8_t>(Instance::Instance_1) + (instance_index - 1));
+        
+        return waitFor(systemModule->pumpsModule(instance)->setSpeed(pump_index, speedValue));
+    });
+}
+
 // ==========================================
 // Recipes
 // ==========================================

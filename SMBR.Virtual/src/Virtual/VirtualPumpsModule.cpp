@@ -33,3 +33,10 @@ std::future<float> VirtualPumpsModule::getSpeed(uint8_t pump_index) {
         return 0.5f;
     });
 }
+
+std::future<bool> VirtualPumpsModule::setSpeed(uint8_t pump_index, float speed) {
+    return std::async(std::launch::async, [pump_index, speed]() {
+        Random::randomDelay();
+        return true;
+    });
+}

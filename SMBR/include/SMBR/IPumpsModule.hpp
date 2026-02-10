@@ -43,4 +43,9 @@ public:
      * @brief Retrieves current speed of a specific pump.
      */
     virtual std::future<float> getSpeed(uint8_t pump_index) = 0;
+    
+    /**
+     * @brief Sets speed of a specific pump.
+     */
+    virtual std::future<bool> setSpeed(uint8_t pump_index, float speed) = 0;
 };

@@ -2293,6 +2293,34 @@ public:
     ADD_CORS(getPumpSpeed)
     ENDPOINT("GET", "/pumps/{instance_index}/speed/{pump_index}", getPumpSpeed, PATH(UInt8, instance_index), PATH(UInt8, pump_index));
 
+    /**
+     * @brief Sets speed of a specific pump.
+     */
+    ENDPOINT_INFO(setPumpSpeed) {
+        info->summary = "Sets speed of the pump";
+        info->description = 
+            "Sets speed of the pump in range -1.0 (pumping liquid out) to 1.0 (pumping liquid in).\n";
+        info->addTag("Pumps module");
+        
+        auto example = SpeedDto::createShared();
+        example->speed = -0.33f;
+        
+        info->addConsumes<Object<SpeedDto>>("application/json")
+            .addExample("application/json", example);
+        info->addResponse<Object<MessageDto>>(Status::CODE_200, "application/json", "Speed set successfully")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Speed set successfully"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_400, "application/json", "Invalid speed value")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Invalid speed value"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Pump module not available")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Pump module not available"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to set pump speed")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to set pump speed"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_504, "application/json", "Request timed out")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
+    }
+    ADD_CORS(setPumpSpeed)
+    ENDPOINT("POST", "/pumps/{instance_index}/speed/{pump_index}", setPumpSpeed, PATH(UInt8, instance_index), PATH(UInt8, pump_index), BODY_DTO(Object<SpeedDto>, body));
+
 // ==========================================
 // Recipes
 // ========================================== 

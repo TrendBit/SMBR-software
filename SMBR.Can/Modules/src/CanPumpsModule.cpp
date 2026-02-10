@@ -5,6 +5,7 @@
 #include "codes/messages/pumps/info_response.hpp"
 #include "codes/messages/pumps/get_speed_request.hpp"
 #include "codes/messages/pumps/get_speed_response.hpp"
+#include "codes/messages/pumps/set_speed.hpp"
 #include <SMBR/Log.hpp>
 
 using namespace Codes;
@@ -53,4 +54,9 @@ std::future<float> CanPumpsModule::getSpeed(uint8_t pump_index) {
     >(request, [](App_messages::Pumps::Get_speed_response response){
         return response.pump_speed;
     }, 2000);
+}
+
+std::future<bool> CanPumpsModule::setSpeed(uint8_t pump_index, float speed) {
+    App_messages::Pumps::Set_speed request(pump_index, speed);
+    return base.set<App_messages::Pumps::Set_speed>(request);
 }

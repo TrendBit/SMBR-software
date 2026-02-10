@@ -58,4 +58,9 @@ public:
      * @brief Sets flow rate of a specific pump.
      */
     virtual std::future<bool> setFlowrate(uint8_t pump_index, float flowrate) = 0;
+    
+    /**
+     * @brief Moves a specific volume of liquid with a specific pump.
+     */
+    virtual std::future<bool> move(uint8_t pump_index, float volume, float flowrate) = 0;
 };

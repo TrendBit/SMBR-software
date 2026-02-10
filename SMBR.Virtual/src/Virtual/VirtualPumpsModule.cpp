@@ -54,3 +54,10 @@ std::future<bool> VirtualPumpsModule::setFlowrate(uint8_t pump_index, float flow
         return true;
     });
 }
+
+std::future<bool> VirtualPumpsModule::move(uint8_t pump_index, float volume, float flowrate) {
+    return std::async(std::launch::async, [pump_index, volume, flowrate]() {
+        Random::randomDelay();
+        return true;
+    });
+}

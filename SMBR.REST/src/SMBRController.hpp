@@ -2377,6 +2377,38 @@ public:
     ADD_CORS(setPumpFlowrate)
     ENDPOINT("POST", "/pumps/{instance_index}/flowrate/{pump_index}", setPumpFlowrate, PATH(UInt8, instance_index), PATH(UInt8, pump_index), BODY_DTO(Object<FlowrateDto>, body));
 
+    /**
+     * @brief Moves requested amount of liquid by specified pump.
+     */
+    ENDPOINT_INFO(movePump) {
+        info->summary = "Moves requested amount of liquid by specified pump";
+        info->description = 
+            "Moves requested amount of liquid by specified pump in ml.\n"
+            "Positive value means pumping liquid in, negative value means pumping liquid out of the system.\n"
+            "When this endpoint is used pump will run until requested amount of liquid is moved.\n"
+            "Pump can be stopped because is done by stop endpoint.\n";
+        info->addTag("Pumps module");
+        
+        auto example = MoveDto::createShared();
+        example->volume = 10.0f;
+        example->flowrate = 2.0f;
+        
+        info->addConsumes<Object<MoveDto>>("application/json")
+            .addExample("application/json", example);
+        info->addResponse<Object<MessageDto>>(Status::CODE_200, "application/json", "Successfully started moving pump")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Successfully started moving pump"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_400, "application/json", "Invalid volume or flowrate value")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Invalid volume or flowrate value"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Pump module not available")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Pump module not available"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to move pump")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to move pump"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_504, "application/json", "Request timed out")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
+    }
+    ADD_CORS(movePump)
+    ENDPOINT("POST", "/pumps/{instance_index}/move/{pump_index}", movePump, PATH(UInt8, instance_index), PATH(UInt8, pump_index), BODY_DTO(Object<MoveDto>, body));
+
 // ==========================================
 // Recipes
 // ========================================== 

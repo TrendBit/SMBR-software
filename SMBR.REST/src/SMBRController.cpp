@@ -1744,6 +1744,40 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     });
 }
 
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::movePump(const UInt8& instance_index, const UInt8& pump_index, const oatpp::Object<MoveDto>& body) {
+    return processBool(__FUNCTION__, [&](){
+        if (instance_index < 1 || instance_index > 12) {
+            throw ArgumentException("Invalid instance_index. Must be between 1 and 12.");
+        }
+        
+        if (!body) {
+            throw ArgumentException("Request body is required.");
+        }
+        
+        if (!body->volume) {
+            throw ArgumentException("Volume field is required.");
+        }
+        
+        if (!body->flowrate) {
+            throw ArgumentException("Flowrate field is required.");
+        }
+        
+        float volumeValue = body->volume;
+        if (volumeValue < -1000.0f || volumeValue > 1000.0f) {
+            throw ArgumentException("Invalid volume value. Must be between -1000 and 1000.");
+        }
+        
+        float flowrateValue = body->flowrate;
+        if (flowrateValue < 0.0f || flowrateValue > 1000.0f) {
+            throw ArgumentException("Invalid flowrate value. Must be between 0 and 1000.");
+        }
+        
+        Instance instance = static_cast<Instance>(static_cast<uint8_t>(Instance::Instance_1) + (instance_index - 1));
+        
+        return waitFor(systemModule->pumpsModule(instance)->move(pump_index, volumeValue, flowrateValue));
+    });
+}
+
 // ==========================================
 // Recipes
 // ==========================================

@@ -1381,6 +1381,12 @@ SMBRController::printCustomText(const oatpp::Object<TextDto>& body) {
         if (!body->text) {
             throw ArgumentException("missing or invalid field");
         }
+        
+        size_t textLength = body->text->size();
+        if (textLength < 1 || textLength > 127) {
+            throw ArgumentException("Text length must be between 1 and 127 characters.");
+        }
+        
         return waitFor(systemModule->sensorModule()->printCustomText(body->text));
     });
 }

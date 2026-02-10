@@ -1724,7 +1724,7 @@ public:
         info->description = "Use last line of Mini OLED display to print custom text. Text will be appended to existing text. Note: Additional properties beyond 'text' are not allowed.";
         info->addTag("Sensor module");
         auto example = TextDto::createShared();
-        example->text = "text to printed"; 
+        example->text = "Hello"; 
         info->addConsumes<Object<TextDto>>("application/json")
             .addExample("application/json", example);
         info->addResponse<Object<MessageDto>>(Status::CODE_200, "application/json", "Successfully printed custom text on Mini OLED display")

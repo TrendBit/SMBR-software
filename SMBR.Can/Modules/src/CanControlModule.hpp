@@ -27,6 +27,7 @@ public:
     std::future <float> getCuvettePumpSpeed() override;
     std::future <bool> setCuvettePumpFlowrate(float flowrate) override;
     std::future <float> getCuvettePumpFlowrate() override;
+    std::future <bool> setCuvettePumpMaxFlowrate(float flowrate) override;
     std::future <bool> moveCuvettePump(float volume, float flowrate) override;
     std::future <bool> primeCuvettePump() override;
     std::future <bool> purgeCuvettePump() override;

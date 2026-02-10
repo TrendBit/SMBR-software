@@ -1249,6 +1249,38 @@ public:
     ENDPOINT("GET", "/control/cuvette_pump/stop", stopCuvettePump);
 
     /**
+     * @brief Configures the maximum flowrate calibration value for the cuvette pump.
+     */
+    ENDPOINT_INFO(calibrateCuvettePump) {
+        info->summary = "Configure measured volume value on module in order to calibrate cuvette pump";
+        info->description = 
+            "Sends calibrated value of flowrate per minute (ml/min) to pump in order to calibrate move and flowrate commands.\n"
+            "Calibration should be used if it is necessary to achieve a dosing accuracy greater than 5% or if the liquid has a non-standard viscosity.\n"
+            "Value of calibration can be checked by using GET request to info endpoint of cuvette pump.\n"
+            "Calibration send by this endpoint is stored on module and used after restart.\n"
+            "Calibration procedure:\n"
+            "- Insert the inlet tube of the cuvette pump into a container filled with liquid.\n"
+            "- Place the outlet tube into a measuring cylinder.\n"
+            "- Start the pump so that the entire circuit is filled with liquid (primed).\n"
+            "- Empty measuring cylinder.\n"
+            "- Run the pump at maximum speed for exactly one minute (speed 1.0).\n"
+            "- Measure the volume of liquid dispensed into the measuring cylinder.\n"
+            "- Send measured volume / flowrate to the module. Unit is ml/min.\n"
+            "Common value is around 10 to 100 ml/min, default is 30 ml/min.";
+        info->addTag("Control module");
+        auto example = FlowrateDto::createShared();
+        example->flowrate = 30.0;
+        info->addConsumes<Object<FlowrateDto>>("application/json")
+            .addExample("application/json", example);
+        info->addResponse<Object<MessageDto>>(Status::CODE_200, "application/json", "Successfully wrote cuvette pump max flowrate calibration")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Successfully wrote cuvette pump max flowrate calibration"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to set calibration")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to set calibration"}}));
+    }
+    ADD_CORS(calibrateCuvettePump)
+    ENDPOINT("POST", "/control/cuvette_pump/calibration", calibrateCuvettePump, BODY_DTO(Object<FlowrateDto>, body));
+
+    /**
      * @brief Retrieves capabilities of the aerator (air pump).
      */
     ENDPOINT_INFO(getAeratorInfo) {

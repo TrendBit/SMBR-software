@@ -114,6 +114,11 @@ public:
     virtual std::future <float> getCuvettePumpFlowrate() = 0;
 
     /**
+     * @brief Sets the maximum flowrate calibration for the cuvette pump.
+     */
+    virtual std::future <bool> setCuvettePumpMaxFlowrate(float flowrate) = 0;
+
+    /**
      * @brief Moves the requested amount of liquid in or out of the cuvette.
      */
     virtual std::future <bool> moveCuvettePump(float volume, float flowrate) = 0;

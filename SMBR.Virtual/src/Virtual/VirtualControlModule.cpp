@@ -114,6 +114,13 @@ std::future <float> VirtualControlModule::getCuvettePumpFlowrate(){
     });
 }
 
+std::future <bool> VirtualControlModule::setCuvettePumpMaxFlowrate(float flowrate){
+    return std::async(std::launch::async, [flowrate]() {
+        Random::randomDelay();
+        return true;
+    });
+}
+
 std::future <bool> VirtualControlModule::moveCuvettePump(float volume, float flowrate){
     return std::async(std::launch::async, [volume, flowrate]() {
         Random::randomDelay();

@@ -998,6 +998,26 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     });
 }
 
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::calibrateCuvettePump(const oatpp::Object<FlowrateDto>& body) {
+
+    return processBool(__FUNCTION__, [&](){
+        if (!body) {
+            throw ArgumentException("Request body is required.");
+        }
+        
+        if (!body->flowrate) {
+            throw ArgumentException("Flowrate field is required.");
+        }
+        
+        float flowrateValue = body->flowrate;
+        if (flowrateValue < 0.0f || flowrateValue > 1000.0f) {
+            throw ArgumentException("Invalid flowrate value. Must be between 0.0 and 1000.0.");
+        }
+
+        return waitFor(systemModule->controlModule()->setCuvettePumpMaxFlowrate(flowrateValue));
+    });
+}
+
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getAeratorInfo() {
     return process(__FUNCTION__, [&](){
         auto result = waitFor(systemModule->controlModule()->getAeratorInfo());

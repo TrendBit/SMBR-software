@@ -26,6 +26,7 @@
 #include "codes/messages/cuvette_pump/set_flowrate.hpp"
 #include "codes/messages/cuvette_pump/get_flowrate_request.hpp"
 #include "codes/messages/cuvette_pump/get_flowrate_response.hpp"
+#include "codes/messages/cuvette_pump/set_max_flowrate.hpp"
 #include "codes/messages/cuvette_pump/move.hpp"
 #include "codes/messages/cuvette_pump/prime.hpp"
 #include "codes/messages/cuvette_pump/purge.hpp"
@@ -221,6 +222,12 @@ std::future <float> CanControlModule::getCuvettePumpFlowrate() {
     >([](App_messages::Cuvette_pump::Get_flowrate_response response){
         return response.flowrate;
     }, default_timeout_ms);
+}
+
+std::future <bool> CanControlModule::setCuvettePumpMaxFlowrate(float flowrate) {
+
+    App_messages::Cuvette_pump::Set_max_flowrate r((float)flowrate);
+    return base.set(r);
 }
 
 std::future <bool> CanControlModule::moveCuvettePump(float volume, float flowrate) {

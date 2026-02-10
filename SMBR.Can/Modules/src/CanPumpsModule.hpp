@@ -14,6 +14,7 @@ public:
     std::future<PumpInfo> getPumpInfo(uint8_t pump_index) override;
     std::future<float> getSpeed(uint8_t pump_index) override;
     std::future<bool> setSpeed(uint8_t pump_index, float speed) override;
+    std::future<float> getFlowrate(uint8_t pump_index) override;
 
 private:
     BaseModule base;

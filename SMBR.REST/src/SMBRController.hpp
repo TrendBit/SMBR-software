@@ -2321,6 +2321,30 @@ public:
     ADD_CORS(setPumpSpeed)
     ENDPOINT("POST", "/pumps/{instance_index}/speed/{pump_index}", setPumpSpeed, PATH(UInt8, instance_index), PATH(UInt8, pump_index), BODY_DTO(Object<SpeedDto>, body));
 
+    /**
+     * @brief Get current flow rate of a specific pump.
+     */
+    ENDPOINT_INFO(getPumpFlowrate) {
+        info->summary = "Retrieves current flow rate of the given pump";
+        info->description = 
+            "Retrieves current flow rate of the given pump.\n";
+        info->addTag("Pumps module");
+        
+        auto example = FlowrateDto::createShared();
+        example->flowrate = 100.0f;
+        
+        info->addResponse<Object<FlowrateDto>>(Status::CODE_200, "application/json")
+            .addExample("application/json", example);
+        info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Pump module not available")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Pump module not available"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve pump flow rate")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve pump flow rate"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_504, "application/json", "Request timed out")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
+    }
+    ADD_CORS(getPumpFlowrate)
+    ENDPOINT("GET", "/pumps/{instance_index}/flowrate/{pump_index}", getPumpFlowrate, PATH(UInt8, instance_index), PATH(UInt8, pump_index));
+
 // ==========================================
 // Recipes
 // ========================================== 

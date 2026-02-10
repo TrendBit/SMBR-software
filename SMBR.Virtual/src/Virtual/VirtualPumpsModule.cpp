@@ -26,3 +26,10 @@ std::future<IPumpsModule::PumpInfo> VirtualPumpsModule::getPumpInfo(uint8_t pump
         };
     });
 }
+
+std::future<float> VirtualPumpsModule::getSpeed(uint8_t pump_index) {
+    return std::async(std::launch::async, [pump_index]() {
+        Random::randomDelay();
+        return 0.5f;
+    });
+}

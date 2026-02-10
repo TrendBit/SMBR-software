@@ -38,4 +38,9 @@ public:
      * @brief Retrieves information about a specific pump.
      */
     virtual std::future<PumpInfo> getPumpInfo(uint8_t pump_index) = 0;
+    
+    /**
+     * @brief Retrieves current speed of a specific pump.
+     */
+    virtual std::future<float> getSpeed(uint8_t pump_index) = 0;
 };

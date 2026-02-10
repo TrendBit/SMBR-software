@@ -2269,6 +2269,30 @@ public:
     ADD_CORS(getPumpInfo)
     ENDPOINT("GET", "/pumps/{instance_index}/info/{pump_index}", getPumpInfo, PATH(UInt8, instance_index), PATH(UInt8, pump_index));
 
+    /**
+     * @brief Get current speed of a specific pump.
+     */
+    ENDPOINT_INFO(getPumpSpeed) {
+        info->summary = "Retrieves current speed of the given pump";
+        info->description = 
+            "Retrieves current speed of the given pump. Range -1.0 (pumping liquid out) to 1.0 (pumping liquid in).\n";
+        info->addTag("Pumps module");
+        
+        auto example = SpeedDto::createShared();
+        example->speed = -0.33f;
+        
+        info->addResponse<Object<SpeedDto>>(Status::CODE_200, "application/json")
+            .addExample("application/json", example);
+        info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Pump module not available")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Pump module not available"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve pump speed")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve pump speed"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_504, "application/json", "Request timed out")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
+    }
+    ADD_CORS(getPumpSpeed)
+    ENDPOINT("GET", "/pumps/{instance_index}/speed/{pump_index}", getPumpSpeed, PATH(UInt8, instance_index), PATH(UInt8, pump_index));
+
 // ==========================================
 // Recipes
 // ========================================== 

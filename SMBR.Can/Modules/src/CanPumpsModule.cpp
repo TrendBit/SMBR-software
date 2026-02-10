@@ -3,6 +3,8 @@
 #include "codes/messages/pumps/pump_count_response.hpp"
 #include "codes/messages/pumps/info_request.hpp"
 #include "codes/messages/pumps/info_response.hpp"
+#include "codes/messages/pumps/get_speed_request.hpp"
+#include "codes/messages/pumps/get_speed_response.hpp"
 #include <SMBR/Log.hpp>
 
 using namespace Codes;
@@ -38,5 +40,17 @@ std::future<IPumpsModule::PumpInfo> CanPumpsModule::getPumpInfo(uint8_t pump_ind
             response.max_flowrate,
             response.min_flowrate
         };
+    }, 2000);
+}
+
+std::future<float> CanPumpsModule::getSpeed(uint8_t pump_index) {
+    App_messages::Pumps::Get_speed_request request(pump_index);
+    
+    return base.get<
+        App_messages::Pumps::Get_speed_request,
+        App_messages::Pumps::Get_speed_response,
+        float
+    >(request, [](App_messages::Pumps::Get_speed_response response){
+        return response.pump_speed;
     }, 2000);
 }

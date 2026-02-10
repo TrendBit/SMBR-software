@@ -1651,6 +1651,10 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
             throw ArgumentException("Invalid instance_index. Must be between 1 and 12.");
         }
         
+        if (pump_index < 1 || pump_index > 4) {
+            throw ArgumentException("Invalid pump_index. Must be between 1 and 4.");
+        }
+        
         Instance instance = static_cast<Instance>(static_cast<uint8_t>(Instance::Instance_1) + (instance_index - 1));
         
         auto pumpInfo = waitFor(systemModule->pumpsModule(instance)->getPumpInfo(pump_index));
@@ -1668,6 +1672,10 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
             throw ArgumentException("Invalid instance_index. Must be between 1 and 12.");
         }
         
+        if (pump_index < 1 || pump_index > 4) {
+            throw ArgumentException("Invalid pump_index. Must be between 1 and 4.");
+        }
+        
         Instance instance = static_cast<Instance>(static_cast<uint8_t>(Instance::Instance_1) + (instance_index - 1));
         
         auto speed = waitFor(systemModule->pumpsModule(instance)->getSpeed(pump_index));
@@ -1682,6 +1690,10 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     return processBool(__FUNCTION__, [&](){
         if (instance_index < 1 || instance_index > 12) {
             throw ArgumentException("Invalid instance_index. Must be between 1 and 12.");
+        }
+        
+        if (pump_index < 1 || pump_index > 4) {
+            throw ArgumentException("Invalid pump_index. Must be between 1 and 4.");
         }
         
         if (!body) {
@@ -1709,6 +1721,10 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
             throw ArgumentException("Invalid instance_index. Must be between 1 and 12.");
         }
         
+        if (pump_index < 1 || pump_index > 4) {
+            throw ArgumentException("Invalid pump_index. Must be between 1 and 4.");
+        }
+        
         Instance instance = static_cast<Instance>(static_cast<uint8_t>(Instance::Instance_1) + (instance_index - 1));
         
         auto flowrate = waitFor(systemModule->pumpsModule(instance)->getFlowrate(pump_index));
@@ -1723,6 +1739,10 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     return processBool(__FUNCTION__, [&](){
         if (instance_index < 1 || instance_index > 12) {
             throw ArgumentException("Invalid instance_index. Must be between 1 and 12.");
+        }
+        
+        if (pump_index < 1 || pump_index > 4) {
+            throw ArgumentException("Invalid pump_index. Must be between 1 and 4.");
         }
         
         if (!body) {
@@ -1748,6 +1768,10 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     return processBool(__FUNCTION__, [&](){
         if (instance_index < 1 || instance_index > 12) {
             throw ArgumentException("Invalid instance_index. Must be between 1 and 12.");
+        }
+        
+        if (pump_index < 1 || pump_index > 4) {
+            throw ArgumentException("Invalid pump_index. Must be between 1 and 4.");
         }
         
         if (!body) {
@@ -1782,6 +1806,10 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     return processBool(__FUNCTION__, [&](){
         if (instance_index < 1 || instance_index > 12) {
             throw ArgumentException("Invalid instance_index. Must be between 1 and 12.");
+        }
+        
+        if (pump_index < 1 || pump_index > 4) {
+            throw ArgumentException("Invalid pump_index. Must be between 1 and 4.");
         }
         
         Instance instance = static_cast<Instance>(static_cast<uint8_t>(Instance::Instance_1) + (instance_index - 1));

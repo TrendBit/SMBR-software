@@ -110,19 +110,20 @@ public:
      * @brief Retrieves available modules and their unique CAN IDs.
      */
     ENDPOINT_INFO(getSystemModules) {
-        info->summary = "Retrieves available modules and their respective unique CAN IDs";
+        info->summary = "Determines which all modules are available on the device and their respective unique CAN IDs";
         info->addTag("System");
-        info->description = "Returns a list of all modules that have responded to the identification message.";
+        info->description = "Returns a list of all modules that have responded to the identification message and can therefore be considered available on the device.\n\n"
+        "Included are the unique CAN IDs of the modules. Unique ID is 6-byte identifier which is made from:\n"
+        "  - MCU unique ID from Flash memory hashed by fast-hash ans same as Katapult bootloader id\n"
+        "  - RPi unique ID is lower part of serial number `/sys/firmware/devicetree/base/serial-number`";
         auto example = List<Object<ModuleInfoDto>>::createShared();
         auto module = ModuleInfoDto::createShared();
         module->module_type = "sensor";
         module->uid = "0x0123456789ab";
         module->instance = "Exclusive"; 
         example->push_back(module);
-        info->addResponse<List<Object<ModuleInfoDto>>>(Status::CODE_200, "application/json")
+        info->addResponse<List<Object<ModuleInfoDto>>>(Status::CODE_200, "application/json", "List of available devices")
             .addExample("application/json", example);
-        info->addResponse<Object<MessageDto>>(Status::CODE_504, "application/json", "Request timed out")
-            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
     }
     ADD_CORS(getSystemModules)
     ENDPOINT("GET", "/system/modules", getSystemModules);
@@ -131,7 +132,7 @@ public:
      * @brief Lists all detected system errors or confirms that the system is operating normally.
      */
     ENDPOINT_INFO(getSystemErrors) {
-    info->summary = "Lists all detected system errors or confirms normal system operation";
+    info->summary = "Lists all detected system errors or confirms that the system is operating normally";
     info->addTag("System");
     info->description =
         "Returns all detected system errors.\n\n"
@@ -173,7 +174,7 @@ public:
     * @brief Lists all detected system warnings or confirms that the system is operating normally.
     */
     ENDPOINT_INFO(getSystemWarnings) {
-        info->summary = "Lists all detected system warnings or confirms normal system operation";
+        info->summary = "Lists all detected system warnings or confirms that the system is operating normally";
         info->addTag("System");
         info->description =
             "Returns all detected system warnings.\n\n"
@@ -225,7 +226,7 @@ public:
     * @brief Lists all active module issues or confirms that the system is operating normally.
     */
     ENDPOINT_INFO(getModuleIssues) {
-        info->summary = "Lists all active module issues or confirms normal system operation";
+        info->summary = "Lists all active module issues or confirms that the system is operating normally";
         info->addTag("System");
         info->description =
             "Returns all active module issues younger than 3 minutes.\n\n"
@@ -239,7 +240,7 @@ public:
             "  - `instance`: Module instance";
 
         auto exampleOk = ModuleIssuesListDto::createShared();
-        exampleOk->message = "No active module issues detected. System operating normally.";
+        exampleOk->message = "No active module issues detected. System is operating normally.";
         exampleOk->issues = {};
 
         auto exampleIssues = ModuleIssuesListDto::createShared();
@@ -280,11 +281,11 @@ public:
         
         auto successExample = RxPacketsDto::createShared();
         successExample->rx_packets = 144640;
-        info->addResponse<Object<RxPacketsDto>>(Status::CODE_200, "application/json")
+        info->addResponse<Object<RxPacketsDto>>(Status::CODE_200, "application/json", "Number of received CAN packets")
             .addExample("application/json", successExample);
         auto timeoutExample = MessageDto::createShared();
         timeoutExample->message = "Timeout occurred while retrieving CAN data";
-        info->addResponse<Object<MessageDto>>(Status::CODE_408, "application/json")
+        info->addResponse<Object<MessageDto>>(Status::CODE_408, "application/json", "Timeout while trying to retrieve CAN data")
             .addExample("application/json", timeoutExample);
         info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve CAN data")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve CAN data"}}));
@@ -302,12 +303,12 @@ public:
 
         auto example = TxPacketsDto::createShared();
         example->tx_packets = 132750;
-        info->addResponse<Object<TxPacketsDto>>(Status::CODE_200, "application/json")
+        info->addResponse<Object<TxPacketsDto>>(Status::CODE_200, "application/json", "Number of transmitted CAN packets")
             .addExample("application/json", example);
 
         auto timeoutExample = MessageDto::createShared();
         timeoutExample->message = "Timeout occurred while retrieving CAN data";
-        info->addResponse<Object<MessageDto>>(Status::CODE_408, "application/json")
+        info->addResponse<Object<MessageDto>>(Status::CODE_408, "application/json", "Timeout while trying to retrieve CAN data")
             .addExample("application/json", timeoutExample);
         info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve CAN data")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve CAN data"}}));
@@ -325,12 +326,12 @@ public:
 
         auto example = RxErrorsDto::createShared();
         example->rx_errors = static_cast<uint64_t>(0);
-        info->addResponse<Object<RxErrorsDto>>(Status::CODE_200, "application/json")
+        info->addResponse<Object<RxErrorsDto>>(Status::CODE_200, "application/json", "Number of receive errors")
             .addExample("application/json", example);
 
         auto timeoutExample = MessageDto::createShared();
         timeoutExample->message = "Timeout while trying to retrieve CAN data";
-        info->addResponse<Object<MessageDto>>(Status::CODE_408, "application/json")
+        info->addResponse<Object<MessageDto>>(Status::CODE_408, "application/json", "Timeout while trying to retrieve CAN data")
             .addExample("application/json", timeoutExample);
         info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve CAN data")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve CAN data"}}));
@@ -348,12 +349,12 @@ public:
 
         auto example = TxErrorsDto::createShared();
         example->tx_errors = static_cast<uint64_t>(0);
-        info->addResponse<Object<TxErrorsDto>>(Status::CODE_200, "application/json")
+        info->addResponse<Object<TxErrorsDto>>(Status::CODE_200, "application/json", "Number of transmit errors")
             .addExample("application/json", example);
 
         auto timeoutExample = MessageDto::createShared();
         timeoutExample->message = "Timeout while trying to retrieve CAN data";
-        info->addResponse<Object<MessageDto>>(Status::CODE_408, "application/json")
+        info->addResponse<Object<MessageDto>>(Status::CODE_408, "application/json", "Timeout while trying to retrieve CAN data")
             .addExample("application/json", timeoutExample);
         info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve CAN data")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve CAN data"}}));
@@ -371,12 +372,12 @@ public:
 
         auto example = RxDroppedDto::createShared();
         example->rx_dropped = static_cast<uint64_t>(0);
-        info->addResponse<Object<RxDroppedDto>>(Status::CODE_200, "application/json")
+        info->addResponse<Object<RxDroppedDto>>(Status::CODE_200, "application/json", "Number of dropped received packets")
             .addExample("application/json", example);
 
         auto timeoutExample = MessageDto::createShared();
         timeoutExample->message = "Timeout while trying to retrieve CAN data";
-        info->addResponse<Object<MessageDto>>(Status::CODE_408, "application/json")
+        info->addResponse<Object<MessageDto>>(Status::CODE_408, "application/json", "Timeout while trying to retrieve CAN data")
             .addExample("application/json", timeoutExample);
         info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve CAN data")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve CAN data"}}));
@@ -394,12 +395,12 @@ public:
 
         auto example = TxDroppedDto::createShared();
         example->tx_dropped = static_cast<uint64_t>(0);
-        info->addResponse<Object<TxDroppedDto>>(Status::CODE_200, "application/json")
+        info->addResponse<Object<TxDroppedDto>>(Status::CODE_200, "application/json", "Number of dropped transmitted packets")
             .addExample("application/json", example);
 
         auto timeoutExample = MessageDto::createShared();
         timeoutExample->message = "Timeout while trying to retrieve CAN data";
-        info->addResponse<Object<MessageDto>>(Status::CODE_408, "application/json")
+        info->addResponse<Object<MessageDto>>(Status::CODE_408, "application/json", "Timeout while trying to retrieve CAN data")
             .addExample("application/json", timeoutExample);
         info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve CAN data")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve CAN data"}}));
@@ -417,12 +418,12 @@ public:
 
         auto example = CollisionsDto::createShared();
         example->collisions = static_cast<uint64_t>(0);
-        info->addResponse<Object<CollisionsDto>>(Status::CODE_200, "application/json")
+        info->addResponse<Object<CollisionsDto>>(Status::CODE_200, "application/json", "Number of collisions")
             .addExample("application/json", example);
 
         auto timeoutExample = MessageDto::createShared();
         timeoutExample->message = "Timeout while trying to retrieve CAN data";
-        info->addResponse<Object<MessageDto>>(Status::CODE_408, "application/json")
+        info->addResponse<Object<MessageDto>>(Status::CODE_408, "application/json", "Timeout while trying to retrieve CAN data")
             .addExample("application/json", timeoutExample);
         info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve CAN data")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve CAN data"}}));

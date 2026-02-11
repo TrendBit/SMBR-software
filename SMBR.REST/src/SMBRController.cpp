@@ -401,7 +401,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     auto listDto = ModuleIssuesListDto::createShared();
     auto activeIssues = systemModule->issues()->getActiveIssuesData();
     if (activeIssues.empty()) {
-        listDto->message = "No active module issues detected. System operating normally.";
+        listDto->message = "No active module issues detected. System is operating normally.";
         listDto->issues = {};
     } else {
         listDto->message = "Active issues detected. See 'issues' field for details.";

@@ -1674,25 +1674,27 @@ public:
     ENDPOINT("GET", "/control/mixer/stop", stopMixer);
 
 // ==========================================
-// Control module
+// Sensor module
 // ==========================================
     /**
      * @brief Retrieves the temperature of the bottle.
      */
     ENDPOINT_INFO(getBottleTemperature) {
         info->summary = "Retrieves temperature of the bottle";
-        info->description = "Retrieves the temperature of the bottle in °C.";
+        info->description = 
+            "Retrieves temperature of the bottle in °C."
+            "This temperature could be fusion of several sensors measuring bottle."
+            "At default it is fusion of top and bottom thermopile but more sensors can be added."
+            "This temperature is generally more filtered in comparison to top and bottom thermopile temperatures.";
         info->addTag("Sensor module");
         auto example = TempDto::createShared();
-        example->temperature = 30.2; 
-        info->addResponse<Object<TempDto>>(Status::CODE_200, "application/json")
+        example->temperature = 30.2f; 
+        info->addResponse<Object<TempDto>>(Status::CODE_200, "application/json", "Successfully retrieved temperature of the bottle")
             .addExample("application/json", example);
-        info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Bottle temperature not available")
-            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Bottle temperature not available"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_408, "application/json", "Request timed out")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve temperature")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve temperature"}}));
-        info->addResponse<Object<MessageDto>>(Status::CODE_504, "application/json", "Request timed out")
-            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
     }
     ADD_CORS(getBottleTemperature)
     ENDPOINT("GET", "/sensor/bottle/temperature", getBottleTemperature);
@@ -1702,81 +1704,89 @@ public:
      */
     ENDPOINT_INFO(getTopMeasuredTemperature) {
         info->summary = "Retrieves measured temperature from top sensor";
-        info->description = "Retrieves the measured temperature from the top sensor of the bottle in °C.";
+        info->description = 
+            "Retrieves measured temperature of the top of the bottle in °C."
+            "This temperature is measured by thermopile sensor placed on top of right side of the bottle."
+            "This temperature has low filtration of it's value and can be used for fast temperature changes.";
         info->addTag("Sensor module");
         auto example = TempDto::createShared();
-        example->temperature = 30.2; 
-        info->addResponse<Object<TempDto>>(Status::CODE_200, "application/json")
+        example->temperature = 30.2f; 
+        info->addResponse<Object<TempDto>>(Status::CODE_200, "application/json", "Successfully retrieved measured temperature from top thermopile")
             .addExample("application/json", example);
-        info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Top temperature not available")
-            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Top temperature not available"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_408, "application/json", "Request timed out")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve temperature")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve temperature"}}));
-        info->addResponse<Object<MessageDto>>(Status::CODE_504, "application/json", "Request timed out")
-            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
     }
     ADD_CORS(getTopMeasuredTemperature)
     ENDPOINT("GET", "/sensor/bottle/top/measured_temperature", getTopMeasuredTemperature);
-
-    /**
-     * @brief Retrieves the measured temperature from the bottom sensor of the bottle.
-     */
-    ENDPOINT_INFO(getBottomMeasuredTemperature) {
-        info->summary = "Retrieves measured temperature from bottom sensor";
-        info->description = "Retrieves the measured temperature from the bottom sensor of the bottle in °C.";
-        info->addTag("Sensor module"); 
-        auto example = TempDto::createShared();
-        example->temperature = 30.2; 
-        info->addResponse<Object<TempDto>>(Status::CODE_200, "application/json")
-            .addExample("application/json", example);
-        info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Bottom temperature not available")
-            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Bottom temperature not available"}}));
-        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve temperature")
-            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve temperature"}}));
-        info->addResponse<Object<MessageDto>>(Status::CODE_504, "application/json", "Request timed out")
-            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
-    }
-    ADD_CORS(getBottomMeasuredTemperature)
-    ENDPOINT("GET", "/sensor/bottle/bottom/measured_temperature", getBottomMeasuredTemperature);
 
     /**
      * @brief Retrieves the temperature of the top sensor case of the bottle.
      */
     ENDPOINT_INFO(getTopSensorTemperature) {
         info->summary = "Retrieves temperature of the top sensor case";
-        info->description = "Retrieves the temperature of the sensor case on top of the bottle in °C.";
+        info->description = 
+            "Retrieves temperature of the sensor on top of the bottle in °C."
+            "This temperature is measured internally inside case of the sensor."
+            "This value is already used as cold side compensation in measured temperature of the sensor."
+            "Could be sued to detect external effects on bottle or distortions due to high sensor temperature."
+            "This sensor could be heated by other components on sensor board, so it is not suitable for ambient temperature measurement.";
         info->addTag("Sensor module");
         auto example = TempDto::createShared();
-        example->temperature = 30.2; 
-        info->addResponse<Object<TempDto>>(Status::CODE_200, "application/json")
+        example->temperature = 30.2f; 
+        info->addResponse<Object<TempDto>>(Status::CODE_200, "application/json", "Successfully retrieved temperature of the top sensor case")
             .addExample("application/json", example);
-        info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Top sensor temperature not available")
-            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Top sensor temperature not available"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_408, "application/json", "Request timed out")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve temperature")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve temperature"}}));
-        info->addResponse<Object<MessageDto>>(Status::CODE_504, "application/json", "Request timed out")
-            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
     }
     ADD_CORS(getTopSensorTemperature)
     ENDPOINT("GET", "/sensor/bottle/top/sensor_temperature", getTopSensorTemperature);
+
+    /**
+     * @brief Retrieves the measured temperature from the bottom sensor of the bottle.
+     */
+    ENDPOINT_INFO(getBottomMeasuredTemperature) {
+        info->summary = "Retrieves measured temperature from bottom sensor";
+        info->description = 
+            "Retrieves measured temperature of the bottom of the bottle in °C."
+            "This temperature is measured by thermopile sensor placed on bottom of right side of the bottle."
+            "This temperature has low filtration of it's value and can be used for fast temperature changes.";
+        info->addTag("Sensor module"); 
+        auto example = TempDto::createShared();
+        example->temperature = 30.2f; 
+        info->addResponse<Object<TempDto>>(Status::CODE_200, "application/json", "Successfully retrieved measured temperature from bottom thermopile")
+            .addExample("application/json", example);
+        info->addResponse<Object<MessageDto>>(Status::CODE_408, "application/json", "Request timed out")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve temperature")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve temperature"}}));
+    }
+    ADD_CORS(getBottomMeasuredTemperature)
+    ENDPOINT("GET", "/sensor/bottle/bottom/measured_temperature", getBottomMeasuredTemperature);
 
     /**
      * @brief Retrieves the temperature of the bottom sensor case of the bottle.
      */
     ENDPOINT_INFO(getBottomSensorTemperature) {
         info->summary = "Retrieves temperature of the bottom sensor case";
-        info->description = "Retrieves the temperature of the sensor case on the bottom of the bottle in °C.";
+        info->description = 
+            "Retrieves temperature of the sensor on bottom of the bottle in °C."
+            "This temperature is measured internally inside case of the sensor."
+            "This value is already used as cold side compensation in measured temperature of the sensor."
+            "Could be sued to detect external effects on bottle or distortions due to high sensor temperature."
+            "This sensor could be heated by other components on sensor board, so it is not suitable for ambient temperature measurement.";
         info->addTag("Sensor module");
         auto example = TempDto::createShared();
-        example->temperature = 30.2; 
-        info->addResponse<Object<TempDto>>(Status::CODE_200, "application/json")
+        example->temperature = 30.2f; 
+        info->addResponse<Object<TempDto>>(Status::CODE_200, "application/json", "Successfully retrieved temperature of the bottom sensor case")
             .addExample("application/json", example);
-        info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Bottom sensor temperature not available")
-            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Bottom sensor temperature not available"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_408, "application/json", "Request timed out")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve temperature")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve temperature"}}));
-        info->addResponse<Object<MessageDto>>(Status::CODE_504, "application/json", "Request timed out")
-            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
     }
     ADD_CORS(getBottomSensorTemperature)
     ENDPOINT("GET", "/sensor/bottle/bottom/sensor_temperature", getBottomSensorTemperature);
@@ -1786,7 +1796,9 @@ public:
      */
     ENDPOINT_INFO(clearCustomText) {
         info->summary = "Clear custom text on Mini OLED display";
-        info->description = "Clear custom text on Mini OLED display and display serial number of the device.";
+        info->description = 
+            "Clear custom text on Mini OLED display and display serial number of the device."
+            "If no text is set to display, serial number of device will be displayed instead.";
         info->addTag("Sensor module");
         info->addResponse<Object<MessageDto>>(Status::CODE_200, "application/json", "Successfully cleared custom text on Mini OLED display")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Successfully cleared custom text on Mini OLED display"}}));
@@ -1801,18 +1813,21 @@ public:
      */
     ENDPOINT_INFO(printCustomText) {
         info->summary = "Print custom text on Mini OLED display";
-        info->description = "Use last line of Mini OLED display to print custom text. Text will be appended to existing text. Note: Additional properties beyond 'text' are not allowed.";
+        info->description = 
+            "Use last line of Mini OLED display to print custom text. Text posted to this endpoint will be appended to existing text."
+            "To clear displayed text use clear_custom_text endpoint. If no text is set to display, serial number if device will be displayed instead."
+            "If text is longer then width of display then it will be scrolled.";
         info->addTag("Sensor module");
         auto example = TextDto::createShared();
         example->text = "Hello"; 
         info->addConsumes<Object<TextDto>>("application/json")
             .addExample("application/json", example);
-        info->addResponse<Object<MessageDto>>(Status::CODE_200, "application/json", "Successfully printed custom text on Mini OLED display")
-            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Successfully printed custom text on Mini OLED display"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_200, "application/json", "Successfully set text to OLED display")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Successfully set text to OLED display"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_400, "application/json", "Invalid request body")
-            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Invalid request body: malformed JSON or unexpected structure"}}));
-        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to print custom text")
-            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to print custom text"}}));
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Invalid request body"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to set text on OLED display")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to set text on OLED display"}}));
     }
     ADD_CORS(printCustomText)
     ENDPOINT("POST", "/sensor/oled/print_custom_text", printCustomText, BODY_DTO(Object<TextDto>, dto));
@@ -1823,10 +1838,10 @@ public:
     ENDPOINT_INFO(performFluorometerSingleSample) {
         info->summary = "Perform single sample measurement on fluorometer";
         info->description = 
-            "Perform single sample of data measurement on fluorometer.\n"
-            "This will start capturing of single sample and immediately retrieve it.\n"
-            "Detector gain and emitor intensity can be used to change relative range of measured values.\n"
-            "Emitor intensity is not strictly linear, so it is better to use gain of detector to change range.\n"
+            "Perform single sample of data measurement on fluorometer."
+            "This will start capturing of single sample and immediately retrieve it."
+            "Detector gain and emitor intensity can be used to change relative range of measured values."
+            "Emitor intensity is not strictly linear, so it is better to use gain of detector to change range."
             "Absolute value is calculated based on gain of detector and emitor intensity. And relates to detector max range.\n"
             "\n"
             "Allowed values:\n"
@@ -1844,8 +1859,14 @@ public:
 
         info->addConsumes<Object<FluorometerSingleSampleRequestDto>>("application/json")
             .addExample("application/json", exampleRequest);
-        info->addResponse<Object<FluorometerSingleSampleResponseDto>>(Status::CODE_200, "application/json")
+        info->addResponse<Object<FluorometerSingleSampleResponseDto>>(Status::CODE_200, "application/json", "Successfully retrieved single sample values")
             .addExample("application/json", exampleResponse);
+        info->addResponse<Object<MessageDto>>(Status::CODE_400, "application/json", "Invalid request body")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Invalid request body"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_408, "application/json", "Request timed out")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to perform measurement")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to perform measurement"}}));
     }
     ADD_CORS(performFluorometerSingleSample)
     ENDPOINT("POST", "/sensor/fluorometer/single_sample", performFluorometerSingleSample, 
@@ -1857,16 +1878,16 @@ public:
     ENDPOINT_INFO(captureFluorometerOjip) {
         info->summary = "Perform OJIP capture on fluorometer";
         info->description = 
-            "Start OJIP capture on fluorometer and return captured data.\n"
-            "This will start capturing the OJIP curve and store it in the memory of the fluorometer.\n"
-            "After the capture is completed, it will read the data and return it.\n"
-            "During measurement, some components are unable to be used, like density measurements, and their processing can be postponed.\n"
-            "Detector gain and emitter intensity can be used to change the relative range of measured values.\n"
-            "This can lead to better relative resolution, with regard to the max value of the OJIP curve.\n"
-            "But this can also lead to saturation of the detector and loss of data.\n"
-            "Emitter intensity is not strictly linear, so it is better to use the gain of the detector to change the range.\n"
-            "Absolute value is calculated based on the gain of the detector and emitter intensity. And relates to the detector's max range.\n"
-            "More info about the returned data can be found in the read_last endpoint description.\n"
+            "Start OJIP capture on fluorometer and return captured data."
+            "This will start capturing the OJIP curve and store it in the memory of the fluorometer."
+            "After the capture is completed, it will read the data and return it."
+            "During measurement, some components are unable to be used, like density measurements, and their processing can be postponed."
+            "Detector gain and emitter intensity can be used to change the relative range of measured values."
+            "This can lead to better relative resolution, with regard to the max value of the OJIP curve."
+            "But this can also lead to saturation of the detector and loss of data."
+            "Emitter intensity is not strictly linear, so it is better to use the gain of the detector to change the range."
+            "Absolute value is calculated based on the gain of the detector and emitter intensity. And relates to the detector's max range."
+            "More info about the returned data can be found in the read_last endpoint description.\n\n"
             "Expected timeout can be estimated as:\n"
             "timeout_ms ≈ length_ms + 2 × required_samples (in milliseconds).\n"
             "\n"
@@ -1912,10 +1933,14 @@ public:
 
         info->addConsumes<Object<FluorometerOjipCaptureRequestDto>>("application/json")
             .addExample("application/json", example2);
-        info->addResponse<Object<FluorometerMeasurementDto>>(Status::CODE_200, "application/json")
+        info->addResponse<Object<FluorometerMeasurementDto>>(Status::CODE_200, "application/json", "Successfully retrieved OJIP data from fluorometer")
             .addExample("application/json", example);
+        info->addResponse<Object<MessageDto>>(Status::CODE_400, "application/json", "Invalid request body")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Invalid request body"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "OJIP data not available")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "OJIP data not available"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to perform OJIP capture")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to perform OJIP capture"}}));
     }
 
     ADD_CORS(captureFluorometerOjip)
@@ -1931,10 +1956,12 @@ public:
         info->addTag("Sensor module");
         auto example = FluorometerCaptureStatusDto::createShared();
         example->capture_complete = false; 
-        info->addResponse<Object<FluorometerCaptureStatusDto>>(Status::CODE_200, "application/json")
+        info->addResponse<Object<FluorometerCaptureStatusDto>>(Status::CODE_200, "application/json", "Successfully checked fluorometer capture status")
             .addExample("application/json", example);
-        info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Fluorometer capture status not available")
-            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Fluorometer capture status not available"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_408, "application/json", "Request timed out")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to check capture status")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to check capture status"}}));
     }
 
     ADD_CORS(checkFluorometerOjipCaptureComplete)
@@ -1946,26 +1973,26 @@ public:
     ENDPOINT_INFO(retrieveLastFluorometerOjipData) {
         info->summary = "Retrieve OJIP data from last fluorometer capture";
         info->description = 
-            "Retrieve OJIP data from last fluorometer capture.\n"
-            "Measurement ID is generally increasing in value and different for every new measurement started.\n"
-            "If measurement is retrieved twice, ID will be the same.\n"
-            "Measurement ID is used to determine if this measurement is already exported to the database.\n"
-            "Boolean Read contains information if data was already read from the sensor.\n"
-            "It starts as true and resets with every new measurement started.\n"
-            "Serves as an easier way to determine if data was already read instead of Measurement ID.\n"
-            "The second retrieve without starting a new measurement will return false.\n"
-            "Samples are always ordered by the time of capture.\n"
-            "Time between capture_start and retrieve should be at least double the length of the measurement.\n"
-            "Based on selected parameters when the measurement was started, data can be saturated.\n"
-            "Depending on the gain of the detector or intensity of the emitter, adjustments can be made for the next measurement.\n"
-            "Intensity of the emitter is not strictly linear, so it is better to use the gain of the detector to change absolute values.\n"
-            "Samples have 3 types of values:\n"
-            " - raw_value: raw ADC value from the detector (generally 12-bit, see detector info)\n"
-            " - relative_value: value normalized to a 0-1 range\n"
-            " - absolute_value: value normalized to a 0-1 range and corrected for the gain of the detector and emitter intensity\n"
-            "\n"
-            "Expected timeout can be estimated as:\n"
-            "timeout_ms ≈ 2 × required_samples (in milliseconds).\n";
+        "Retrieve OJIP data from last fluorometer capture"
+        "Measurement ID is generally increasing in value and different for every new measurement started."
+        "If measurement is retrieved twice ID will be same."
+        "Measurement ID is used to determine if this measurement is already exported to database."
+        "Boolean Read contains information if data was already read from sensor."
+        "Starts as true and resets with every new measurement started."
+        "Serves as easier way to determine if data was already read instead of Measurement ID.";
+        "Second retrieve without starting new measurement will return false."
+        "Samples are always ordered by time of capture."
+        "Time between capture_start and retrieve should be at least double of length of measurement."
+        "Based on selected parameters when measurement was started, data can be saturated."
+        "Based on this gain of detector or intensity of emitor can be changed for next measurement."
+        "Intensity of emitor is not strictly linear, so it is better to use gain of detector to change absolute values."
+        "Samples has 3 types of values."
+          "- raw_value: raw adc value from detector (generaly 12-bit, see detector info)"
+          "- relative_value: value normalized to 0-1 range"
+          "- absolute_value: value normalized to 0-1 range and corrected for gain of detector and emitor intensity."
+        "\n"
+        "Expected timeout can be estimated as:\n"
+        "timeout_ms ≈ 2 × required_samples (in milliseconds).\n";
         info->addTag("Sensor module");
         auto example = FluorometerMeasurementDto::createShared();
         example->measurement_id = 1235;
@@ -1994,10 +2021,12 @@ public:
         sample2->absolute_value = 0.95f;
 
         example->samples = {sample1, sample2};
-        info->addResponse<Object<FluorometerMeasurementDto>>(Status::CODE_200, "application/json")
+        info->addResponse<Object<FluorometerMeasurementDto>>(Status::CODE_200, "application/json", "Successfully retrieved OJIP data from fluorometer")
             .addExample("application/json", example);
         info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "OJIP data not available")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "OJIP data not available"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve OJIP data")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve OJIP data"}}));
     }
 
     ADD_CORS(retrieveLastFluorometerOjipData)
@@ -2017,14 +2046,12 @@ public:
         example->peak_wavelength = 750;
         example->sensitivity = 100;
         example->sampling_rate = 500;
-        info->addResponse<Object<FluorometerDetectorInfoDto>>(Status::CODE_200, "application/json")
+        info->addResponse<Object<FluorometerDetectorInfoDto>>(Status::CODE_200, "application/json", "Successfully retrieved information about the fluorometer")
             .addExample("application/json", example);
-        info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Fluorometer detector info not available")
-            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Fluorometer detector info not available"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_408, "application/json", "Request timed out")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve detector info")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve detector info"}}));
-        info->addResponse<Object<MessageDto>>(Status::CODE_504, "application/json", "Request timed out")
-            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
     }
     ADD_CORS(getFluorometerDetectorInfo)
     ENDPOINT("GET", "/sensor/fluorometer/detector/info", getFluorometerDetectorInfo);
@@ -2034,19 +2061,18 @@ public:
      */
     ENDPOINT_INFO(getFluorometerDetectorTemperature) {
         info->summary = "Retrieves temperature of the fluorometer detector";
-        info->description = "Retrieves temperature of the fluorometer detector in °C. "
-                        "High temperature (>40°C) can have negative effect on detector sensitivity.";
+        info->description = 
+            "Retrieves temperature of the fluorometer detector in °C."
+            "High temperature (>40°C) can have negative effect on detector sensitivity.";
         info->addTag("Sensor module");
         auto example = TempDto::createShared();
-        example->temperature = 25.5; 
-        info->addResponse<Object<TempDto>>(Status::CODE_200, "application/json")
+        example->temperature = 25.5f; 
+        info->addResponse<Object<TempDto>>(Status::CODE_200, "application/json", "Successfully retrieved temperature of the fluorometer detector")
             .addExample("application/json", example);
-        info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Fluorometer detector temperature not available")
-            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Fluorometer detector temperature not available"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_408, "application/json", "Request timed out")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve temperature")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve temperature"}}));
-        info->addResponse<Object<MessageDto>>(Status::CODE_504, "application/json", "Request timed out")
-            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
     }
     ADD_CORS(getFluorometerDetectorTemperature)
     ENDPOINT("GET", "/sensor/fluorometer/detector/temperature", getFluorometerDetectorTemperature);
@@ -2056,21 +2082,20 @@ public:
      */
     ENDPOINT_INFO(getFluorometerEmitorInfo) {
         info->summary = "Retrieves information about the fluorometer emitor";
-        info->description = "Contains:\n"
-                            "- peak wavelength in nm\n"
-                            "- max power output in mW";
+        info->description = 
+            "Contains:\n"
+            "  - peak wavelength in nm\n"
+            "  - max power output in mW";
         info->addTag("Sensor module");
         auto example = FluorometerEmitorInfoDto::createShared();
         example->peak_wavelength = 525;
         example->power_output = 10000;
-        info->addResponse<Object<FluorometerEmitorInfoDto>>(Status::CODE_200, "application/json")
+        info->addResponse<Object<FluorometerEmitorInfoDto>>(Status::CODE_200, "application/json", "Successfully retrieved information about the fluorometer emitor")
             .addExample("application/json", example);
-        info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Fluorometer emitor info not available")
-            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Fluorometer emitor info not available"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_408, "application/json", "Request timed out")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve emitor info")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve emitor info"}}));
-        info->addResponse<Object<MessageDto>>(Status::CODE_504, "application/json", "Request timed out")
-            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
     }
     ADD_CORS(getFluorometerEmitorInfo)
     ENDPOINT("GET", "/sensor/fluorometer/emitor/info", getFluorometerEmitorInfo);
@@ -2080,20 +2105,19 @@ public:
      */
     ENDPOINT_INFO(getFluorometerEmitorTemperature) {
         info->summary = "Retrieves temperature of the fluorometer emitor";
-        info->description = "Retrieves temperature of the fluorometer emitor in °C. "
-                        "High temperature (>60°C) can have negative effect on emitor stability. "
-                        "Measurement performed in quick succession can lead to higher temperature.";
+        info->description = 
+            "Retrieves temperature of the fluorometer emitor in °C."
+            "High temperature (>60°C) can have negative effect on emitor stability."
+            "Measurement performed in quick succession can lead to higher temperature.";
         info->addTag("Sensor module");
         auto example = TempDto::createShared();
-        example->temperature = 35.0; 
-        info->addResponse<Object<TempDto>>(Status::CODE_200, "application/json")
+        example->temperature = 35.0f; 
+        info->addResponse<Object<TempDto>>(Status::CODE_200, "application/json", "Successfully retrieved temperature of the fluorometer emitor")
             .addExample("application/json", example);
-        info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Fluorometer emitor temperature not available")
-            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Fluorometer emitor temperature not available"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_408, "application/json", "Request timed out")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve temperature")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve temperature"}}));
-        info->addResponse<Object<MessageDto>>(Status::CODE_504, "application/json", "Request timed out")
-            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
     }
     ADD_CORS(getFluorometerEmitorTemperature)
     ENDPOINT("GET", "/sensor/fluorometer/emitor/temperature", getFluorometerEmitorTemperature);
@@ -2104,12 +2128,9 @@ public:
     ENDPOINT_INFO(calibrateFluorometer) {
         info->summary = "Calibrate fluorometer";
         info->description = 
-            "Request self-calibration of fluorometer.\n"
-            "For calibration cuvette should be empty or filled with clean medium.\n"
-            "No algae or other particles should be present in cuvette.\n"
-            "Calibration is preserved in persistent memory of module.\n"
-            "And will be loaded during next power up.\n"
-            "Body of request must be empty, but it is required to be present for future calibration extensions.";
+            "Request self-calibration of fluorometer. For calibration cuvette should be empty or filled with clean medium."
+            "No algae or other particles should be present in cuvette. Calibration is preserved in persistent memory of module."
+            "And will be loaded during next power up. Body of request must be empty, but it is required to be present for future calibration extensions.";
         info->addTag("Sensor module");
         
         auto exampleRequest = SpectroCalibrateDto::createShared();
@@ -2132,20 +2153,18 @@ public:
     ENDPOINT_INFO(getSpectrophotometerChannels) {
         info->summary = "Reads number of channels available on spectrophotometer";
         info->description = 
-            "Reads number of channels available on spectrophotometer.\n"
-            "Each channel can be used to measure absorbance of different wavelength.\n"
+            "Reads number of channels available on spectrophotometer."
+            "Each channel can be used to measure absorbance of different wavelength."
             "Endpoints return N channels which are numbered from 0 to (N-1).";
         info->addTag("Sensor module");
         auto example = SpectroChannelsDto::createShared();
         example->channels = 6; 
-        info->addResponse<Object<SpectroChannelsDto>>(Status::CODE_200, "application/json")
+        info->addResponse<Object<SpectroChannelsDto>>(Status::CODE_200, "application/json", "Successfully retrieved number of channels")
             .addExample("application/json", example);
-        info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Spectrophotometer channels count not available")
-            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Spectrophotometer channels count not available"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_408, "application/json", "Request timed out")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve channels count")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve channels count"}}));
-        info->addResponse<Object<MessageDto>>(Status::CODE_504, "application/json", "Request timed out")
-            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
     }
     ADD_CORS(getSpectrophotometerChannels)
     ENDPOINT("GET", "/sensor/spectrophotometer/channels", getSpectrophotometerChannels);
@@ -2167,14 +2186,14 @@ public:
         example->peak_wavelength = 480;
         example->half_intensity_peak_width = 10;
         
-        info->addResponse<Object<SpectroChannelInfoDto>>(Status::CODE_200, "application/json")
+        info->addResponse<Object<SpectroChannelInfoDto>>(Status::CODE_200, "application/json", "Successfully retrieved information about selected channel")
             .addExample("application/json", example);
         info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Channel not found or not available")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Channel not found or not available"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_408, "application/json", "Request timed out")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve channel info")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve channel info"}}));
-        info->addResponse<Object<MessageDto>>(Status::CODE_504, "application/json", "Request timed out")
-            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
     }
     ADD_CORS(getSpectrophotometerChannelInfo)
     ENDPOINT("GET", "/sensor/spectrophotometer/channel_info/{channel}", getSpectrophotometerChannelInfo, PATH(oatpp::UInt8, channel));
@@ -2185,8 +2204,7 @@ public:
     ENDPOINT_INFO(measureAllSpectrophotometerChannels) {
         info->summary = "Measure all channels at once and return responses";
         info->description = 
-            "Measure all channels at once and return responses.\n"
-            "Each channel can be used to measure absorbance of different wavelength.\n"
+            "Measure all channels at once and return responses. Each channel can be used to measure absorbance of different wavelength."
             "Endpoints return N channel which are numbered from 0 to (N-1).";
         info->addTag("Sensor module");
         
@@ -2208,14 +2226,12 @@ public:
         addExampleMeasurement(4, 0.561f, 3845);
         addExampleMeasurement(5, 0.473f, 5724);
         
-        info->addResponse<Object<SpectroMeasurementsDto>>(Status::CODE_200, "application/json")
+        info->addResponse<Object<SpectroMeasurementsDto>>(Status::CODE_200, "application/json", "Successfully performed measurement of all channels")
             .addExample("application/json", example);
-        info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Spectrophotometer not available")
-            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Spectrophotometer not available"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_408, "application/json", "Request timed out")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to perform measurements")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to perform measurements"}}));
-        info->addResponse<Object<MessageDto>>(Status::CODE_504, "application/json", "Request timed out")
-            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
     }
     ADD_CORS(measureAllSpectrophotometerChannels)
     ENDPOINT("POST", "/sensor/spectrophotometer/measure_all", measureAllSpectrophotometerChannels);
@@ -2226,8 +2242,7 @@ public:
     ENDPOINT_INFO(measureSingleSpectrophotometerChannel) {
         info->summary = "Measure selected single channel and return response";
         info->description = 
-            "Measure selected single channel and return response.\n"
-            "Each channel can be used to measure absorbance of different wavelength.\n"
+            "Measure selected single channel and return response. Each channel can be used to measure absorbance of different wavelength."
             "To get information about wavelength channel_info/{channel} could be used.";
         info->addTag("Sensor module");
         
@@ -2236,14 +2251,12 @@ public:
         example->relative_value = 0.236f;
         example->absolute_value = 5012;
         
-        info->addResponse<Object<SingleChannelMeasurementDto>>(Status::CODE_200, "application/json")
+        info->addResponse<Object<SingleChannelMeasurementDto>>(Status::CODE_200, "application/json", "Successfully performed measurement of selected channel")
             .addExample("application/json", example);
-        info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Channel not available")
-            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Channel not available"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_408, "application/json", "Request timed out")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to perform measurement")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to perform measurement"}}));
-        info->addResponse<Object<MessageDto>>(Status::CODE_504, "application/json", "Request timed out")
-            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
     }
     ADD_CORS(measureSingleSpectrophotometerChannel)
     ENDPOINT("POST", "/sensor/spectrophotometer/measure/{channel}", measureSingleSpectrophotometerChannel, PATH(Int8, channel));
@@ -2256,15 +2269,13 @@ public:
         info->description = "Retrieves the temperature of the spectrophotometer emitor in °C.";
         info->addTag("Sensor module");
         auto example = TempDto::createShared();
-        example->temperature = 30.2; 
-        info->addResponse<Object<TempDto>>(Status::CODE_200, "application/json")
+        example->temperature = 30.2f; 
+        info->addResponse<Object<TempDto>>(Status::CODE_200, "application/json", "Successfully retrieved temperature of the spectrophotometer emitor")
             .addExample("application/json", example);
-        info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Spectrophotometer emitor temperature not available")
-            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Spectrophotometer emitor temperature not available"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_408, "application/json", "Request timed out")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve temperature")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve temperature"}}));
-        info->addResponse<Object<MessageDto>>(Status::CODE_504, "application/json", "Request timed out")
-            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
     }
     ADD_CORS(getSpectrophotometerEmitorTemperature)
     ENDPOINT("GET", "/sensor/spectrophotometer/emitor/temperature", getSpectrophotometerEmitorTemperature);
@@ -2276,12 +2287,9 @@ public:
     ENDPOINT_INFO(calibrateSpectrophotometer) {
         info->summary = "Calibrate spectrophotometer";
         info->description = 
-            "Request self-calibration of spectrophotometer.\n"
-            "For calibration cuvette should be empty or filled with clean medium.\n"
-            "No algae or other particles should be present in cuvette.\n"
-            "Calibration is preserved in persistent memory of module.\n"
-            "And will be loaded during next power up.\n"
-            "Body of request must be empty, but it is required to be present for future calibration extensions.";
+            "Request self-calibration of spectrophotometer. For calibration cuvette should be empty or filled with clean medium."
+            "No algae or other particles should be present in cuvette. Calibration is preserved in persistent memory of module."
+            "And will be loaded during next power up. Body of request must be empty, but it is required to be present for future calibration extensions.";
         info->addTag("Sensor module");
         
         auto exampleRequest = SpectroCalibrateDto::createShared();

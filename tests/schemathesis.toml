@@ -8,4 +8,17 @@ include-method = "GET"
   [operations.checks.response_schema_conformance]
   enabled = false
 
+[parameters]
+"GET /{module}/ping" = { module = ["core", "control", "sensor"] }
+"GET /{module}/load" = { module = ["core", "control", "sensor"] }
+"GET /{module}/core_temp" = { module = ["core", "control", "sensor"] }
+"GET /{module}/board_temp" = { module = ["core", "control", "sensor"] }
+"GET /{module}/fw_version" = { module = ["core", "control", "sensor"] }
+"GET /{module}/hw_version" = { module = ["core", "control", "sensor"] }
 
+[[operations]]
+include-path-regex = "^/[^/]+/(ping|load|core_temp|board_temp|fw_version|hw_version)$"
+include-method = "GET"
+
+  [operations.checks.status_code_conformance]
+  enabled = false

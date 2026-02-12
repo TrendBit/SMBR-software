@@ -10,6 +10,13 @@ getCanRxDropped
 getCanTxDropped
 getCanCollisions
 
+ping
+getCoreLoad
+getCoreTemp
+getBoardTemp
+getFwVersion
+getHwVersion
+
 getShortID
 getIpAddress
 getHostname

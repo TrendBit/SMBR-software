@@ -11,6 +11,7 @@ All endpoints share the same test structure - only the URL, field name, and vali
 | Endpoint | URL | Field | Min | Max |
 |----------|-----|-------|-----|-----|
 | setHeaterIntensity | `/control/heater/intensity` | `intensity` | -1.0 | 1.0 |
+| setHeaterTargetTemperature | `/control/heater/target_temperature` | `temperature` | 0.0 | 60.0 |
 | setCuvettePumpSpeed | `/control/cuvette_pump/speed` | `speed` | -1.0 | 1.0 |
 | setCuvettePumpFlowrate | `/control/cuvette_pump/flowrate` | `flowrate` | -1000.0 | 1000.0 |
 | setAeratorSpeed | `/control/aerator/speed` | `speed` | 0.0 | 1.0 |

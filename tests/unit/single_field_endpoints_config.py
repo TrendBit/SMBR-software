@@ -13,6 +13,14 @@ SINGLE_FIELD_ENDPOINTS = [
         "cleanup_url": "/control/heater/turn_off",
     },
     {
+        "name": "setHeaterTargetTemperature",
+        "url": "/control/heater/target_temperature",
+        "field": "temperature",
+        "min": 0.0,
+        "max": 60.0,
+        "cleanup_url": "/control/heater/turn_off",
+    },
+    {
         "name": "setCuvettePumpSpeed",
         "url": "/control/cuvette_pump/speed",
         "field": "speed",

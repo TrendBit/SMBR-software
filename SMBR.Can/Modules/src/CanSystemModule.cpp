@@ -138,7 +138,7 @@ std::future <ISystemModule::AvailableModules> CanSystemModule::getAvailableModul
 
                 promise->set_value(result);
             } else if (response.status == CanRequestStatus::Timeout) {
-                promise->set_exception(std::make_exception_ptr(std::runtime_error("Timeout")));
+                promise->set_exception(std::make_exception_ptr(TimeoutException("Timeout")));
             } else {
                 promise->set_exception(std::make_exception_ptr(std::runtime_error("Failed to send request")));
             }

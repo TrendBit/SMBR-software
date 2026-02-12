@@ -518,7 +518,7 @@ uint64_t SMBRController::readCanValue(const std::string& statName) {
     if (future.wait_for(2s) == std::future_status::ready) {
         return future.get();
     } else {
-        throw std::runtime_error("Timeout reading CAN stat: " + statName);
+        throw TimeoutException("Timeout reading CAN stat: " + statName);
     }
 }
 

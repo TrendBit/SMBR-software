@@ -2,6 +2,7 @@
 
 #include "codes/codes.hpp"
 #include "SMBR/SMBR.hpp"
+#include "SMBR/Exceptions.hpp"
 #include "SMBR/Log.hpp"
 #include "can/CanChannel.hpp"
 #include <iostream>
@@ -78,7 +79,7 @@ class BaseModule {
                             }
                         } else if (response.status == CanRequestStatus::Timeout) {
                             LERROR("Can") << name <<  "CAN get error - timeout " << LE;
-                            promise->set_exception(std::make_exception_ptr(std::runtime_error("Timeout")));
+                            promise->set_exception(std::make_exception_ptr(TimeoutException("Timeout")));
                         } else {
                             LERROR("Can") << name <<  "CAN get error - some error " << LE;
                             promise->set_exception(std::make_exception_ptr(std::runtime_error("Failed to send request")));
@@ -133,7 +134,7 @@ class BaseModule {
                             promise->set_exception(std::make_exception_ptr(std::runtime_error("Failed to interpret response")));
                         }
                     } else if (response.status == CanRequestStatus::Timeout) {
-                        promise->set_exception(std::make_exception_ptr(std::runtime_error("Timeout")));
+                        promise->set_exception(std::make_exception_ptr(TimeoutException("Timeout")));
                     } else {
                         promise->set_exception(std::make_exception_ptr(std::runtime_error("Failed to send request")));
                     }
@@ -162,7 +163,7 @@ class BaseModule {
                         setMultiple(promise, requests);
                     } else if (response.status == CanRequestStatus::Timeout) {
                         LERROR("Can") << name <<  " setMultiple: exc 1" << LE;
-                        promise->set_exception(std::make_exception_ptr(std::runtime_error("Timeout")));
+                        promise->set_exception(std::make_exception_ptr(TimeoutException("Timeout")));
                     } else {
                         LERROR("Can") <<  name <<  " setMultiple: exc 2" << LE;
                         promise->set_exception(std::make_exception_ptr(std::runtime_error("Failed to send request")));
@@ -238,7 +239,7 @@ class BaseModule {
                         }
                         promise->set_exception(std::make_exception_ptr(std::runtime_error("No valid response data received")));
                     } else if (response.status == CanRequestStatus::Timeout) {
-                        promise->set_exception(std::make_exception_ptr(std::runtime_error("Timeout")));
+                        promise->set_exception(std::make_exception_ptr(TimeoutException("Timeout")));
                     } else {
                         promise->set_exception(std::make_exception_ptr(std::runtime_error("Failed to send request")));
                     }

@@ -1457,22 +1457,22 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     if (!body->detector_gain || !body->timebase || !body->emitor_intensity || !body->length_ms || !body->sample_count) {
         auto dto = MessageDto::createShared();
         dto->message = "Missing required parameters.";
-        return createDtoResponse(Status::CODE_500, dto);
+        return createDtoResponse(Status::CODE_400, dto);
     }
     if (body->length_ms < 200 || body->length_ms > 4000) {
         auto dto = MessageDto::createShared();
         dto->message = "Invalid length. Must be between 200 and 4000.";
-        return createDtoResponse(Status::CODE_500, dto);
+        return createDtoResponse(Status::CODE_400, dto);
     }
     if (body->sample_count  < 200 || body->sample_count  > 4000) {
         auto dto = MessageDto::createShared();
         dto->message = "Invalid sample count. Must be between 200 and 4000.";
-        return createDtoResponse(Status::CODE_500, dto);
+        return createDtoResponse(Status::CODE_400, dto);
     }
     if (body->emitor_intensity < 0.2f || body->emitor_intensity > 1.0f) {
         auto dto = MessageDto::createShared();
         dto->message = "Invalid emitor intensity. Must be between 0.2 and 1.0.";
-        return createDtoResponse(Status::CODE_500, dto);
+        return createDtoResponse(Status::CODE_400, dto);
     }
 
     const std::unordered_set<std::string> validGains = {"x1", "x10", "x50", "Auto"};
@@ -1480,12 +1480,12 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     if (validGains.find(body->detector_gain) == validGains.end()) {
         auto dto = MessageDto::createShared();
         dto->message = "Invalid detector_gain. Must be one of: x1, x10, x50, Auto.";
-        return createDtoResponse(Status::CODE_500, dto);
+        return createDtoResponse(Status::CODE_400, dto);
     }
     if (validTimebases.find(body->timebase) == validTimebases.end()) {
         auto dto = MessageDto::createShared();
         dto->message = "Invalid timebase. Must be one of: logarithmic, linear.";
-        return createDtoResponse(Status::CODE_500, dto);
+        return createDtoResponse(Status::CODE_400, dto);
     }
 
     auto promise = std::make_shared<std::promise<std::shared_ptr<oatpp::web::protocol::http::outgoing::Response>>>();
@@ -1683,12 +1683,10 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::calibrateFluorometer(const oatpp::String& body)  {
-    if (body != "{}") {
-        auto dto = MessageDto::createShared();
-        dto->message = "Invalid input";
-        return createDtoResponse(Status::CODE_500, dto);
-    }
     return processBool(__FUNCTION__, [&](){
+        if (body != "{}") {
+            throw ArgumentException("Invalid input. Expected empty JSON object {}");
+        }
         return waitFor(systemModule->sensorModule()->calibrateFluorometer());
     });
 }
@@ -1754,12 +1752,10 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::calibrateSpectrophotometer(const oatpp::String& body)  {
-    if (body != "{}") {
-        auto dto = MessageDto::createShared();
-        dto->message = "Invalid input";
-        return createDtoResponse(Status::CODE_500, dto);
-    }
     return processBool(__FUNCTION__, [&](){
+        if (body != "{}") {
+            throw ArgumentException("Invalid input. Expected empty JSON object {}");
+        }
         return waitFor(systemModule->sensorModule()->calibrateSpectrophotometer());
     });
 }

@@ -2232,7 +2232,7 @@ public:
         auto example = PumpCountDto::createShared();
         example->pump_count = 4;
         
-        info->addResponse<Object<PumpCountDto>>(Status::CODE_200, "application/json")
+        info->addResponse<Object<PumpCountDto>>(Status::CODE_200, "application/json", "Successfully retrieved pump count")
             .addExample("application/json", example);
         info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Pump module not available")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Pump module not available"}}));
@@ -2257,7 +2257,7 @@ public:
         example->max_flowrate = 200.0f;
         example->min_flowrate = 10.0f;
         
-        info->addResponse<Object<PumpInfoDto>>(Status::CODE_200, "application/json")
+        info->addResponse<Object<PumpInfoDto>>(Status::CODE_200, "application/json", "Successfully retrieved pump information")
             .addExample("application/json", example);
         info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Pump module not available")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Pump module not available"}}));
@@ -2281,7 +2281,7 @@ public:
         auto example = SpeedDto::createShared();
         example->speed = -0.33f;
         
-        info->addResponse<Object<SpeedDto>>(Status::CODE_200, "application/json")
+        info->addResponse<Object<SpeedDto>>(Status::CODE_200, "application/json","Successfully retrieved pump speed")
             .addExample("application/json", example);
         info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Pump module not available")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Pump module not available"}}));
@@ -2307,16 +2307,14 @@ public:
         
         info->addConsumes<Object<SpeedDto>>("application/json")
             .addExample("application/json", example);
-        info->addResponse<Object<MessageDto>>(Status::CODE_200, "application/json", "Speed set successfully")
-            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Speed set successfully"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_200, "application/json", "Successfully set speed of pump")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Successfully set speed of pump"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_400, "application/json", "Invalid speed value")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Invalid speed value"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Pump module not available")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Pump module not available"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to set pump speed")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to set pump speed"}}));
-        info->addResponse<Object<MessageDto>>(Status::CODE_504, "application/json", "Request timed out")
-            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
     }
     ADD_CORS(setPumpSpeed)
     ENDPOINT("POST", "/pumps/{instance_index}/speed/{pump_index}", setPumpSpeed, PATH(UInt8, instance_index), PATH(UInt8, pump_index), BODY_DTO(Object<SpeedDto>, body));
@@ -2333,7 +2331,7 @@ public:
         auto example = FlowrateDto::createShared();
         example->flowrate = 100.0f;
         
-        info->addResponse<Object<FlowrateDto>>(Status::CODE_200, "application/json")
+        info->addResponse<Object<FlowrateDto>>(Status::CODE_200, "application/json", "Successfully retrieved pump flow rate")
             .addExample("application/json", example);
         info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Pump module not available")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Pump module not available"}}));
@@ -2363,16 +2361,14 @@ public:
         
         info->addConsumes<Object<FlowrateDto>>("application/json")
             .addExample("application/json", example);
-        info->addResponse<Object<MessageDto>>(Status::CODE_200, "application/json", "Flow rate set successfully")
-            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Flow rate set successfully"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_200, "application/json", "Successfully set flow rate of selected pump")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Successfully set flow rate of selected pump"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_400, "application/json", "Invalid flow rate value")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Invalid flow rate value"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Pump module not available")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Pump module not available"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to set pump flow rate")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to set pump flow rate"}}));
-        info->addResponse<Object<MessageDto>>(Status::CODE_504, "application/json", "Request timed out")
-            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
     }
     ADD_CORS(setPumpFlowrate)
     ENDPOINT("POST", "/pumps/{instance_index}/flowrate/{pump_index}", setPumpFlowrate, PATH(UInt8, instance_index), PATH(UInt8, pump_index), BODY_DTO(Object<FlowrateDto>, body));
@@ -2403,8 +2399,6 @@ public:
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Pump module not available"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to move pump")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to move pump"}}));
-        info->addResponse<Object<MessageDto>>(Status::CODE_504, "application/json", "Request timed out")
-            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
     }
     ADD_CORS(movePump)
     ENDPOINT("POST", "/pumps/{instance_index}/move/{pump_index}", movePump, PATH(UInt8, instance_index), PATH(UInt8, pump_index), BODY_DTO(Object<MoveDto>, body));
@@ -2424,8 +2418,6 @@ public:
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Pump module not available"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to stop pump")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to stop pump"}}));
-        info->addResponse<Object<MessageDto>>(Status::CODE_504, "application/json", "Request timed out")
-            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
     }
     ADD_CORS(stopPump)
     ENDPOINT("GET", "/pumps/{instance_index}/stop/{pump_index}", stopPump, PATH(UInt8, instance_index), PATH(UInt8, pump_index));

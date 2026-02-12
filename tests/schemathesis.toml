@@ -15,6 +15,7 @@ include-method = "GET"
 "GET /{module}/board_temp" = { module = ["core", "control", "sensor"] }
 "GET /{module}/fw_version" = { module = ["core", "control", "sensor"] }
 "GET /{module}/hw_version" = { module = ["core", "control", "sensor"] }
+"GET /control/led_panel/intensity/{channel}" = { channel = ["0", "1", "2", "3"] }
 
 [[operations]]
 include-path-regex = "^/[^/]+/(ping|load|core_temp|board_temp|fw_version|hw_version)$"

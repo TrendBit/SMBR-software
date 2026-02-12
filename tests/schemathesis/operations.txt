@@ -29,6 +29,7 @@ getPoEVoltage
 getCurrentConsumption
 getPowerDraw
 
+getIntensity
 getLedTemperature
 getHeaterIntensity
 getHeaterTargetTemperature

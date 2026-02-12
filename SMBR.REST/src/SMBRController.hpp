@@ -1274,6 +1274,8 @@ public:
             .addExample("application/json", example);
         info->addResponse<Object<MessageDto>>(Status::CODE_200, "application/json", "Successfully wrote cuvette pump max flowrate calibration")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Successfully wrote cuvette pump max flowrate calibration"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_400, "application/json", "Invalid flowrate value")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Invalid flowrate value"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to set calibration")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to set calibration"}}));
     }

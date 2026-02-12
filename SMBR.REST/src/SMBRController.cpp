@@ -899,11 +899,20 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::setHeaterTargetTemperature(const oatpp::Object<TempDto>& body) {
 
     return processBool(__FUNCTION__, [&](){
-        if (!body || body->temperature < 0.0f) {
-            throw ArgumentException("Invalid target temperature. Must be a positive value.");
+        if (!body) {
+            throw ArgumentException("Request body is required.");
+        }
+        
+        if (!body->temperature) {
+            throw ArgumentException("Temperature field is required.");
+        }
+        
+        float temperatureValue = body->temperature;
+        if (temperatureValue < 0.0f || temperatureValue > 60.0f) {
+            throw ArgumentException("Invalid target temperature. Must be between 0 and 60.");
         }
 
-        return waitFor(systemModule->controlModule()->setHeaterTargetTemperature(body->temperature));
+        return waitFor(systemModule->controlModule()->setHeaterTargetTemperature(temperatureValue));
     });
 }
 

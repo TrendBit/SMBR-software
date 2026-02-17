@@ -44,8 +44,8 @@ std::future<IPumpsModule::PumpInfo> CanPumpsModule::getPumpInfo(uint8_t pump_ind
         IPumpsModule::PumpInfo
     >(request, [](App_messages::Pumps::Info_response response){
         return IPumpsModule::PumpInfo{
-            response.max_flowrate,
-            response.min_flowrate
+            response.min_flowrate,
+            response.max_flowrate
         };
     }, 2000);
 }

@@ -16,6 +16,7 @@ public:
     std::future<bool> setSpeed(uint8_t pump_index, float speed) override;
     std::future<float> getFlowrate(uint8_t pump_index) override;
     std::future<bool> setFlowrate(uint8_t pump_index, float flowrate) override;
+    std::future<bool> setMaxFlowrate(uint8_t pump_index, float flowrate) override;
     std::future<bool> move(uint8_t pump_index, float volume, float flowrate) override;
     std::future<bool> stop(uint8_t pump_index) override;
 

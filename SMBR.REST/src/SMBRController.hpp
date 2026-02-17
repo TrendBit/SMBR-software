@@ -2374,6 +2374,35 @@ public:
     ENDPOINT("POST", "/pumps/{instance_index}/flowrate/{pump_index}", setPumpFlowrate, PATH(UInt8, instance_index), PATH(UInt8, pump_index), BODY_DTO(Object<FlowrateDto>, body));
 
     /**
+     * @brief Calibrates the given pump.
+     */
+    ENDPOINT_INFO(calibratePump) {
+        info->summary = "Calibrates the given pump";
+        info->description =
+            "Sends calibrated value of flowrate per minute (ml/min) to pump in order to calibrate move and flowrate commands.\n"
+            "Calibration should be used if it is necessary to achieve a dosing accuracy greater than 5 % or if the liquid has a non-standard viscosity.\n"
+            "Value of calibration can be checked by using GET request to info endpoint of pump.\n"
+            "See cuvette pump calibration endpoint for more details.\n";
+        info->addTag("Pumps module");
+
+        auto example = FlowrateDto::createShared();
+        example->flowrate = 30.0f;
+
+        info->addConsumes<Object<FlowrateDto>>("application/json")
+            .addExample("application/json", example);
+        info->addResponse<Object<MessageDto>>(Status::CODE_200, "application/json", "Successfully wrote pump max flowrate calibration")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Successfully wrote pump max flowrate calibration"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_400, "application/json", "Invalid flowrate value")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Invalid flowrate value"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Pump module not available")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Pump module not available"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to write pump max flowrate calibration")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to write pump max flowrate calibration"}}));
+    }
+    ADD_CORS(calibratePump)
+    ENDPOINT("POST", "/pumps/{instance_index}/calibration/{pump_index}", calibratePump, PATH(UInt8, instance_index), PATH(UInt8, pump_index), BODY_DTO(Object<FlowrateDto>, body));
+
+    /**
      * @brief Moves requested amount of liquid by specified pump.
      */
     ENDPOINT_INFO(movePump) {

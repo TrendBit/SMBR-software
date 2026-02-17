@@ -1387,6 +1387,33 @@ public:
     ENDPOINT("GET", "/control/aerator/flowrate", getAeratorFlowrate);;
 
     /**
+     * @brief Configure measured volume on module in order to calibrate aerator flowrate.
+     */
+    ENDPOINT_INFO(calibrateAerator) {
+        info->summary = "Configure measured volume on module in order to calibrate aerator flowrate";
+        info->description =
+            "Sends calibrated value of flowrate per minute (ml/min) to aerator in order to calibrate move and flowrate commands.\n"
+            "Calibration should be used if it is necessary to achieve a dosing accuracy greater than 20 %.\n"
+            "Value of calibration can be checked by using GET request to info endpoint of aerator.\n"
+            "Calibration send by this endpoint is stored on module and used after restart.\n";
+        info->addTag("Control module");
+
+        auto example = FlowrateDto::createShared();
+        example->flowrate = 30.0f;
+
+        info->addConsumes<Object<FlowrateDto>>("application/json")
+            .addExample("application/json", example);
+        info->addResponse<Object<MessageDto>>(Status::CODE_200, "application/json", "Successfully wrote cuvette pump max flowrate calibration")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Successfully wrote cuvette pump max flowrate calibration"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_400, "application/json", "Invalid flowrate value")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Invalid flowrate value"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to set calibration")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to set calibration"}}));
+    }
+    ADD_CORS(calibrateAerator)
+    ENDPOINT("POST", "/control/aerator/calibration", calibrateAerator, BODY_DTO(Object<FlowrateDto>, body));
+
+    /**
      * @brief Moves requested amount of air into the bottle using the aerator
      */
     ENDPOINT_INFO(moveAerator) {

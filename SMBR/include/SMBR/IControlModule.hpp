@@ -164,6 +164,11 @@ public:
     virtual std::future <float> getAeratorFlowrate() = 0;
 
     /**
+     * @brief Sets the maximum flowrate calibration for the aerator.
+     */
+    virtual std::future <bool> setAeratorMaxFlowrate(float flowrate) = 0;
+
+    /**
      * @brief Moves the requested amount of air into the bottle using the aerator.
      */
     virtual std::future <bool> moveAerator(float volume, float flowrate) = 0;

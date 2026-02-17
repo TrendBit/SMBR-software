@@ -187,6 +187,13 @@ std::future <float> VirtualControlModule::getAeratorFlowrate(){
     });
 }
 
+std::future <bool> VirtualControlModule::setAeratorMaxFlowrate(float flowrate){
+    return std::async(std::launch::async, [flowrate]() {
+        Random::randomDelay();
+        return true;
+    });
+}
+
 std::future <bool> VirtualControlModule::moveAerator(float volume, float flowrate){
     return std::async(std::launch::async, [volume, flowrate]() {
         Random::randomDelay();

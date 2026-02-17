@@ -39,6 +39,7 @@
 #include "codes/messages/aerator/set_flowrate.hpp"
 #include "codes/messages/aerator/get_flowrate_request.hpp"
 #include "codes/messages/aerator/get_flowrate_response.hpp"
+#include "codes/messages/aerator/set_max_flowrate.hpp"
 #include "codes/messages/aerator/move.hpp"
 #include "codes/messages/aerator/stop.hpp"
 #include "codes/messages/mixer/info_request.hpp"
@@ -301,6 +302,12 @@ std::future <float> CanControlModule::getAeratorFlowrate() {
     >([](App_messages::Aerator::Get_flowrate_response response){
         return response.flowrate;
     }, default_timeout_ms);
+}
+
+std::future <bool> CanControlModule::setAeratorMaxFlowrate(float flowrate) {
+
+    App_messages::Aerator::Set_max_flowrate r((float)flowrate);
+    return base.set(r);
 }
 
 std::future <bool> CanControlModule::moveAerator(float volume, float flowrate) {

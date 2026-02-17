@@ -33,6 +33,7 @@ public:
     std::future <float> getAeratorSpeed() override;
     std::future <bool> setAeratorFlowrate(float flowrate) override;
     std::future <float> getAeratorFlowrate() override;
+    std::future <bool> setAeratorMaxFlowrate(float flowrate) override;
     std::future <bool> moveAerator(float volume, float flowrate) override;
     std::future <bool> stopAerator() override;
     std::future <MixerInfo> getMixerInfo() override;

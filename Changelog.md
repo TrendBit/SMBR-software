@@ -2,6 +2,16 @@
 
 The version number consists of MAJOR.MINOR identifiers.
 
+## 0.3
+
+### Added
+- New endpoints:
+  - `POST /control/cuvette_pump/calibration` – configure measured volume value on module in order to calibrate cuvette pump
+  - `POST /control/aerator/calibration` – configure measured volume on module in order to calibrate aerator flowrate
+
+### Fixed
+- Correct validation ranges for volume and flowrate in control move endpoints
+
 ## 0.2
 
 ### Added

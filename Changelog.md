@@ -2,6 +2,21 @@
 
 The version number consists of MAJOR.MINOR identifiers.
 
+## 0.4
+
+### Added
+- Support for pump modules in /system/module endpoint
+- New endpoints:
+  - `GET /pumps/{instance_index}/pump_count` – get information about how many pumps are available in a specific instance of module
+  - `GET /pumps/{instance_index}/info/{pump_index}` – get information about a specific pump
+  - `GET /pumps/{instance_index}/speed/{pump_index}` - retrieves current speed of the given pump
+  - `POST /pumps/{instance_index}/speed/{pump_index}` - sets speed of the pump
+  - `GET /pumps/{instance_index}/flowrate/{pump_index}` - retrieves current flow rate of the given pump
+  - `POST /pumps/{instance_index}/flowrate/{pump_index}` - sets flow rate of the selected pump
+  - `POST /pumps/{instance_index}/calibration/{pump_index}` - calibrates the given pump
+  - `POST /pumps/{instance_index}/move/{pump_index}` - moves requested amount of liquid by specified pump
+  - `GET /pumps/{instance_index}/stop/{pump_index}` - stops the given pump
+
 ## 0.3
 
 ### Added

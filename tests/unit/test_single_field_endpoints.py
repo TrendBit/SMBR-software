@@ -382,7 +382,7 @@ class TestSingleFieldEndpoints:
             headers={"Content-Type": "text/plain"},
             timeout=REQUEST_TIMEOUT
         )
-        assert response.status_code >= 400
+        assert response.status_code == 400
     
     # ==========================================
     # Framework Limitations (200 OK despite invalid data)
@@ -452,4 +452,4 @@ class TestSingleFieldEndpoints:
             headers={"Content-Type": "application/json"},
             timeout=REQUEST_TIMEOUT
         )
-        assert response.status_code in [200, 400]
+        assert response.status_code == 200  

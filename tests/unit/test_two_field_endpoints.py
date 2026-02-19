@@ -612,7 +612,7 @@ class TestTwoFieldEndpoints:
             headers={"Content-Type": "text/plain"},
             timeout=REQUEST_TIMEOUT
         )
-        assert response.status_code >= 400
+        assert response.status_code == 400
     
     # ==========================================
     # Framework Limitations (200 OK despite invalid data)
@@ -715,7 +715,7 @@ class TestTwoFieldEndpoints:
             headers={"Content-Type": "application/json"},
             timeout=REQUEST_TIMEOUT
         )
-        assert response.status_code in [200, 400]
+        assert response.status_code == 200  
     
     def test_framework_missing_content_type(self, base_url, endpoint):
         """Test missing Content-Type header (framework assumes JSON by default)"""

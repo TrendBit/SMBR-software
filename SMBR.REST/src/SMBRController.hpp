@@ -2636,6 +2636,9 @@ private:
     Fluorometer_config::Gain getGain(const std::string& gainStr);
     Fluorometer_config::Timing getTimebase(const std::string& timebaseStr);
 
+    uint8_t pumpCountForInstance(Instance instance);
+    void validatePumpIndex(Instance instance, uint8_t pump_index);
+
     std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> process(
         std::string name,
         std::function<std::shared_ptr<oatpp::web::protocol::http::outgoing::Response>()> body);

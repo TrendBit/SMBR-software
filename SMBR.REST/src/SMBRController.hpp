@@ -2259,6 +2259,8 @@ public:
         
         info->addResponse<Object<PumpInfoDto>>(Status::CODE_200, "application/json", "Successfully retrieved pump information")
             .addExample("application/json", example);
+        info->addResponse<Object<MessageDto>>(Status::CODE_400, "application/json", "Invalid pump index")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Invalid pump index"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Pump module not available")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Pump module not available"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve pump info")
@@ -2283,6 +2285,8 @@ public:
         
         info->addResponse<Object<SpeedDto>>(Status::CODE_200, "application/json","Successfully retrieved pump speed")
             .addExample("application/json", example);
+        info->addResponse<Object<MessageDto>>(Status::CODE_400, "application/json", "Invalid pump index")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Invalid pump index"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Pump module not available")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Pump module not available"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve pump speed")
@@ -2309,8 +2313,8 @@ public:
             .addExample("application/json", example);
         info->addResponse<Object<MessageDto>>(Status::CODE_200, "application/json", "Successfully set speed of pump")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Successfully set speed of pump"}}));
-        info->addResponse<Object<MessageDto>>(Status::CODE_400, "application/json", "Invalid speed value")
-            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Invalid speed value"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_400, "application/json", "Invalid speed or pump index value")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Invalid speed or pump index value"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Pump module not available")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Pump module not available"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to set pump speed")
@@ -2333,6 +2337,8 @@ public:
         
         info->addResponse<Object<FlowrateDto>>(Status::CODE_200, "application/json", "Successfully retrieved pump flow rate")
             .addExample("application/json", example);
+        info->addResponse<Object<MessageDto>>(Status::CODE_400, "application/json", "Invalid pump index")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Invalid pump index"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Pump module not available")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Pump module not available"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to retrieve pump flow rate")
@@ -2363,8 +2369,8 @@ public:
             .addExample("application/json", example);
         info->addResponse<Object<MessageDto>>(Status::CODE_200, "application/json", "Successfully set flow rate of selected pump")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Successfully set flow rate of selected pump"}}));
-        info->addResponse<Object<MessageDto>>(Status::CODE_400, "application/json", "Invalid flow rate value")
-            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Invalid flow rate value"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_400, "application/json", "Invalid flow rate or pump index value")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Invalid flow rate or pump index value"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Pump module not available")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Pump module not available"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to set pump flow rate")
@@ -2392,8 +2398,8 @@ public:
             .addExample("application/json", example);
         info->addResponse<Object<MessageDto>>(Status::CODE_200, "application/json", "Successfully wrote pump max flowrate calibration")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Successfully wrote pump max flowrate calibration"}}));
-        info->addResponse<Object<MessageDto>>(Status::CODE_400, "application/json", "Invalid flowrate value")
-            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Invalid flowrate value"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_400, "application/json", "Invalid flowrate or pump index value")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Invalid flowrate or pump index value"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Pump module not available")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Pump module not available"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to write pump max flowrate calibration")
@@ -2422,8 +2428,8 @@ public:
             .addExample("application/json", example);
         info->addResponse<Object<MessageDto>>(Status::CODE_200, "application/json", "Successfully started moving pump")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Successfully started moving pump"}}));
-        info->addResponse<Object<MessageDto>>(Status::CODE_400, "application/json", "Invalid volume or flowrate value")
-            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Invalid volume or flowrate value"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_400, "application/json", "Invalid volume or flowrate or pump index value")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Invalid volume or flowrate or pump index value"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Pump module not available")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Pump module not available"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to move pump")
@@ -2443,6 +2449,8 @@ public:
         
         info->addResponse<Object<MessageDto>>(Status::CODE_200, "application/json", "Successfully stopped pump")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Successfully stopped pump"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_400, "application/json", "Invalid pump index")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Invalid pump index"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Pump module not available")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Pump module not available"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to stop pump")

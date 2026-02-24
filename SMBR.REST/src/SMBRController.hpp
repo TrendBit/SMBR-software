@@ -2630,7 +2630,7 @@ public:
         info->addResponse<String>(Status::CODE_404, "application/json", "Recipe not found");
     }
     ADD_CORS(selectRecipe)
-    ENDPOINT("POST", "/scheduler/recipe", selectRecipe, BODY_DTO(String, recipeName));
+    ENDPOINT("POST", "/scheduler/recipe/{recipeName}", selectRecipe, PATH(String, recipeName));
 
 
 

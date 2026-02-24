@@ -2021,15 +2021,15 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     }
 }
 
-std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::updateRecipe(const oatpp::String& name, const oatpp::Object<ScriptDto>& body) {
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::updateRecipe(const oatpp::String& name, const oatpp::Object<ScriptContentDto>& body) {
     try {
 
         LDEBUG("API") << "Api updateRecipe begin" << LE;
-        if (!body || !body->name || !body->content) {
-            throw ArgumentException("Invalid script. Must contain a name and content.");
+        if (!body || !body->content) {
+            throw ArgumentException("Invalid script. Must contain content.");
         }
         ScriptInfo s;
-        s.name = *body->name;
+        s.name = decodeRecipeName(name);
         s.content = *body->content;
         recipes_->replaceRecipe(s);
         LDEBUG("API") << "Api updateRecipe end (success)" << LE;

@@ -1,5 +1,6 @@
 #include "SMBR/APIScheduler.hpp"
 #include "dto/ScriptDto.hpp"
+#include "dto/ScriptContentDto.hpp"
 #include "dto/ScriptRuntimeInfoDto.hpp"
 
 #include "APIClientImpl.hpp"
@@ -39,10 +40,9 @@ void APIScheduler::stop() {
 }
 
 void APIScheduler::setScriptFromString(const ScriptInfo & info) {
-    auto scriptDto = ScriptDto::createShared();
-    scriptDto->name = info.name;
-    scriptDto->content = info.content;
-    auto response1 = impl->client()->replaceRecipe(info.name, scriptDto);
+    auto scriptContentDto = ScriptContentDto::createShared();
+    scriptContentDto->content = info.content;
+    auto response1 = impl->client()->replaceRecipe(info.name, scriptContentDto);
     checkResponse(response1);
     auto response2 = impl->client()->selectRecipe(info.name);
     checkResponse(response2);

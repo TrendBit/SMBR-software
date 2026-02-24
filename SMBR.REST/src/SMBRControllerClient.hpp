@@ -4,6 +4,7 @@
 #include "oatpp/macro/codegen.hpp"
 
 #include "dto/ScriptDto.hpp"
+#include "dto/ScriptContentDto.hpp"
 #include "dto/ScriptRuntimeInfoDto.hpp"
 #include "dto/ScriptProcessIdDto.hpp"
 #include "dto/CaptureEnumDto.hpp"
@@ -17,7 +18,7 @@ class SMBRControllerClient : public oatpp::web::client::ApiClient {
 
   API_CLIENT_INIT(SMBRControllerClient)
 
-  API_CALL("PUT", "/recipes/{recipeName}", replaceRecipe, PATH(String, recipeName), BODY_DTO(Object<ScriptDto>, body))
+  API_CALL("PUT", "/recipes/{recipeName}", replaceRecipe, PATH(String, recipeName), BODY_DTO(Object<ScriptContentDto>, body))
   API_CALL("POST", "/scheduler/recipe", selectRecipe, BODY_DTO(String, recipeName))
   //API_CALL("PUT", "/scheduler/script", uploadScript, BODY_DTO(Object<ScriptDto>, body))
   API_CALL("GET", "/scheduler/recipe", getRecipe)

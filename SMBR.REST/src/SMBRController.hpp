@@ -34,6 +34,7 @@
 #include "dto/CurrentDto.hpp"
 #include "dto/PowerDrawDto.hpp"
 #include "dto/ScriptDto.hpp"
+#include "dto/ScriptContentDto.hpp"
 #include "dto/ScriptProcessIdDto.hpp"
 #include "dto/ScriptRuntimeInfoDto.hpp"
 #include "dto/TextDto.hpp"
@@ -2579,12 +2580,12 @@ public:
         info->summary = "Update recipe content";
         info->addTag("Recipes");
         info->description = "Update content of the recipe.";
-        info->addConsumes<Object<ScriptDto>>("application/json");
+        info->addConsumes<Object<ScriptContentDto>>("application/json");
         info->addResponse<String>(Status::CODE_200, "application/json", "Recipe updated successfully");
         info->addResponse<String>(Status::CODE_404, "application/json", "Recipe not found");
     }
     ADD_CORS(updateRecipe)
-    ENDPOINT("PUT", "/recipes/{recipeName}", updateRecipe, PATH(String, recipeName), BODY_DTO(Object<ScriptDto>, body));
+    ENDPOINT("PUT", "/recipes/{recipeName}", updateRecipe, PATH(String, recipeName), BODY_DTO(Object<ScriptContentDto>, body));
     
     /**
      * @brief Deletes recipe

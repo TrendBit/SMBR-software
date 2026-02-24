@@ -1984,7 +1984,9 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         return createDtoResponse(Status::CODE_200, dtoList);
     } catch (std::exception & e){
         LWARNING("API") << "Api getRecipeList end (failure: " << e.what() << ")" << LE;
-        return createResponse(Status::CODE_500, "Failed to retrieve recipe list: " + std::string(e.what()));
+        auto dto = MessageDto::createShared();
+        dto->message = "Failed to retrieve recipe list: " + std::string(e.what());
+        return createDtoResponse(Status::CODE_500, dto);
     }
 }
 
@@ -1993,7 +1995,9 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         recipes_->reload();
         return getRecipeList();
     } catch (std::exception & e){
-        return createResponse(Status::CODE_500, "Failed to reload recipe: " + std::string(e.what()));
+        auto dto = MessageDto::createShared();
+        dto->message = "Failed to reload recipe list: " + std::string(e.what());
+        return createDtoResponse(Status::CODE_500, dto);
     }
 }
 
@@ -2017,7 +2021,9 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         return createDtoResponse(Status::CODE_200, scriptResponseDto);
     } catch (std::exception & e){
         LWARNING("API") << "Api getRecipeContent end (failure: " << e.what() << ")" << LE;
-        return createResponse(Status::CODE_500, "Failed to retrieve recipe: " + std::string(e.what()));
+        auto dto = MessageDto::createShared();
+        dto->message = "Failed to retrieve recipe: " + std::string(e.what());
+        return createDtoResponse(Status::CODE_404, dto);
     }
 }
 
@@ -2033,10 +2039,14 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         s.content = *body->content;
         recipes_->replaceRecipe(s);
         LDEBUG("API") << "Api updateRecipe end (success)" << LE;
-        return createResponse(Status::CODE_200, "Recipe updated successfully.");
+        auto dto = MessageDto::createShared();
+        dto->message = "Recipe updated successfully.";
+        return createDtoResponse(Status::CODE_200, dto);
     } catch (std::exception & e){
         LWARNING("API") << "Api updateRecipe end (failure: " << e.what() << ")" << LE;
-        return createResponse(Status::CODE_500, "Failed to update recipe: " + std::string(e.what()));
+        auto dto = MessageDto::createShared();
+        dto->message = "Failed to update recipe: " + std::string(e.what());
+        return createDtoResponse(Status::CODE_500, dto);
     }
 }
 
@@ -2047,10 +2057,14 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
         
         recipes_->deleteRecipe(nn);
         LDEBUG("API") << "Api deleteRecipe end (success)" << LE;
-        return createResponse(Status::CODE_200, "Recipe deleted successfully.");
+        auto dto = MessageDto::createShared();
+        dto->message = "Recipe deleted successfully.";
+        return createDtoResponse(Status::CODE_200, dto);
     } catch (std::exception & e){
         LWARNING("API") << "Api deleteRecipe end (failure: " << e.what() << ")" << LE;
-        return createResponse(Status::CODE_500, "Failed to delete recipe: " + std::string(e.what()));
+        auto dto = MessageDto::createShared();
+        dto->message = "Failed to delete recipe: " + std::string(e.what());
+        return createDtoResponse(Status::CODE_404, dto);
     }
 }
 

@@ -2,6 +2,20 @@
 
 The version number consists of MAJOR.MINOR identifiers.
 
+## 0.5
+
+### Added
+- Automated testing of all endpoints using pytest and Schemathesis (validates expected HTTP status codes)
+- `sensor/oled/print_custom_text`: input length limited to 1-127 characters
+- `control/heater/target_temperature`: value limited to 0-60°C
+
+### Changed
+- Improved validation for POST endpoints
+- Refactored and improved consistency of HTTP status codes across the API (e.g., 504 for timeouts, 400 for validation errors, 404 for missing OJIP data)
+- Updated Swagger UI documentation for all endpoints
+- `GET /recipes/{recipeName}` now uses `recipeName` from the URL instead of the request body
+- `POST /scheduler/recipe`: moved `recipeName` from request body to path parameter and rename to `POST /scheduler/recipe/{recipeName}`
+
 ## 0.4
 
 ### Added

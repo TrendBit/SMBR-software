@@ -7,7 +7,7 @@
 	url = https://github.com/TrendBit/SMBR-candump.git
 [submodule "SMBR.Services/reactor-web-control/src"]
 	path = SMBR.Services/reactor-web-control/src
-	url = git@github.com:TrendBit/SMBR-web-control.git
+	url = https://github.com/TrendBit/SMBR-web-control.git
 [submodule "SMBR.Services/reactor-core-module/src"]
 	path = SMBR.Services/reactor-core-module/src
 	url = https://github.com/TrendBit/SMBR-can-core-module.git

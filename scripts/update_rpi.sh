@@ -19,7 +19,7 @@ echo "Host: $HOST"
 ./scripts/build_rpi.sh
 
 #stop services over ssh
-ssh ${HOST} systemctl stop can0.service reactor-database-export.service reactor-core-module.service reactor-api-server.service reactor-web-control.service
+ssh ${HOST} systemctl stop can0.service reactor-database-export.service reactor-core-module.service reactor-api-server.service reactor-web-control.service reactor-web-control-ts.service
 
 #rsync to rpi
 rsync -rv --no-perms \build/rpi/install/filesystem/ ${HOST}:/
@@ -28,7 +28,7 @@ rsync -rv --no-perms \build/rpi/install/filesystem/ ${HOST}:/
 ssh ${HOST} systemctl daemon-reload
 
 #start services over ssh
-ssh ${HOST} systemctl start can0.service reactor-database-export.service reactor-core-module.service reactor-api-server.service reactor-web-control.service
+ssh ${HOST} systemctl start can0.service reactor-database-export.service reactor-core-module.service reactor-api-server.service reactor-web-control-ts.service
 
 #restart avahi separately at he end to avoid issue not non existing hostname
 ssh ${HOST} systemctl restart avahi-daemon.socket avahi-daemon.service

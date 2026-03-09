@@ -23,7 +23,10 @@ add_subdirectory(SMBR.Services/reactor-api-server)
 add_subdirectory(SMBR.Services/reactor-core-module)
 add_subdirectory(SMBR.Services/avahi)
 add_subdirectory(SMBR.Services/reactor-database-export)
-add_subdirectory(SMBR.Services/reactor-web-control)
+# Deprecated original reactor-web-control
+#add_subdirectory(SMBR.Services/reactor-web-control)
+# New typescript web control server
+add_subdirectory(SMBR.Services/reactor-web-control-ts)
 
 #utilities
 add_subdirectory(SMBR.Utilities/reactor-can-watch)

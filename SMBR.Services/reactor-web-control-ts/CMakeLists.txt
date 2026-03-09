@@ -8,10 +8,7 @@ set(WEB_CONTROL_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 install(DIRECTORY ${WEB_CONTROL_SRC_DIR}/
     DESTINATION ${SMBR_INSTALL_HOME}/server-ts
     USE_SOURCE_PERMISSIONS
-    PATTERN "node_modules" EXCLUDE
     PATTERN ".git" EXCLUDE
-    PATTERN "dist" EXCLUDE
-    PATTERN "build" EXCLUDE
 )
 
 # Install dependencies and build on the target system

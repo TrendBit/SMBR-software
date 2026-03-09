@@ -11,3 +11,6 @@
 [submodule "SMBR.Services/reactor-core-module/src"]
 	path = SMBR.Services/reactor-core-module/src
 	url = https://github.com/TrendBit/SMBR-can-core-module.git
+[submodule "SMBR.Services/reactor-web-control-ts/src"]
+	path = SMBR.Services/reactor-web-control-ts/src
+	url = https://github.com/Kulihrasek456/smbr-web-control-ts.git

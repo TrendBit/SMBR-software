@@ -3,7 +3,7 @@ Tests for the pump-related endpoints added in recent refactor.
 """
 import pytest
 import requests
-from config import BASE_URL, REQUEST_TIMEOUT
+from ..config import BASE_URL, REQUEST_TIMEOUT
 
 
 BASE_PUMPS = f"{BASE_URL}/pumps"

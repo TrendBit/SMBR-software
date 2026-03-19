@@ -3,7 +3,7 @@ Unit tests for POST /sensor/oled/print_custom_text endpoint
 """
 import pytest
 import requests
-from config import BASE_URL
+from ..config import BASE_URL
 
 ENDPOINT = f"{BASE_URL}/sensor/oled/print_custom_text"
 

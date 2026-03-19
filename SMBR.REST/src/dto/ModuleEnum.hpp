@@ -14,7 +14,8 @@ namespace dto {
 ENUM(ModuleEnum, v_int32,
      VALUE(core, 0, "core"),
      VALUE(control, 1, "control"),
-     VALUE(sensor, 2, "sensor"))
+     VALUE(sensor, 2, "sensor"),
+     VALUE(pump, 3, "pump"))
 
 #include OATPP_CODEGEN_END(DTO)
 

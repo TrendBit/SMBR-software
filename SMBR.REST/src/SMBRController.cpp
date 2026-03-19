@@ -735,12 +735,24 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     });
 }
 
-std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getHwVersion(const oatpp::Enum<dto::ModuleEnum>::AsString& module) {
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getHwVersion(const std::shared_ptr<IncomingRequest>& request, const oatpp::Enum<dto::ModuleEnum>::AsString& module) {
     return process(__FUNCTION__, [&]() {
-        auto version = waitFor(getModule(module)->getHwVersion());
+        std::shared_ptr<ICommonModule> mod;
+        if (module == dto::ModuleEnum::pump) {
+            auto instanceStr = request->getQueryParameter("instance");
+            if (!instanceStr) throw ArgumentException("instance is required for pump module (1-12)");
+            int inst;
+            try { inst = std::stoi(instanceStr->c_str()); }
+            catch (...) { throw ArgumentException("instance must be a number between 1 and 12"); }
+            if (inst < 1 || inst > 12) throw ArgumentException("instance must be between 1 and 12");
+            Instance instanceEnum = static_cast<Instance>(static_cast<uint8_t>(Instance::Instance_1) + (inst - 1));
+            mod = systemModule->commonModule(systemModule->pumpsModule(instanceEnum)->id());
+        } else {
+            mod = getModule(module);
+        }
+        auto version = waitFor(mod->getHwVersion());
         auto dto = HwVersionDto::createShared();
         dto->version = version;
-
         return createDtoResponse(Status::CODE_200, dto);
     });
 }

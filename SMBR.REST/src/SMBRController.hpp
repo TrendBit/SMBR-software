@@ -429,6 +429,10 @@ public:
         example->time_ms = 2.5f;
         info->addResponse<Object<PingResponseDto>>(Status::CODE_200, "application/json", "Ping received from module")
             .addExample("application/json", example);
+        info->queryParams.add<oatpp::Int8>("instance").required = false;
+        info->queryParams["instance"].description = "Pump module instance number (1-12). Required only when module=pump, ignored otherwise.";
+        info->addResponse<Object<MessageDto>>(Status::CODE_400, "application/json", "Missing or invalid instance for pump module")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Instance is required for pump module (1-12)"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Module not found")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Module not found"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Ping failed")
@@ -437,7 +441,8 @@ public:
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Request timed out"}}));
         }
     ADD_CORS(ping)
-    ENDPOINT("GET", "/{module}/ping", ping, PATH(oatpp::Enum<dto::ModuleEnum>::AsString, module));
+    ENDPOINT("GET", "/{module}/ping", ping,
+        REQUEST(std::shared_ptr<IncomingRequest>, request), PATH(oatpp::Enum<dto::ModuleEnum>::AsString, module));
 
     /**
     * @brief Retrieves the CPU/MCU load of the specified module.

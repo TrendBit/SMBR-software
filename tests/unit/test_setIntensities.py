@@ -4,7 +4,7 @@ LEDs will be set to [0,0,0,0] at the end of tests
 """
 import pytest
 import requests
-from config import BASE_URL
+from ..config import BASE_URL
 
 ENDPOINT = f"{BASE_URL}/control/led_panel/intensity"
 

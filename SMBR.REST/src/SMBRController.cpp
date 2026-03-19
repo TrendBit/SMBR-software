@@ -658,6 +658,8 @@ static ICommonModule::Ptr byUID(ISystemModule::Ptr s, const oatpp::Enum<dto::Mod
         type = Modules::Sensor;
     } else if (module == dto::ModuleEnum::core) {
         type = Modules::Core;
+    } else if (module == dto::ModuleEnum::pump) {
+        type = Modules::Pump;
     } else {
         throw NotFoundException("Invalid module type");
     }

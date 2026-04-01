@@ -2,6 +2,19 @@
 
 The version number consists of MAJOR.MINOR identifiers.
 
+## 0.6
+
+### Changed
+- Added pump module support to common `/{module}/` endpoints:
+  - `GET /{module}/ping`
+  - `GET /{module}/load`
+  - `GET /{module}/core_temp`
+  - `GET /{module}/board_temp`
+  - `POST /{module}/restart`
+  - `GET /{module}/fw_version`
+  - `GET /{module}/hw_version`
+  - All above endpoints now accept `module=pump` with an optional `instance` query parameter (1–12) that is required when targeting a pump module
+
 ## 0.5
 
 ### Added

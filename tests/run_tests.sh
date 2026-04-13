@@ -1,26 +1,29 @@
 #!/bin/bash
-set -e
 
 ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-# 1) Run pytest
-echo "=== Running pytest ==="
-pytest -v "$ROOT_DIR" || echo "Pytest finished with failures, continuing..."
+UNIT_FAILED=0
+BEHAVIORAL_FAILED=0
+SCHEMATHESIS_FAILED=0
 
-# 2) Load BASE_URL from config.py
-BASE_URL=$(python3 "$ROOT_DIR/config.py")
-echo "Using BASE_URL: $BASE_URL"
+# 1) Unit tests
+echo "=== Running unit tests ==="
+pytest -v "$ROOT_DIR/unit" || UNIT_FAILED=1
 
-# 3) Paths to schemathesis configuration
-OPERATIONS_FILE="$ROOT_DIR/schemathesis/operations.txt"
+# 2) Behavioral tests
+echo "=== Running behavioral tests ==="
+pytest -v "$ROOT_DIR/behavioral" || BEHAVIORAL_FAILED=1
 
-# 4) Load operation-id
-ARGS=""
-while IFS= read -r op; do
-  [[ -z "$op" || "$op" =~ ^# ]] && continue
-  ARGS="$ARGS --include-operation-id $op"
-done < "$OPERATIONS_FILE"
-
-# 5) Run Schemathesis
+# 3) Schemathesis
 echo "=== Running Schemathesis ==="
-uvx schemathesis run "$BASE_URL/api-docs/oas-3.0.0.json" $ARGS
+"$ROOT_DIR/schemathesis/run_schemathesis.sh" || SCHEMATHESIS_FAILED=1
+
+# Summary
+echo ""
+echo "=== Summary ==="
+[[ $UNIT_FAILED -eq 0 ]]        && echo "Unit tests:        PASSED" || echo "Unit tests:        FAILED"
+[[ $BEHAVIORAL_FAILED -eq 0 ]]  && echo "Behavioral tests:  PASSED" || echo "Behavioral tests:  FAILED"
+[[ $SCHEMATHESIS_FAILED -eq 0 ]] && echo "Schemathesis:      PASSED" || echo "Schemathesis:      FAILED"
+
+# Exit with non-zero if any suite failed
+[[ $UNIT_FAILED -eq 0 && $BEHAVIORAL_FAILED -eq 0 && $SCHEMATHESIS_FAILED -eq 0 ]]

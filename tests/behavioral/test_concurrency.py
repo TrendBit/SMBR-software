@@ -9,9 +9,7 @@ from .concurrency_config import (
     SETTLE_AFTER_WRITE_S,
     DELAY_BETWEEN_WRITES_S,
     PUMPS_SPEED_VALUES,
-    PUMPS_FLOWRATE_VALUES,
     PUMPS_SPEED_IDEMPOTENT,
-    PUMPS_FLOWRATE_IDEMPOTENT,
 )
 
 
@@ -155,9 +153,15 @@ class TestPumpsLastWriteWins:
     def test_flowrate_last_write_wins(self, pump_instances):
         if not pump_instances:
             pytest.skip("No pump instances available")
-        value_a, value_b = PUMPS_FLOWRATE_VALUES
         for inst, cnt in pump_instances.items():
             for pump in range(1, cnt + 1):
+                info = requests.get(
+                    f"{BASE_URL}/pumps/{inst}/info/{pump}", timeout=REQUEST_TIMEOUT
+                )
+                assert info.status_code == 200, f"GET info failed for pump {inst}/{pump}"
+                max_fr = float(info.json()["max_flowrate"])
+                value_a = round(-max_fr * 0.5, 4)
+                value_b = round(max_fr, 4)
                 url = f"/pumps/{inst}/flowrate/{pump}"
                 try:
                     self._run_last_write_wins(url, "flowrate", value_a, value_b, 0.1)
@@ -202,8 +206,13 @@ class TestPumpsIdempotentWrite:
             pytest.skip("No pump instances available")
         for inst, cnt in pump_instances.items():
             for pump in range(1, cnt + 1):
+                info = requests.get(
+                    f"{BASE_URL}/pumps/{inst}/info/{pump}", timeout=REQUEST_TIMEOUT
+                )
+                assert info.status_code == 200, f"GET info failed for pump {inst}/{pump}"
+                flowrate = float(info.json()["max_flowrate"])
                 url = f"/pumps/{inst}/flowrate/{pump}"
                 try:
-                    self._run_idempotent(url, "flowrate", PUMPS_FLOWRATE_IDEMPOTENT, 0.1)
+                    self._run_idempotent(url, "flowrate", flowrate, 0.1)
                 finally:
                     requests.get(f"{BASE_URL}/pumps/{inst}/stop/{pump}", timeout=REQUEST_TIMEOUT)

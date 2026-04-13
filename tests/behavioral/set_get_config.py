@@ -94,6 +94,5 @@ LED_ALL_CHANNEL_VALUES = [
     [0.2, 0.4, 0.6, 0.8],
 ]
 
-# Pumps module: speed and flowrate values
-PUMPS_SPEED_VALUES    = [-1.0, 0.0, 1.0]
-PUMPS_FLOWRATE_VALUES = [28.0]
+# Pumps module: speed values
+PUMPS_SPEED_VALUES = [-1.0, 0.0, 1.0]

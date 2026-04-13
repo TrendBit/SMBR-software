@@ -8,7 +8,6 @@ from .set_get_config import (
     LED_SINGLE_CHANNEL_VALUES,
     LED_ALL_CHANNEL_VALUES,
     PUMPS_SPEED_VALUES,
-    PUMPS_FLOWRATE_VALUES,
 )
 
 _STOP_URLS = [
@@ -158,12 +157,17 @@ class TestPumpsSetGet:
 
                 requests.get(f"{BASE_URL}/pumps/{inst}/stop/{pump}", timeout=REQUEST_TIMEOUT)
 
-    @pytest.mark.parametrize("flowrate", PUMPS_FLOWRATE_VALUES)
-    def test_flowrate_set_get(self, pump_instances, flowrate):
+    def test_flowrate_set_get(self, pump_instances):
         if not pump_instances:
             pytest.skip("No pump instances available")
         for inst, cnt in pump_instances.items():
             for pump in range(1, cnt + 1):
+                info = requests.get(
+                    f"{BASE_URL}/pumps/{inst}/info/{pump}", timeout=REQUEST_TIMEOUT
+                )
+                assert info.status_code == 200, f"GET info failed for pump {inst}/{pump}"
+                flowrate = float(info.json()["max_flowrate"])
+
                 resp = requests.post(
                     f"{BASE_URL}/pumps/{inst}/flowrate/{pump}",
                     json={"flowrate": flowrate},

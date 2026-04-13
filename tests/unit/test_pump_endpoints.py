@@ -176,8 +176,12 @@ def test_flowrate_invalid_bodies(pump_info):
 def test_calibration_valid(pump_info):
     """Calibration POST with zero flowrate should succeed for every pump."""
     for inst, pump in iterate_pumps(pump_info):
+        info = requests.get(f"{BASE_PUMPS}/{inst}/info/{pump}", timeout=REQUEST_TIMEOUT)
+        original_flowrate = float(info.json()["max_flowrate"]) if info.status_code == 200 else 0.0
+
         r = requests.post(f"{BASE_PUMPS}/{inst}/calibration/{pump}", json={"flowrate": 0.0}, timeout=REQUEST_TIMEOUT)
         assert r.status_code == 200
+        requests.post(f"{BASE_PUMPS}/{inst}/calibration/{pump}", json={"flowrate": original_flowrate}, timeout=REQUEST_TIMEOUT)
 
 def test_calibration_invalid(pump_info):
     """Calibration endpoint should reject bad indexes and payloads."""
@@ -193,6 +197,9 @@ def test_calibration_invalid(pump_info):
     min_val, max_val = -1000.0, 1000.0
     for inst, pump in iterate_pumps(pump_info):
         url = f"{BASE_PUMPS}/{inst}/calibration/{pump}"
+
+        orig_info = requests.get(f"{BASE_PUMPS}/{inst}/info/{pump}", timeout=REQUEST_TIMEOUT)
+        original_flowrate = float(orig_info.json()["max_flowrate"]) if orig_info.status_code == 200 else 0.0
         r = requests.post(url, json={}, timeout=REQUEST_TIMEOUT)
         assert r.status_code == 400
         r = requests.post(url, headers={"Content-Type": "application/json"}, timeout=REQUEST_TIMEOUT)
@@ -224,6 +231,7 @@ def test_calibration_invalid(pump_info):
         assert r.status_code == 400
         r = requests.post(url, data='{"flowrate": NaN}', headers={"Content-Type": "application/json"}, timeout=REQUEST_TIMEOUT)
         assert r.status_code == 400
+        requests.post(url, json={"flowrate": original_flowrate}, timeout=REQUEST_TIMEOUT)
 
 def test_move_valid(pump_info):
     """Move command with zero volume/flowrate must work on every pump."""

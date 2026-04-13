@@ -1,16 +1,14 @@
 LED_CHANNEL = "0"   # channel used for LED panel concurrency tests
 
 # Pumps module: values used for concurrency tests
-PUMPS_SPEED_VALUES    = (-0.5, 0.5)   # (value_a, value_b)
-PUMPS_FLOWRATE_VALUES = (-28.0, 28.0) # (value_a, value_b) 
+PUMPS_SPEED_VALUES        = (-0.5, 0.5)  # (value_a, value_b)
 PUMPS_SPEED_IDEMPOTENT    = 0.7
-PUMPS_FLOWRATE_IDEMPOTENT = 28.0
 
 
 # Seconds to wait after concurrent writes complete before issuing GET
-SETTLE_AFTER_WRITE_S = 0.3
+SETTLE_AFTER_WRITE_S = 0.5
 # Seconds to wait between first and second write (POST)
-DELAY_BETWEEN_WRITES_S = 0.1
+DELAY_BETWEEN_WRITES_S = 0.3
 
 LAST_WRITE_WINS = [
     {

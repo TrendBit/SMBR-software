@@ -1,23 +1,26 @@
-# Python API Testing
+# API Testing
 
-This directory contains all automated tests for the SMBR REST API.  The primary framework is
-**pytest**; a subset of endpoints is also exercised via **Schemathesis** for schema‑based
-generated inputs.
+This directory contains all automated tests for the SMBR REST API. Three types of testing
+are used:
 
-## Preparing a Python environment
+| Type | Location | Tool | Documentation |
+|------|----------|------|---------------|
+| **Unit** | `unit/` | pytest | `docs/unit.md` |
+| **Behavioral** | `behavioral/` | pytest | `docs/behavioral.md` |
+| **Schemathesis** | `schemathesis/` | schemathesis | `docs/schemathesis.md` |
 
-A virtual environment is recommended to avoid polluting the system Python.  Example using
-`venv`:
+## Preparing a Python Environment
+
+A virtual environment is recommended to avoid polluting the system Python:
 
 ```bash
 cd tests
 python3 -m venv venv
-source venv/bin/activate   
+source venv/bin/activate
 pip install -r requirements.txt
 ```
 
 Any subsequent invocation of `pytest` or `schemathesis` should be done with the venv activated.
-
 
 ## Configuration
 
@@ -30,72 +33,58 @@ DEVICE_PORT = 8089
 
 ## Running Tests
 
-Once dependencies are installed and the virtualenv activated, you can either run `pytest`
-directly or use the provided helper script.
+### All tests at once
 
-### One‑shot script
-
-A convenience shell script `run_tests.sh` lives in this directory.  When executed it will:
-
-1. run `pytest -v` against the entire `tests` tree
-2. read `BASE_URL` from `config.py` and echo it
-3. collect operation ids from `schemathesis/operations.txt`
-4. invoke Schemathesis against the server's OpenAPI spec
-
-Execute it like so:
+`run_tests.sh` runs all three suites sequentially and prints a final summary:
 
 ```bash
 cd tests
 ./run_tests.sh
 ```
 
-### Pytest directly
+Each suite runs to completion regardless of whether a previous one failed. The script exits
+with a non-zero code if any suite failed.
 
-Use `pytest` from the `tests` directory. 
+### Unit tests only
 
-### Run everything
 ```bash
-pytest -v
+cd tests
+pytest unit/ -v
 ```
 
-### Filter by name
+### Behavioral tests only
+
 ```bash
-pytest -k printCustomText    
+cd tests
+pytest behavioral/ -v
 ```
 
-### Stop on first failure
+### Schemathesis only
+
 ```bash
-pytest -x
+cd tests
+./schemathesis/run_schemathesis.sh
 ```
 
 ---
 
-## Schemathesis fuzzing
-
-The `tests/schemathesis/` directory contains an OpenAPI schema and operation list used by
-Schemathesis to generate randomized requests. Running these tests helps catch edge cases
-uncovered by the hand‑written pytest modules.
-
-To execute the Schemathesis suite:
-
-```bash
-cd tests
-schemathesis run http://<device>:<port>/api-docs/oas-3.0.0.json --include-operation-id <operation>
-```
-
-The `operations.txt` file lists the operations to include.
 ## Project Structure
 
-- **docs/**: documentation for each test category (single‑field, two‑field, pump, etc.)
-- **unit/**: pytest scripts and configuration for API tests
-- **schemathesis/**: schema/operation configuration for fuzz testing
-- `config.py`: host/port configuration
-- `requirements.txt`: Python dependencies
-
-For detailed scenarios see the docs directory:
-
-```bash
-ls docs/*.md
+```
+tests/
+├── run_tests.sh                  # Run all suites (unit + behavioral + schemathesis)
+├── config.py                     # Device IP and port
+├── requirements.txt              # Python dependencies
+├── conftest.py
+├── docs/
+│   ├── unit.md                   # Unit test documentation
+│   ├── behavioral.md             # Behavioral test documentation
+│   └── schemathesis.md           # Schemathesis documentation
+├── unit/                         # Unit tests (input validation)
+├── behavioral/                   # Behavioral tests (end-to-end system behaviour)
+└── schemathesis/
+    ├── run_schemathesis.sh       # Run schemathesis suite only
+    └── operations.txt            # Operation IDs to include
 ```
 
 

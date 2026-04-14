@@ -26,7 +26,8 @@ def discover_instances():
 def pump_info():
     """Pytest fixture yielding discovered instances mapping."""
     info = discover_instances()
-    assert info, "no pump instances available"
+    if not info:
+        pytest.skip("No pump instances available")
     return info
 
 @pytest.mark.parametrize("instance", [0, 13])
@@ -113,6 +114,8 @@ def test_speed_invalid_bodies(pump_info):
         assert r.status_code == 400
         r = requests.post(url, data='{"speed": NaN}', headers={"Content-Type": "application/json"}, timeout=REQUEST_TIMEOUT)
         assert r.status_code == 400
+    for inst, pump in iterate_pumps(pump_info):
+        requests.post(f"{BASE_PUMPS}/{inst}/speed/{pump}", json={"speed": 0.0}, timeout=REQUEST_TIMEOUT)
 
 def test_flowrate_get_valid(pump_info):
     """GET flowrate should return 200 for each known pump."""
@@ -172,6 +175,8 @@ def test_flowrate_invalid_bodies(pump_info):
         assert r.status_code == 400
         r = requests.post(url, data='{"flowrate": NaN}', headers={"Content-Type": "application/json"}, timeout=REQUEST_TIMEOUT)
         assert r.status_code == 400
+    for inst, pump in iterate_pumps(pump_info):
+        requests.get(f"{BASE_PUMPS}/{inst}/stop/{pump}", timeout=REQUEST_TIMEOUT)
 
 def test_calibration_valid(pump_info):
     """Calibration POST with zero flowrate should succeed for every pump."""

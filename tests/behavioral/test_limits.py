@@ -131,7 +131,7 @@ class TestPumpsMaxFlowrate:
                     f"pumps/{inst}/{pump}: set to {flowrate}, actual {actual} exceeds max_flowrate {max_flowrate}"
                 )
 
-                requests.post(
+                requests.get(
                     f"{BASE_URL}/pumps/{inst}/stop/{pump}", timeout=REQUEST_TIMEOUT
                 )
 

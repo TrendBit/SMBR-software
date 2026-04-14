@@ -30,7 +30,7 @@ STOP_ZERO_ENDPOINTS = [
             {"post_url": "/control/mixer/speed", "field": "speed", "value": 1.0},
         ],
         "stop_url": "/control/mixer/stop",
-        "settle_time": 5.0,  # wait for physical rotor to spin down
+        "settle_time": 7.0,  # wait for physical rotor to spin down
         "verify": [
             {"get_url": "/control/mixer/speed", "field": "speed", "expected": 0.0, "tolerance": 0.01},
             {"get_url": "/control/mixer/rpm",   "field": "rpm",   "expected": 0,   "tolerance": 10},

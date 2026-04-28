@@ -2,6 +2,25 @@
 
 The version number consists of MAJOR.MINOR identifiers.
 
+## 0.7
+
+### Added
+- Expanded behavioral test coverage:
+  - Set-get consistency tests for control and pump endpoints
+  - Concurrency tests (last-write-wins and idempotent writes)
+  - State persistence tests for control module restart scenarios
+  - Stop-zero behavior tests for control and pump endpoints
+  - Power draw tests
+  - Thermal effects tests for LED panel, fluorometer and spectrophotometer
+  - OJIP capture workflow tests
+  - Limit-from-info tests
+  - Move/interruption completion tests
+  - System stats tests
+- Script for running Schemathesis tests independently
+
+### Changed
+- Refactored `run_tests.sh` to improve test execution flow
+
 ## 0.6
 
 ### Changed

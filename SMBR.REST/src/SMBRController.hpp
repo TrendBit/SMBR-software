@@ -2559,6 +2559,28 @@ public:
     ADD_CORS(stopPump)
     ENDPOINT("GET", "/pumps/{instance_index}/stop/{pump_index}", stopPump, PATH(UInt8, instance_index), PATH(UInt8, pump_index));
 
+    /**
+     * @brief Sets the instance of a pump module identified by UID.
+     */
+    ENDPOINT_INFO(setPumpInstance) {
+        info->summary = "Sets the instance of a pump module identified by UID";
+        info->description = 
+            "Sets the instance of the pump module with the specified UID to the target instance.\n"
+            "This uses the Enumerator_set message to configure the module instance.\n";
+        info->addTag("Pumps module");
+        
+        info->addResponse<Object<MessageDto>>(Status::CODE_200, "application/json", "Successfully set pump instance")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Successfully set pump instance"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_400, "application/json", "Invalid instance index or UID")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Invalid instance index or UID"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Pump module with specified UID not found")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Pump module with specified UID not found"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to set pump instance")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to set pump instance"}}));
+    }
+    ADD_CORS(setPumpInstance)
+    ENDPOINT("POST", "/pumps/enumeration/{uid}/set-instance/{instance_index}", setPumpInstance, PATH(String, uid), PATH(UInt8, instance_index));
+
 // ==========================================
 // Recipes
 // ========================================== 

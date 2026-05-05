@@ -75,3 +75,10 @@ std::future<bool> VirtualPumpsModule::stop(uint8_t pump_index) {
         return true;
     });
 }
+
+std::future<bool> VirtualPumpsModule::setInstance(uint8_t target_instance) {
+    return std::async(std::launch::async, [target_instance]() {
+        Random::randomDelay();
+        return true;
+    });
+}

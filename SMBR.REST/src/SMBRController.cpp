@@ -2066,6 +2066,33 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     });
 }
 
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::setPumpInstance(const String& uid, const UInt8& instance_index) {
+    return processBool(__FUNCTION__, [&](){
+        if (instance_index < 1 || instance_index > 12) {
+            throw ArgumentException("Invalid instance_index. Must be between 1 and 12.");
+        }
+
+        std::string uidStr = uid->c_str();
+        auto existing = systemModule->existing();
+        Instance moduleInstance;
+        bool found = false;
+
+        for (const auto& m : existing) {
+            if (m.type == Modules::Pump && m.uidHex == uidStr) {
+                moduleInstance = m.instance;
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            throw NotFoundException("Pump module with specified UID not found");
+        }
+
+        return waitFor(systemModule->pumpsModule(moduleInstance)->setInstance(instance_index));
+    });
+}
+
 // ==========================================
 // Recipes
 // ==========================================

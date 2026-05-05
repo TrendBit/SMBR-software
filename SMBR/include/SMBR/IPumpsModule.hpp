@@ -73,4 +73,9 @@ public:
      * @brief Stops a specific pump.
      */
     virtual std::future<bool> stop(uint8_t pump_index) = 0;
+
+    /**
+     * @brief Sets the instance of this pump module to the target instance.
+     */
+    virtual std::future<bool> setInstance(uint8_t target_instance) = 0;
 };

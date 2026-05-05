@@ -12,6 +12,7 @@
 #include "codes/messages/pumps/set_max_flowrate.hpp"
 #include "codes/messages/pumps/move.hpp"
 #include "codes/messages/pumps/stop.hpp"
+#include "codes/messages/enumerator/enumerator_set.hpp"
 #include <SMBR/Log.hpp>
 
 using namespace Codes;
@@ -97,4 +98,31 @@ std::future<bool> CanPumpsModule::move(uint8_t pump_index, float volume, float f
 std::future<bool> CanPumpsModule::stop(uint8_t pump_index) {
     App_messages::Pumps::Stop request(pump_index);
     return base.set<App_messages::Pumps::Stop>(request);
+}
+
+std::future<bool> CanPumpsModule::setInstance(uint8_t target_instance) {
+    std::string uidHex = base.uidHex();
+    
+    UID_t uid = {0, 0, 0, 0, 0, 0};
+    
+    size_t startIdx = 0;
+    if (uidHex.length() >= 2 && uidHex[0] == '0' && uidHex[1] == 'x') {
+        startIdx = 2;
+    }
+    
+    if (uidHex.length() - startIdx != 12) {
+        return std::async(std::launch::deferred, []() {
+            return false;
+        });
+    }
+    
+    for (int i = 0; i < 6; i++) {
+        std::string byte_str = uidHex.substr(startIdx + (i * 2), 2);
+        uid[i] = static_cast<uint8_t>(std::strtol(byte_str.c_str(), nullptr, 16));
+    }
+    
+    Codes::Instance target = static_cast<Codes::Instance>(target_instance);
+    App_messages::Common::Enumerator_set request(target, uid);
+    
+    return base.set<App_messages::Common::Enumerator_set>(request);
 }

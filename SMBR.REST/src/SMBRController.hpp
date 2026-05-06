@@ -924,7 +924,8 @@ public:
         info->summary = "Sets all channels of LED panel to given intensity";
         info->description = 
             "Sets all channels of LED panel to respective intensities at once."
-            "In API is this request split into several CAN messages settings individual channels.";
+            "In API is this request split into several CAN messages settings individual channels."
+            "Valid intensity range for all channels is 0.0 to 1.0.";
         info->addTag("Control module");  
 
         auto example = IntensitiesDto::createShared();
@@ -949,7 +950,7 @@ public:
     */
     ENDPOINT_INFO(setIntensity) {
         info->summary = "Sets the selected channel of LED panel to given intensity";
-        info->description = "Sets the selected channel of LED panel to given intensity.";
+        info->description = "Sets the selected channel of LED panel to given intensity. Valid intensity range is 0.0 to 1.0.";
         info->addTag("Control module");
         auto example = IntensityDto::createShared();
         example->intensity = 0.5f;
@@ -1057,7 +1058,8 @@ public:
         info->summary = "Sets the target temperature for the heater (temperature of bottle)";
         info->description = 
             "Sets the target temperature for the heater (temperature of bottle)."
-            "Temperature is in ˚C and heater will set intensity in order to reach this temperature.";
+            "Temperature is in ˚C and heater will set intensity in order to reach this temperature."
+            "Valid temperature range is 0.0 to 60.0 ˚C.";
         info->addTag("Control module");
         auto example = TempDto::createShared();
         example->temperature = 30.5f; 
@@ -1180,7 +1182,7 @@ public:
      */
     ENDPOINT_INFO(getCuvettePumpSpeed) {
         info->summary = "Retrieves current speed of the cuvette pump";
-        info->description = "Retrieves current speed of the cuvette pump. Range -1.0 (pumping liquid out) to 1.0 (pumping liquid in).";
+        info->description = "Retrieves current speed of the cuvette pump. Range .0 (pumping liquid out) to 1.0 (pumping liquid in).";
         info->addTag("Control module");
         auto example = SpeedDto::createShared();
         example->speed = -0.33f;
@@ -1203,7 +1205,8 @@ public:
             "Sets flowrate of the cuvette pump in ml/min. Maximal flowrate is internally limited by used pump. Normaly in range 20-100 ml/min."
             "Current limit of pump can be obtained from info endpoint. Positive value means pumping liquid in, negative value means pumping liquid out of the cuvette."
             "When this endpoint is used pump will run until interrupted with another request."
-            "Pump does not have feedback loop, so flowrate is not guaranteed but extrapolated from measured data.";
+            "Pump does not have feedback loop, so flowrate is not guaranteed but extrapolated from measured data."
+            "Valid flowrate range is -1000.0 to 1000.0 ml/min.";
         info->addTag("Control module");
         auto example = FlowrateDto::createShared();
         example->flowrate = 10.0f; 
@@ -1251,7 +1254,8 @@ public:
             "Amount of liquid is in ml, positive value means pumping liquid in, negative value means pumping liquid out of the cuvette."
             "Flowrate can be specified in ml/min and must be positive, if set to zero then maximal flowrate of pump will be used."
             "Flowrate is limited by current pump capabilities. This can be checked using the info endpoint."
-            "Status of movement can be checked by using GET request to flowrate or speed endpoints.";
+            "Status of movement can be checked by using GET request to flowrate or speed endpoints."
+            "Valid volume range is 0.0 to 1000.0 ml. Valid flowrate range is -1000.0 to 1000.0 ml/min.";
         info->addTag("Control module");
     
         auto example = MoveDto::createShared();
@@ -1331,8 +1335,9 @@ public:
             "- Empty measuring cylinder.\n"
             "- Run the pump at maximum speed for exactly one minute (speed 1.0).\n"
             "- Measure the volume of liquid dispensed into the measuring cylinder.\n"
-            "- Send measured volume / flowrate to the module. Unit is ml/min.\n"
-            "Common value is around 10 to 100 ml/min, default is 30 ml/min.";
+            "- Send measured volume/flowrate to the module. Unit is ml/min.\n\n"
+            "Common value is around 10 to 100 ml/min, default is 30 ml/min."
+            "Valid flowrate range is 0.0 to 1000.0 ml/min.";
         info->addTag("Control module");
         auto example = FlowrateDto::createShared();
         example->flowrate = 30.0;
@@ -1429,7 +1434,8 @@ public:
             "When this endpoint is used, pump will run until interrupted with another request."
             "Aerator does not have feedback loop. Flowrate is not guaranteed but extrapolated from measured data."
             "Due to this, real flowrate can be different when using longer tubes."
-            "In those cases aerator can be calibrated using calibration endpoint.";
+            "In those cases aerator can be calibrated using calibration endpoint."
+            "Valid flowrate range is 10.0 to 5000.0 ml/min.";
         info->addTag("Control module");
         auto example = FlowrateDto::createShared();
         example->flowrate = 100.0f;
@@ -1478,7 +1484,8 @@ public:
             "Sends calibrated value of flowrate per minute (ml/min) to aerator in order to calibrate move and flowrate commands.\n"
             "Calibration should be used if it is necessary to achieve a dosing accuracy greater than 20 %.\n"
             "Value of calibration can be checked by using GET request to info endpoint of aerator.\n"
-            "Calibration send by this endpoint is stored on module and used after restart.\n";
+            "Calibration send by this endpoint is stored on module and used after restart.\n"
+            "Valid flowrate range is 0.0 to 1000.0 ml/min.";
         info->addTag("Control module");
 
         auto example = FlowrateDto::createShared();
@@ -1504,7 +1511,8 @@ public:
         info->description = 
             "Moves requested amount of air into the bottle. Amount of air is in ml."
             "Flowrate can be specified in ml/min and must be positive, if set to zero then maximal flowrate of pump will be used."
-            "Status of movement can be checked by using GET request to flowrate or speed endpoints.";
+            "Status of movement can be checked by using GET request to flowrate or speed endpoints."
+            "Valid volume range is 0.0 to 1000.0 ml. Valid flowrate range is 10.0 to 5000.0 ml/min.";
         info->addTag("Control module");
         auto example = MoveDto::createShared();
         example->volume = 100.0f;
@@ -1609,7 +1617,8 @@ public:
             "Sets target RPM of the mixer. Real minimal and maximal values are limited by used stirrer element and liquid density."
             "Mixer will try to achieve and hold this RPM but it is not guaranteed that it will be reached."
             "Maximal RPM depends on used magnetic stirrer and liquid density."
-            "Speed ramping can take some time so mixer can reach maximal RPM in several seconds.";
+            "Speed ramping can take some time so mixer can reach maximal RPM in several seconds."
+            "Valid rpm range is 0.0 to 10000.0 RPM.";
         info->addTag("Control module");
         auto example = RpmDto::createShared();
         example->rpm = 3000.0f; 
@@ -1649,7 +1658,10 @@ public:
      */
     ENDPOINT_INFO(stirMixer) {
         info->summary = "Sets the mixer to stir at a specified RPM for a specified time";
-        info->description = "Sets the mixer to stir at a specified RPM for a specified time. RPM is the speed of the mixer and time is the duration in seconds.";
+        info->description = 
+            "Sets the mixer to stir at a specified RPM for a specified time." 
+            "RPM is the speed of the mixer and time is the duration in seconds."
+            "Valid rpm range is 0.0 to 10000.0 RPM. Valid time range is 0.0 to 3600.0 seconds.";
         info->addTag("Control module");
         auto example = StirDto::createShared();
         example->rpm = 3000.0f; 
@@ -1853,7 +1865,8 @@ public:
             "Absolute value is calculated based on gain of detector and emitor intensity. And relates to detector max range.\n"
             "\n"
             "Allowed values:\n"
-            "- detector_gain: \"x1\", \"x10\", \"x50\", \"Auto\"\n";
+            "- detector_gain: \"x1\", \"x10\", \"x50\", \"Auto\"\n"
+            "- emitor_intensity: 0.2 to 1.0";
         info->addTag("Sensor module");
 
         auto exampleRequest = FluorometerSingleSampleRequestDto::createShared();
@@ -1901,7 +1914,10 @@ public:
             "\n"
             "Allowed values:\n"
             "- detector_gain: \"x1\", \"x10\", \"x50\", \"Auto\"\n"
-            "- timebase: \"linear\", \"logarithmic\"\n";
+            "- emitor_intensity: 0.2 to 1.0\n"
+            "- timebase: \"linear\", \"logarithmic\"\n"
+            "- length_ms: 200 to 4000 ms\n"
+            "- sample_count: 200 to 4000 samples";
         info->addTag("Sensor module");
 
         auto example = FluorometerMeasurementDto::createShared();
@@ -2459,7 +2475,8 @@ public:
             "Maximal flowrate is internally limited by used pump. Normally in range 20-200 ml/min.\n"
             "Maximal available flowrate can be determined from info endpoint.\n"
             "Positive value means pumping liquid in, negative value means pumping liquid out of the system.\n"
-            "When this endpoint is used pump will run until interrupted with another request.\n";
+            "When this endpoint is used pump will run until interrupted with another request.\n"
+            "Valid flowrate range is -1000.0 to 1000.0 ml/min, but it can be limited by pump capabilities.";
         info->addTag("Pumps module");
         
         auto example = FlowrateDto::createShared();
@@ -2488,7 +2505,8 @@ public:
             "Sends calibrated value of flowrate per minute (ml/min) to pump in order to calibrate move and flowrate commands.\n"
             "Calibration should be used if it is necessary to achieve a dosing accuracy greater than 5 % or if the liquid has a non-standard viscosity.\n"
             "Value of calibration can be checked by using GET request to info endpoint of pump.\n"
-            "See cuvette pump calibration endpoint for more details.\n";
+            "See cuvette pump calibration endpoint for more details.\n"
+            "Valid flowrate range is 0.0 to 1000.0 ml/min.";
         info->addTag("Pumps module");
 
         auto example = FlowrateDto::createShared();
@@ -2517,7 +2535,8 @@ public:
             "Moves requested amount of liquid by specified pump in ml.\n"
             "Positive value means pumping liquid in, negative value means pumping liquid out of the system.\n"
             "When this endpoint is used pump will run until requested amount of liquid is moved.\n"
-            "Pump can be stopped because is done by stop endpoint.\n";
+            "Pump can be stopped because is done by stop endpoint.\n"
+            "Valid volume range is -1000.0 to 1000.0 ml. Valid flowrate range is 0.0 to 1000.0 ml/min.";
         info->addTag("Pumps module");
         
         auto example = MoveDto::createShared();

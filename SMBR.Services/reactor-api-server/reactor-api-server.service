@@ -1,8 +1,8 @@
 [Unit]
 Description=SMBR API Server Service
 After=network.target
-After=reactor-core-module.service
-Wants=reactor-core-module.service
+After=reactor-startup-updates.service
+Wants=reactor-startup-updates.service
 
 
 [Service]

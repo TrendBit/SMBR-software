@@ -1,0 +1,23 @@
+[Unit]
+Description=SMBR Startup Updates Service
+After=network.target
+After=reactor-core-module.service
+Wants=reactor-core-module.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/reactor/firmware
+ExecStart=python3 startup_autoupdate.py -y -o -d binaries/
+Restart=no
+User=root
+
+# Give this service higher priority
+# needed because it reads the whole binaries
+# and gets slowed down a lot by other reads
+Nice=-10
+IOWeight=1000
+IOSchedulingClass=realtime
+IOSchedulingPriority=0
+
+[Install]
+WantedBy=multi-user.target

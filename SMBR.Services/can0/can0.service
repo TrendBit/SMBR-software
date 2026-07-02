@@ -6,7 +6,7 @@ Before=network.target
 [Service]
 Type=oneshot
 ExecStartPre=/sbin/ip link set can0 type can restart-ms 100
-ExecStart=/sbin/ip link set can0 type can bitrate 500000
+ExecStart=/bin/bash -c "/sbin/ip link set can0 type can bitrate 500000 && /sbin/ifconfig can0 txqueuelen 1000"
 ExecStartPost=/sbin/ip link set can0 up
 ExecStop=/sbin/ip link set can0 down
 RemainAfterExit=yes

@@ -31,11 +31,15 @@ module_instances = {
 }
 
 message_types = {
-    "Probe_modules_request"   : 0x300,
-    "Probe_modules_response"  : 0x301,
-    "Device_reset"            : 0x200,
-    "Device_usb_bootloader"   : 0x201,
-    "Device_can_bootloader"   : 0x202,
+    "Probe_modules_request"      : 0x300,
+    "Probe_modules_response"     : 0x301,
+    "Device_reset"               : 0x200,
+    "Device_usb_bootloader"      : 0x201,
+    "Device_can_bootloader"      : 0x202,
+    "Core_fw_version_request"    : 0xa06,
+    "Core_fw_version_response"   : 0xa07,
+    "Mini_OLED_clear_custom_text": 0x470,
+    "Mini_OLED_print_custom_text": 0x471,
 }
 
 uid_length = 6
@@ -47,7 +51,7 @@ def reverse_dict_search(dictionary, value):
     return "Unknown"
 
 class Message:
-    def __init__(self, message_type=None, module_type=None, instance=None, can_message=None):
+    def __init__(self, message_type=None, module_type=None, instance=None, data=None, can_message=None):
         if can_message is not None:
             self.message_type = (can_message.arbitration_id >> 16) & 0xfff
             self.module_type = (can_message.arbitration_id >> 4) & 0x0f
@@ -57,7 +61,7 @@ class Message:
             self.message_type = message_type
             self.module_type = module_type
             self.instance = instance
-            self.data = []
+            self.data = data
 
     def __str__(self):
         return f"Message type: {reverse_dict_search(message_types,self.message_type)}, Module type: {reverse_dict_search(module_types,self.module_type)}, Instance: {reverse_dict_search(module_instances, self.instance)}"
@@ -71,13 +75,16 @@ class Module:
         self.instance = instance
         self.uid = uid
 
-    def __init__(self, message):
-        self.module_type = message.module_type
-        self.instance = message.instance
+    @classmethod
+    def from_message(cls, message):
+        module_type = message.module_type
+        instance = message.instance
         if len(message.data) == uid_length:
-            self.uid = message.data
+            uid = message.data
         else:
-            self.uid = []
+            uid = []
+        
+        return Module(module_type, instance, uid)
 
     def uid_str(self) -> str:
         return ''.join(f'{byte:02x}' for byte in self.uid)

@@ -27,7 +27,7 @@ add_subdirectory(SMBR.Services/reactor-database-export)
 #add_subdirectory(SMBR.Services/reactor-web-control)
 # New typescript web control server
 add_subdirectory(SMBR.Services/reactor-web-control-ts)
-
+add_subdirectory(SMBR.Services/reactor-startup-updates)
 #utilities
 add_subdirectory(SMBR.Utilities/reactor-can-watch)
 add_subdirectory(SMBR.Utilities/reactor-firmware-update)

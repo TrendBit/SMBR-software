@@ -7,16 +7,16 @@ set(WEB_CONTROL_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/build)
 # Build the Node.js application during CMake build
 add_custom_target(reactor-web-control-ts-build ALL
     COMMENT "Building reactor-web-control-ts"
-
-    # Install and build server
-    COMMAND ${CMAKE_COMMAND} -E echo "Installing server dependencies..."
-    COMMAND cd ${WEB_CONTROL_SRC_DIR}/server && npm install
+    
+    # install needed files
+    COMMAND ${CMAKE_COMMAND} -E echo "Installing dependencies..."
+    COMMAND cd ${WEB_CONTROL_SRC_DIR} && npm ci && npm run ci:all
+    
+    # build server
     COMMAND ${CMAKE_COMMAND} -E echo "Building server..."
     COMMAND cd ${WEB_CONTROL_SRC_DIR}/server && npm run build
 
-    # Install and build client
-    COMMAND ${CMAKE_COMMAND} -E echo "Installing client dependencies..."
-    COMMAND cd ${WEB_CONTROL_SRC_DIR}/client && npm install
+    # build client
     COMMAND ${CMAKE_COMMAND} -E echo "Building client..."
     COMMAND cd ${WEB_CONTROL_SRC_DIR}/client && npm run build
 

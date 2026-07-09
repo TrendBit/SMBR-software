@@ -21,6 +21,9 @@ echo "Host: $HOST"
 #stop services over ssh
 ssh ${HOST} systemctl stop can0.service reactor-database-export.service reactor-core-module.service reactor-startup-updates.service reactor-api-server.service reactor-web-control.service reactor-web-control-ts.service
 
+#remove old firmware binaries
+ssh ${HOST} rm /home/reactor/firmware/binaries/*
+
 #rsync to rpi
 rsync -rv --no-perms \build/rpi/install/filesystem/ ${HOST}:/
 

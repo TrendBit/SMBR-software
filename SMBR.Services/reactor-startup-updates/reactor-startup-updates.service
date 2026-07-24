@@ -7,7 +7,7 @@ Wants=reactor-core-module.service
 [Service]
 Type=oneshot
 WorkingDirectory=/home/reactor/firmware
-ExecStart=python3 startup_autoupdate.py -y -o -d binaries/
+ExecStart=python3 update_all_modules.py -y -o -d binaries/ -s -f version.txt
 Restart=no
 User=root
 

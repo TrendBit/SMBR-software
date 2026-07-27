@@ -419,6 +419,40 @@ public:
 // ==========================================
 
     /**
+     * @brief Retrieves the systemd status of every managed SMBR service.
+     */
+    ENDPOINT_INFO(getServiceStatuses) {
+        info->summary = "List status of all managed SMBR services";
+        info->addTag("Services");
+        info->description = "Returns the systemd status of every managed service.";
+        auto example = oatpp::List<Object<ServiceStatusDto>>::createShared();
+        auto core = ServiceStatusDto::createShared();
+        core->name = "reactor-core-module.service";
+        core->load_state = "loaded";
+        core->active_state = "active";
+        core->sub_state = "running";
+        core->enabled = true;
+        core->main_pid = 1234;
+        core->since = "Wed 2026-07-15 08:30:12 UTC";
+        example->push_back(core);
+        auto db = ServiceStatusDto::createShared();
+        db->name = "reactor-database-export.service";
+        db->load_state = "loaded";
+        db->active_state = "failed";
+        db->sub_state = "failed";
+        db->enabled = true;
+        db->main_pid = 0;
+        db->since = "Wed 2026-07-15 08:31:47 UTC";
+        example->push_back(db);
+        info->addResponse<List<Object<ServiceStatusDto>>>(Status::CODE_200, "application/json", "Status of all managed services")
+            .addExample("application/json", example);
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to query the service via systemctl")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve status: systemctl exited with code 1"}}));
+    }
+    ADD_CORS(getServiceStatuses)
+    ENDPOINT("GET", "/services", getServiceStatuses);
+
+    /**
      * @brief Retrieves the current systemd status of the given managed service.
      */
     ENDPOINT_INFO(getServiceStatus) {
@@ -2869,6 +2903,7 @@ private:
     };
     std::string serviceUnitName(const oatpp::Enum<dto::ServiceEnum>::AsString& service);
     SystemdUnitStatus querySystemdUnit(const std::string& unitName);
+    oatpp::Object<ServiceStatusDto> toServiceStatusDto(const std::string& unitName, const SystemdUnitStatus& status);
     int getChannel(const dto::ChannelEnum& channel);
     Fluorometer_config::Gain getGain(const std::string& gainStr);
     Fluorometer_config::Timing getTimebase(const std::string& timebaseStr);

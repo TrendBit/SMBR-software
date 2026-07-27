@@ -543,6 +543,21 @@ std::string SMBRController::serviceUnitName(const oatpp::Enum<dto::ServiceEnum>:
     throw ArgumentException("Unknown service");
 }
 
+static const std::vector<std::string>& managedServiceUnitNames() {
+    static const std::vector<std::string> names = {
+        "reactor-core-module.service",
+        "reactor-api-server.service",
+        "reactor-web-control-ts.service",
+        "reactor-database-export.service",
+        "reactor-startup-updates.service",
+        "can0.service",
+        "avahi-daemon.service",
+        "swupdate.service",
+        "telegraf.service"
+    };
+    return names;
+}
+
 SMBRController::SystemdUnitStatus SMBRController::querySystemdUnit(const std::string& unitName) {
     Poco::Pipe outPipe;
     Poco::Process::Args args{
@@ -620,15 +635,37 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
             throw NotFoundException("Unit '" + unitName + "' not found");
         }
 
-        auto dto = ServiceStatusDto::createShared();
-        dto->name = unitName;
-        dto->load_state = status.loadState;
-        dto->active_state = status.activeState;
-        dto->sub_state = status.subState;
-        dto->enabled = (status.unitFileState == "enabled" || status.unitFileState == "enabled-runtime");
-        dto->main_pid = status.mainPid;
-        dto->since = status.since;
-        return createDtoResponse(Status::CODE_200, dto);
+        return createDtoResponse(Status::CODE_200, toServiceStatusDto(unitName, status));
+    });
+}
+
+oatpp::Object<ServiceStatusDto> SMBRController::toServiceStatusDto(const std::string& unitName, const SystemdUnitStatus& status) {
+    auto dto = ServiceStatusDto::createShared();
+    dto->name = unitName;
+    dto->load_state = status.loadState;
+    dto->active_state = status.activeState;
+    dto->sub_state = status.subState;
+    dto->enabled = (status.unitFileState == "enabled" || status.unitFileState == "enabled-runtime");
+    dto->main_pid = status.mainPid;
+    dto->since = status.since;
+    return dto;
+}
+
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getServiceStatuses() {
+    return process(__FUNCTION__, [&]() {
+        auto list = oatpp::List<oatpp::Object<ServiceStatusDto>>::createShared();
+        for (const auto& unitName : managedServiceUnitNames()) {
+            SystemdUnitStatus status;
+            try {
+                status = querySystemdUnit(unitName);
+            } catch (std::exception& e) {
+                LWARNING("API") << "Api getServiceStatuses failed to query unit " << unitName << ": " << e.what() << LE;
+                status = SystemdUnitStatus();
+                status.loadState = "not-found";
+            }
+            list->push_back(toServiceStatusDto(unitName, status));
+        }
+        return createDtoResponse(Status::CODE_200, list);
     });
 }
 

@@ -66,6 +66,7 @@
 #include "dto/ModuleIssuesListDto.hpp"
 #include "dto/ServiceEnum.hpp"
 #include "dto/ServiceStatusDto.hpp"
+#include "dto/ServiceLogsDto.hpp"
 #include "oatpp/data/mapping/ObjectMapper.hpp"
 
 #include <future>
@@ -476,6 +477,34 @@ public:
     }
     ADD_CORS(getServiceStatus)
     ENDPOINT("GET", "/services/{service}", getServiceStatus, PATH(oatpp::Enum<dto::ServiceEnum>::AsString, service));
+
+    /**
+     * @brief Retrieves recent journal log lines for the given managed service.
+     */
+    ENDPOINT_INFO(getServiceLogs) {
+        info->summary = "Get recent log lines for a service";
+        info->addTag("Services");
+        info->description = "Returns the most recent journal entries for the given service unit.";
+        info->queryParams.add<oatpp::Int32>("lines").required = false;
+        info->queryParams["lines"].description = "Number of most recent log lines to return (1-1000, default 100).";
+
+        auto example = ServiceLogsDto::createShared();
+        example->name = "reactor-core-module.service";
+        example->lines = oatpp::List<oatpp::String>::createShared();
+        example->lines->push_back("Jul 15 08:30:12 reactor reactor-core-module[1234]: Starting SMBR Core Module Service...");
+
+        info->addResponse<Object<ServiceLogsDto>>(Status::CODE_200, "application/json", "Recent log lines for the service")
+            .addExample("application/json", example);
+        info->addResponse<Object<MessageDto>>(Status::CODE_400, "application/json", "Invalid lines parameter")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "lines must be between 1 and 1000"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Service unit not found")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Unit 'reactor-core-module.service' not found"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to query the service logs via journalctl")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve logs: journalctl exited with code 1"}}));
+    }
+    ADD_CORS(getServiceLogs)
+    ENDPOINT("GET", "/services/{service}/logs", getServiceLogs,
+        REQUEST(std::shared_ptr<IncomingRequest>, request), PATH(oatpp::Enum<dto::ServiceEnum>::AsString, service));
 
 // ==========================================
 // Common Endpoints
@@ -2904,6 +2933,8 @@ private:
     std::string serviceUnitName(const oatpp::Enum<dto::ServiceEnum>::AsString& service);
     SystemdUnitStatus querySystemdUnit(const std::string& unitName);
     oatpp::Object<ServiceStatusDto> toServiceStatusDto(const std::string& unitName, const SystemdUnitStatus& status);
+
+    std::vector<std::string> queryServiceLogs(const std::string& unitName, int lineCount);
     int getChannel(const dto::ChannelEnum& channel);
     Fluorometer_config::Gain getGain(const std::string& gainStr);
     Fluorometer_config::Timing getTimebase(const std::string& timebaseStr);

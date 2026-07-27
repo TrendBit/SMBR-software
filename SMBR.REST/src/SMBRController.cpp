@@ -669,6 +669,74 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     });
 }
 
+std::vector<std::string> SMBRController::queryServiceLogs(const std::string& unitName, int lineCount) {
+    Poco::Pipe outPipe;
+    Poco::Process::Args args{
+        "-u", unitName, "-n", std::to_string(lineCount), "--no-pager"
+    };
+
+    Poco::ProcessHandle ph = Poco::Process::launch("journalctl", args, nullptr, &outPipe, nullptr);
+
+    Poco::PipeInputStream istr(outPipe);
+    std::stringstream output;
+    Poco::StreamCopier::copyStream(istr, output);
+
+    int exitCode = ph.wait();
+    if (exitCode != 0) {
+        throw std::runtime_error("journalctl exited with code " + std::to_string(exitCode));
+    }
+
+    std::vector<std::string> result;
+    std::string line;
+    while (std::getline(output, line)) {
+        if (!line.empty()) {
+            result.push_back(line);
+        }
+    }
+    return result;
+}
+
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getServiceLogs(const std::shared_ptr<IncomingRequest>& request, const oatpp::Enum<dto::ServiceEnum>::AsString& service) {
+    return process(__FUNCTION__, [&]() {
+        std::string unitName = serviceUnitName(service);
+
+        int lineCount = 100;
+        auto linesParam = request->getQueryParameter("lines");
+        if (linesParam) {
+            try { lineCount = std::stoi(linesParam->c_str()); }
+            catch (...) { throw ArgumentException("lines must be an integer between 1 and 1000"); }
+            if (lineCount < 1 || lineCount > 1000) {
+                throw ArgumentException("lines must be between 1 and 1000");
+            }
+        }
+
+        SystemdUnitStatus status;
+        try {
+            status = querySystemdUnit(unitName);
+        } catch (std::exception& e) {
+            throw std::runtime_error("Failed to retrieve status: " + std::string(e.what()));
+        }
+        if (status.loadState == "not-found") {
+            throw NotFoundException("Unit '" + unitName + "' not found");
+        }
+
+        std::vector<std::string> logLines;
+        try {
+            logLines = queryServiceLogs(unitName, lineCount);
+        } catch (std::exception& e) {
+            throw std::runtime_error("Failed to retrieve logs: " + std::string(e.what()));
+        }
+
+        auto dto = ServiceLogsDto::createShared();
+        dto->name = unitName;
+        dto->lines = oatpp::List<oatpp::String>::createShared();
+        for (const auto& l : logLines) {
+            dto->lines->push_back(l);
+        }
+        return createDtoResponse(Status::CODE_200, dto);
+    });
+}
+
   // ==========================================
   // Common Endpoints
   // ==========================================

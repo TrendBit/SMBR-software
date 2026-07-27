@@ -2,12 +2,16 @@
 #include "SMBR/Exceptions.hpp"
 #include <Poco/DateTimeFormatter.h>
 #include <Poco/URI.h>
+#include <Poco/Process.h>
+#include <Poco/PipeStream.h>
+#include <Poco/StreamCopier.h>
 
 #include "SMBR/Recipes.hpp"
 #include "SMBR/Scheduler.hpp"
 #include "SMBR/Log.hpp"
 
 #include <chrono>
+#include <sstream>
 
 using namespace std::chrono_literals;
 
@@ -520,6 +524,112 @@ uint64_t SMBRController::readCanValue(const std::string& statName) {
     } else {
         throw TimeoutException("Timeout reading CAN stat: " + statName);
     }
+}
+
+  // ==========================================
+  // Services Endpoints
+  // ==========================================
+
+std::string SMBRController::serviceUnitName(const oatpp::Enum<dto::ServiceEnum>::AsString& service) {
+    if (service == dto::ServiceEnum::core_module) return "reactor-core-module.service";
+    if (service == dto::ServiceEnum::api_server) return "reactor-api-server.service";
+    if (service == dto::ServiceEnum::web_control_ts) return "reactor-web-control-ts.service";
+    if (service == dto::ServiceEnum::database_export) return "reactor-database-export.service";
+    if (service == dto::ServiceEnum::startup_updates) return "reactor-startup-updates.service";
+    if (service == dto::ServiceEnum::can0) return "can0.service";
+    if (service == dto::ServiceEnum::avahi_daemon) return "avahi-daemon.service";
+    if (service == dto::ServiceEnum::swupdate) return "swupdate.service";
+    if (service == dto::ServiceEnum::telegraf) return "telegraf.service";
+    throw ArgumentException("Unknown service");
+}
+
+SMBRController::SystemdUnitStatus SMBRController::querySystemdUnit(const std::string& unitName) {
+    Poco::Pipe outPipe;
+    Poco::Process::Args args{
+        "show", unitName, "--no-pager",
+        "--property=LoadState,ActiveState,SubState,UnitFileState,MainPID,ExecMainPID,"
+        "ActiveEnterTimestamp,ActiveExitTimestamp,InactiveEnterTimestamp,InactiveExitTimestamp"
+    };
+
+    Poco::ProcessHandle ph = Poco::Process::launch("systemctl", args, nullptr, &outPipe, nullptr);
+
+    Poco::PipeInputStream istr(outPipe);
+    std::stringstream output;
+    Poco::StreamCopier::copyStream(istr, output);
+
+    int exitCode = ph.wait();
+    if (exitCode != 0) {
+        throw std::runtime_error("systemctl exited with code " + std::to_string(exitCode));
+    }
+
+    SystemdUnitStatus status;
+    int32_t execMainPid = 0;
+    std::string activeEnter, activeExit, inactiveEnter, inactiveExit;
+    std::string line;
+    while (std::getline(output, line)) {
+        auto pos = line.find('=');
+        if (pos == std::string::npos) continue;
+        std::string key = line.substr(0, pos);
+        std::string value = line.substr(pos + 1);
+
+        if (key == "LoadState") status.loadState = value;
+        else if (key == "ActiveState") status.activeState = value;
+        else if (key == "SubState") status.subState = value;
+        else if (key == "UnitFileState") status.unitFileState = value;
+        else if (key == "ActiveEnterTimestamp") activeEnter = value;
+        else if (key == "ActiveExitTimestamp") activeExit = value;
+        else if (key == "InactiveEnterTimestamp") inactiveEnter = value;
+        else if (key == "InactiveExitTimestamp") inactiveExit = value;
+        else if (key == "MainPID") {
+            try { status.mainPid = std::stoi(value); }
+            catch (...) { status.mainPid = 0; }
+        } else if (key == "ExecMainPID") {
+            try { execMainPid = std::stoi(value); }
+            catch (...) { execMainPid = 0; }
+        }
+    }
+
+    if (status.mainPid == 0) {
+        status.mainPid = execMainPid;
+    }
+
+    if (status.activeState == "active" || status.activeState == "reloading") {
+        status.since = activeEnter;
+    } else if (status.activeState == "activating") {
+        status.since = inactiveExit;
+    } else if (status.activeState == "deactivating") {
+        status.since = activeExit;
+    } else {
+        status.since = inactiveEnter;
+    }
+    return status;
+}
+
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::getServiceStatus(const oatpp::Enum<dto::ServiceEnum>::AsString& service) {
+    return process(__FUNCTION__, [&]() {
+        std::string unitName = serviceUnitName(service);
+
+        SystemdUnitStatus status;
+        try {
+            status = querySystemdUnit(unitName);
+        } catch (std::exception& e) {
+            throw std::runtime_error("Failed to retrieve status: " + std::string(e.what()));
+        }
+
+        if (status.loadState == "not-found") {
+            throw NotFoundException("Unit '" + unitName + "' not found");
+        }
+
+        auto dto = ServiceStatusDto::createShared();
+        dto->name = unitName;
+        dto->load_state = status.loadState;
+        dto->active_state = status.activeState;
+        dto->sub_state = status.subState;
+        dto->enabled = (status.unitFileState == "enabled" || status.unitFileState == "enabled-runtime");
+        dto->main_pid = status.mainPid;
+        dto->since = status.since;
+        return createDtoResponse(Status::CODE_200, dto);
+    });
 }
 
   // ==========================================

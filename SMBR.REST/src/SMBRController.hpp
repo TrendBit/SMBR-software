@@ -64,6 +64,8 @@
 #include "dto/CollisionsDto.hpp"
 #include "dto/ModuleIssueDto.hpp"
 #include "dto/ModuleIssuesListDto.hpp"
+#include "dto/ServiceEnum.hpp"
+#include "dto/ServiceStatusDto.hpp"
 #include "oatpp/data/mapping/ObjectMapper.hpp"
 
 #include <future>
@@ -411,6 +413,35 @@ public:
     }
     ADD_CORS(getCanCollisions)
     ENDPOINT("GET", "/system/can/collisions", getCanCollisions);
+
+// ==========================================
+// Services Endpoints
+// ==========================================
+
+    /**
+     * @brief Retrieves the current systemd status of the given managed service.
+     */
+    ENDPOINT_INFO(getServiceStatus) {
+        info->summary = "Get status of a single managed service";
+        info->addTag("Services");
+        info->description = "Returns the current systemd status of the given service unit.";
+        auto example = ServiceStatusDto::createShared();
+        example->name = "reactor-core-module.service";
+        example->load_state = "loaded";
+        example->active_state = "active";
+        example->sub_state = "running";
+        example->enabled = true;
+        example->main_pid = 1234;
+        example->since = "Wed 2026-07-15 08:30:12 UTC";
+        info->addResponse<Object<ServiceStatusDto>>(Status::CODE_200, "application/json", "Service status")
+            .addExample("application/json", example);
+        info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Service unit not found")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Unit 'reactor-core-module.service' not found"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to query the service via systemctl")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve status: systemctl exited with code 1"}}));
+    }
+    ADD_CORS(getServiceStatus)
+    ENDPOINT("GET", "/services/{service}", getServiceStatus, PATH(oatpp::Enum<dto::ServiceEnum>::AsString, service));
 
 // ==========================================
 // Common Endpoints
@@ -2827,6 +2858,17 @@ private:
     
     uint64_t readCanValue(const std::string& statName);
     std::shared_ptr<ICommonModule> getModule(const oatpp::Enum<dto::ModuleEnum>::AsString& module);
+
+    struct SystemdUnitStatus {
+        std::string loadState;
+        std::string activeState;
+        std::string subState;
+        std::string unitFileState;
+        int32_t mainPid = 0;
+        std::string since;
+    };
+    std::string serviceUnitName(const oatpp::Enum<dto::ServiceEnum>::AsString& service);
+    SystemdUnitStatus querySystemdUnit(const std::string& unitName);
     int getChannel(const dto::ChannelEnum& channel);
     Fluorometer_config::Gain getGain(const std::string& gainStr);
     Fluorometer_config::Timing getTimebase(const std::string& timebaseStr);

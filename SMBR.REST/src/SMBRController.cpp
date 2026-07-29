@@ -797,6 +797,12 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     });
 }
 
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::restartService(const oatpp::Enum<dto::ServiceEnum>::AsString& service) {
+    return process(__FUNCTION__, [&]() {
+        return performServiceAction(service, "restart", "restarted");
+    });
+}
+
   // ==========================================
   // Common Endpoints
   // ==========================================

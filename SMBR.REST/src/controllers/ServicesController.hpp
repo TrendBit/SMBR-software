@@ -181,6 +181,23 @@ public:
     }
     ADD_CORS(enableService)
     ENDPOINT("POST", "/services/{service}/enable", enableService, PATH(oatpp::Enum<dto::ServiceEnum>::AsString, service));
+
+    /**
+     * @brief Disables the given managed service from starting at boot.
+     */
+    ENDPOINT_INFO(disableService) {
+        info->summary = "Disable a service from starting at boot";
+        info->addTag("Services");
+        info->description = "Disables the given service unit.";
+        info->addResponse<Object<MessageDto>>(Status::CODE_200, "application/json", "Service disabled")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Successfully disabled reactor-database-export.service"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Service unit not found")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Unit 'reactor-core-module.service' not found"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to query or act on the service via systemctl")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to disable service: systemctl exited with code 1"}}));
+    }
+    ADD_CORS(disableService)
+    ENDPOINT("POST", "/services/{service}/disable", disableService, PATH(oatpp::Enum<dto::ServiceEnum>::AsString, service));
     
 private:
     struct SystemdUnitStatus {

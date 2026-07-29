@@ -296,3 +296,9 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> ServicesControll
         return performServiceAction(service, "enable", "enabled");
     });
 }
+
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> ServicesController::disableService(const oatpp::Enum<dto::ServiceEnum>::AsString& service) {
+    return process(__FUNCTION__, [&]() {
+        return performServiceAction(service, "disable", "disabled");
+    });
+}

@@ -506,6 +506,23 @@ public:
     ENDPOINT("GET", "/services/{service}/logs", getServiceLogs,
         REQUEST(std::shared_ptr<IncomingRequest>, request), PATH(oatpp::Enum<dto::ServiceEnum>::AsString, service));
 
+    /**
+     * @brief Starts the given managed service.
+     */
+    ENDPOINT_INFO(startService) {
+        info->summary = "Start a service";
+        info->addTag("Services");
+        info->description = "Starts the given service unit.";
+        info->addResponse<Object<MessageDto>>(Status::CODE_200, "application/json", "Service started")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Successfully started reactor-web-control-ts.service"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Service unit not found")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Unit 'reactor-core-module.service' not found"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to query or act on the service via systemctl")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to start service: systemctl exited with code 1"}}));
+    }
+    ADD_CORS(startService)
+    ENDPOINT("POST", "/services/{service}/start", startService, PATH(oatpp::Enum<dto::ServiceEnum>::AsString, service));
+
 // ==========================================
 // Common Endpoints
 // ==========================================
@@ -2935,6 +2952,11 @@ private:
     oatpp::Object<ServiceStatusDto> toServiceStatusDto(const std::string& unitName, const SystemdUnitStatus& status);
 
     std::vector<std::string> queryServiceLogs(const std::string& unitName, int lineCount);
+    void runSystemctlAction(const std::string& unitName, const std::string& action);
+    std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> performServiceAction(
+        const oatpp::Enum<dto::ServiceEnum>::AsString& service,
+        const std::string& systemctlAction,
+        const std::string& pastTenseVerb);
     int getChannel(const dto::ChannelEnum& channel);
     Fluorometer_config::Gain getGain(const std::string& gainStr);
     Fluorometer_config::Timing getTimebase(const std::string& timebaseStr);

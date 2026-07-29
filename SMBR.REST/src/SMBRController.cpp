@@ -737,6 +737,60 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::
     });
 }
 
+void SMBRController::runSystemctlAction(const std::string& unitName, const std::string& action) {
+    Poco::Pipe errPipe;
+    Poco::Process::Args args{action, unitName};
+
+    Poco::ProcessHandle ph = Poco::Process::launch("systemctl", args, nullptr, nullptr, &errPipe);
+
+    Poco::PipeInputStream istr(errPipe);
+    std::stringstream errOutput;
+    Poco::StreamCopier::copyStream(istr, errOutput);
+
+    int exitCode = ph.wait();
+    if (exitCode != 0) {
+        std::string err = errOutput.str();
+        while (!err.empty() && (err.back() == '\n' || err.back() == '\r')) err.pop_back();
+        std::string message = "systemctl exited with code " + std::to_string(exitCode);
+        if (!err.empty()) message += ": " + err;
+        throw std::runtime_error(message);
+    }
+}
+
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::performServiceAction(
+    const oatpp::Enum<dto::ServiceEnum>::AsString& service,
+    const std::string& systemctlAction,
+    const std::string& pastTenseVerb)
+{
+    std::string unitName = serviceUnitName(service);
+
+    SystemdUnitStatus status;
+    try {
+        status = querySystemdUnit(unitName);
+    } catch (std::exception& e) {
+        throw std::runtime_error("Failed to retrieve status: " + std::string(e.what()));
+    }
+    if (status.loadState == "not-found") {
+        throw NotFoundException("Unit '" + unitName + "' not found");
+    }
+
+    try {
+        runSystemctlAction(unitName, systemctlAction);
+    } catch (std::exception& e) {
+        throw std::runtime_error("Failed to " + systemctlAction + " service: " + std::string(e.what()));
+    }
+
+    auto dto = MessageDto::createShared();
+    dto->message = "Successfully " + pastTenseVerb + " " + unitName;
+    return createDtoResponse(Status::CODE_200, dto);
+}
+
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRController::startService(const oatpp::Enum<dto::ServiceEnum>::AsString& service) {
+    return process(__FUNCTION__, [&]() {
+        return performServiceAction(service, "start", "started");
+    });
+}
+
   // ==========================================
   // Common Endpoints
   // ==========================================

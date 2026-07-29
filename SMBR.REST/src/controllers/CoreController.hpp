@@ -4,6 +4,7 @@
 
 #include "dto/CurrentDto.hpp"
 #include "dto/HostnameDto.hpp"
+#include "dto/HostnameRequestDto.hpp"
 #include "dto/IpDto.hpp"
 #include "dto/MessageDto.hpp"
 #include "dto/ModelDto.hpp"
@@ -87,6 +88,31 @@ public:
     }
     ADD_CORS(getHostname)
     ENDPOINT("GET", "/core/hostname", getHostname);
+
+    /**
+     * @brief Sets the hostname of the device.
+     */
+    ENDPOINT_INFO(setHostname) {
+        info->summary = "Set hostname of the device";
+        info->addTag("Core module");
+        info->description =
+            "Sets the hostname of the device by writing it to `/data/etc/hostname`.\n\n"
+            "Hostname is limited to 8 characters (letters, digits, hyphens and underscores).\n\n"
+            "**Caution:** the device automatically reboots at the end of every call to this endpoint "
+            "so that the new hostname takes effect.";
+        auto example = HostnameRequestDto::createShared();
+        example->hostname = "smpbr01";
+        info->addConsumes<Object<HostnameRequestDto>>("application/json")
+            .addExample("application/json", example);
+        info->addResponse<Object<MessageDto>>(Status::CODE_200, "application/json", "Hostname set, device is rebooting")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Hostname set to 'smpbr01'. Device is rebooting for the change to take effect."}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_400, "application/json", "Invalid hostname")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Invalid request body: hostname must be 1-8 characters long and contain only letters, digits, hyphens and underscores"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to set hostname or trigger reboot")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to set hostname: Failed to open /data/etc/hostname for writing"}}));
+    }
+    ADD_CORS(setHostname)
+    ENDPOINT("POST", "/core/hostname", setHostname, BODY_DTO(Object<HostnameRequestDto>, body));
 
     /**
      * @brief Retrieves the serial number of the device.

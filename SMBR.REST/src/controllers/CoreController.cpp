@@ -4,9 +4,25 @@
 #include "SMBR/Log.hpp"
 #include "ControllerUtils.hpp"
 
+#include <Poco/Process.h>
+
+#include <cctype>
 #include <chrono>
+#include <filesystem>
+#include <fstream>
 
 using namespace std::chrono_literals;
+
+namespace {
+    bool isValidHostname(const std::string& hostname) {
+        if (hostname.empty() || hostname.size() > 8) return false;
+        if (hostname.front() == '-' || hostname.back() == '-') return false;
+        for (char c : hostname) {
+            if (!std::isalnum(static_cast<unsigned char>(c)) && c != '-' && c != '_') return false;
+        }
+        return true;
+    }
+}
 
 CoreController::CoreController(const std::shared_ptr<oatpp::web::mime::ContentMappers>& apiContentMappers,
                                std::shared_ptr<ISystemModule> systemModule)
@@ -41,6 +57,47 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> CoreController::
         auto hostnameResponseDto = HostnameDto::createShared();
         hostnameResponseDto->hostname = hostname;
         return createDtoResponse(Status::CODE_200, hostnameResponseDto);
+    });
+}
+
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> CoreController::setHostname(const oatpp::Object<HostnameRequestDto>& body) {
+
+    return process(__FUNCTION__, [&](){
+        if (!body || !body->hostname) {
+            throw ArgumentException("hostname is required");
+        }
+        std::string hostname = body->hostname;
+        if (!isValidHostname(hostname)) {
+            throw ArgumentException("hostname must be 1-8 characters long and contain only letters, digits, hyphens and underscores");
+        }
+
+        std::filesystem::path hostnameFile("/data/etc/hostname");
+        try {
+            std::filesystem::create_directories(hostnameFile.parent_path());
+        } catch (std::exception& e) {
+            throw std::runtime_error("Failed to create directory " + hostnameFile.parent_path().string() + ": " + e.what());
+        }
+
+        std::ofstream file(hostnameFile, std::ios::trunc);
+        if (!file.is_open()) {
+            throw std::runtime_error("Failed to open " + hostnameFile.string() + " for writing");
+        }
+        file << hostname << "\n";
+        file.close();
+        if (file.fail()) {
+            throw std::runtime_error("Failed to write hostname to " + hostnameFile.string());
+        }
+
+        try {
+            Poco::Process::Args args{"-c", "sleep 1 && systemctl reboot"};
+            Poco::Process::launch("sh", args);
+        } catch (std::exception& e) {
+            throw std::runtime_error("Hostname was set, but failed to trigger reboot: " + std::string(e.what()));
+        }
+
+        auto dto = MessageDto::createShared();
+        dto->message = "Hostname set to '" + hostname + "'. Device is rebooting for the change to take effect.";
+        return createDtoResponse(Status::CODE_200, dto);
     });
 }
 

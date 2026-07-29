@@ -165,6 +165,23 @@ public:
     ADD_CORS(restartService)
     ENDPOINT("POST", "/services/{service}/restart", restartService, PATH(oatpp::Enum<dto::ServiceEnum>::AsString, service));
 
+    /**
+     * @brief Enables the given managed service to start at boot.
+     */
+    ENDPOINT_INFO(enableService) {
+        info->summary = "Enable a service to start at boot";
+        info->addTag("Services");
+        info->description = "Enables the given service unit.";
+        info->addResponse<Object<MessageDto>>(Status::CODE_200, "application/json", "Service enabled")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Successfully enabled reactor-database-export.service"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Service unit not found")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Unit 'reactor-core-module.service' not found"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to query or act on the service via systemctl")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to enable service: systemctl exited with code 1"}}));
+    }
+    ADD_CORS(enableService)
+    ENDPOINT("POST", "/services/{service}/enable", enableService, PATH(oatpp::Enum<dto::ServiceEnum>::AsString, service));
+    
 private:
     struct SystemdUnitStatus {
         std::string loadState;

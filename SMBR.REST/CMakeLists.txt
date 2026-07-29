@@ -14,7 +14,17 @@ add_definitions(
 
 add_library(${PROJECT_NAME}
   src/AppComponent.hpp
-  src/SMBRController.cpp
+  src/controllers/BaseController.cpp
+  src/controllers/ControllerUtils.cpp
+  src/controllers/SystemController.cpp
+  src/controllers/ServicesController.cpp
+  src/controllers/CommonController.cpp
+  src/controllers/CoreController.cpp
+  src/controllers/ControlController.cpp
+  src/controllers/SensorController.cpp
+  src/controllers/PumpsController.cpp
+  src/controllers/RecipesController.cpp
+  src/controllers/SchedulerController.cpp
   src/SMBRServer.cpp
   src/APIClientImpl.cpp
   src/APIScheduler.cpp

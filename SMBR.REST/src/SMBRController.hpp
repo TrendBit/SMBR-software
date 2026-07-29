@@ -523,6 +523,25 @@ public:
     ADD_CORS(startService)
     ENDPOINT("POST", "/services/{service}/start", startService, PATH(oatpp::Enum<dto::ServiceEnum>::AsString, service));
 
+    /**
+     * @brief Stops the given managed service.
+     */
+    ENDPOINT_INFO(stopService) {
+        info->summary = "Stop a service";
+        info->addTag("Services");
+        info->description =
+            "Stops the given service unit.\n\n"
+            "**Caution:** stopping `api-server` or `can0` may make the device unreachable over the API/CAN bus until it is manually restarted.";
+        info->addResponse<Object<MessageDto>>(Status::CODE_200, "application/json", "Service stopped")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Successfully stopped reactor-web-control-ts.service"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Service unit not found")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Unit 'reactor-core-module.service' not found"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to query or act on the service via systemctl")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to stop service: systemctl exited with code 1"}}));
+    }
+    ADD_CORS(stopService)
+    ENDPOINT("POST", "/services/{service}/stop", stopService, PATH(oatpp::Enum<dto::ServiceEnum>::AsString, service));
+
 // ==========================================
 // Common Endpoints
 // ==========================================

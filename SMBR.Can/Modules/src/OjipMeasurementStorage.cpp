@@ -67,6 +67,7 @@ std::pair<bool, std::string> OjipMeasurementStorage::readMeasurementParams(const
             params.length_ms = object->getValue<int>("length_ms");
             params.timebase = object->getValue<int>("timebase");
             params.isRead = object->getValue<bool>("isRead");
+            params.timestamp = object->has("timestamp") ? object->getValue<std::string>("timestamp") : "";
         } catch (const Poco::Exception& e) {
             return {false, "Type mismatch in JSON file [" + filePath + "]: " + e.displayText()};
         }
@@ -101,6 +102,7 @@ std::pair<bool, std::string> OjipMeasurementStorage::writeMeasurementParams(cons
             json.set("length_ms", params.length_ms);
             json.set("timebase", params.timebase);
             json.set("isRead", params.isRead);
+            json.set("timestamp", params.timestamp);
 
             Poco::JSON::Stringifier::stringify(json, output);
             output.close();

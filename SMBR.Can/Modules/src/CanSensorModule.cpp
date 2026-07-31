@@ -367,6 +367,7 @@ std::future<ISensorModule::FluorometerOjipData> CanSensorModule::captureFluorome
     params.length_ms = input.length_ms;
     params.timebase = static_cast<int>(input.sample_timebase);
     params.isRead = isRead;
+    params.timestamp = isoTimeString;
 
     auto [writeSuccess, writeError] = OjipMeasurementStorage::writeMeasurementParams(PARAMS_FILE_PATH, params);
     if (!writeSuccess) {
@@ -423,6 +424,7 @@ std::future<ISensorModule::FluorometerOjipData> CanSensorModule::retrieveLastFlu
             last_length_ms = params.length_ms;
             last_timebase = static_cast<Fluorometer_config::Timing>(params.timebase);
             isRead = params.isRead;
+            last_iso_start_time = params.timestamp;
         } else {
             promise->set_exception(std::make_exception_ptr(std::runtime_error(error)));
             return promise->get_future();
@@ -437,7 +439,7 @@ std::future<ISensorModule::FluorometerOjipData> CanSensorModule::retrieveLastFlu
             last_measurement_data.read = true;
         }
         OjipMeasurementStorage::MeasurementParams params = {last_api_id, last_required_samples, last_length_ms,
-                                  static_cast<int>(last_timebase), isRead};
+                                  static_cast<int>(last_timebase), isRead, last_iso_start_time};
         auto [writeSuccess, writeError] = OjipMeasurementStorage::writeMeasurementParams(PARAMS_FILE_PATH, params);
         if (!writeSuccess) {
             promise->set_exception(std::make_exception_ptr(
@@ -469,7 +471,7 @@ std::future<ISensorModule::FluorometerOjipData> CanSensorModule::retrieveLastFlu
         if (!isRead) {
             isRead = true;
             OjipMeasurementStorage::MeasurementParams params = {last_api_id, last_required_samples, last_length_ms,
-                                  static_cast<int>(last_timebase), isRead};
+                                  static_cast<int>(last_timebase), isRead, last_iso_start_time};
             OjipMeasurementStorage::writeMeasurementParams(PARAMS_FILE_PATH, params);
         }
         return result;

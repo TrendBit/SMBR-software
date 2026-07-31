@@ -20,6 +20,7 @@ class OjipMeasurementStorage {
             uint16_t length_ms;
             int timebase;
             bool isRead;
+            std::string timestamp;
         };
 
         static uint8_t CalculateMeasurementID(uint32_t api_id);

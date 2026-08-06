@@ -44,5 +44,6 @@ target_link_libraries(${PROJECT_NAME}
   PUBLIC SMBR.Scheduler
   PUBLIC oatpp::oatpp
   PUBLIC oatpp::oatpp-swagger
+  PRIVATE PocoNet
 )
 

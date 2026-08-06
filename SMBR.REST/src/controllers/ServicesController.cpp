@@ -7,11 +7,59 @@
 #include <Poco/Process.h>
 #include <Poco/PipeStream.h>
 #include <Poco/StreamCopier.h>
+#include <Poco/Net/HTTPClientSession.h>
+#include <Poco/Net/HTTPRequest.h>
+#include <Poco/Net/HTTPResponse.h>
+#include <Poco/Exception.h>
 #include <sstream>
+#include <fstream>
+#include <cstdio>
 
 #include <chrono>
 
 using namespace std::chrono_literals;
+
+namespace {
+
+const char* const SWUPDATE_WEB_HOST = "127.0.0.1";
+const Poco::UInt16 SWUPDATE_WEB_PORT = 8080;
+const char* const SWUPDATE_TEMP_UPLOAD_PATH = "/tmp/smbr-swupdate-upload.swu";
+
+/**
+ * @brief Deletes the given file when it goes out of scope, regardless of how the scope is exited.
+ */
+struct TempFileGuard {
+    std::string path;
+    ~TempFileGuard() { std::remove(path.c_str()); }
+};
+
+/**
+ * @brief Writes the raw HTTP request body to a local file, chunk by chunk.
+ */
+class FileWriteCallback : public oatpp::data::stream::WriteCallback {
+public:
+    explicit FileWriteCallback(std::ofstream& file) : m_file(file) {}
+
+    oatpp::v_io_size write(const void* data, v_buff_size count, oatpp::async::Action&) override {
+        if (count <= 0) {
+            return 0;
+        }
+        m_file.write(static_cast<const char*>(data), count);
+        if (!m_file) {
+            return oatpp::IOError::BROKEN_PIPE;
+        }
+        m_totalBytes += count;
+        return count;
+    }
+
+    oatpp::v_io_size totalBytes() const { return m_totalBytes; }
+
+private:
+    std::ofstream& m_file;
+    oatpp::v_io_size m_totalBytes = 0;
+};
+
+}
 
 ServicesController::ServicesController(const std::shared_ptr<oatpp::web::mime::ContentMappers>& apiContentMappers,
                                        std::shared_ptr<ISystemModule> systemModule)
@@ -300,5 +348,74 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> ServicesControll
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> ServicesController::disableService(const oatpp::Enum<dto::ServiceEnum>::AsString& service) {
     return process(__FUNCTION__, [&]() {
         return performServiceAction(service, "disable", "disabled");
+    });
+}
+
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> ServicesController::triggerSwUpdate(const std::shared_ptr<IncomingRequest>& request) {
+    return process(__FUNCTION__, [&]() -> std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> {
+        TempFileGuard tempFile{SWUPDATE_TEMP_UPLOAD_PATH};
+        oatpp::v_io_size totalBytes = 0;
+        {
+            std::ofstream file(tempFile.path, std::ios::binary | std::ios::trunc);
+            if (!file) {
+                throw std::runtime_error("Failed to open a temporary file to buffer the upload");
+            }
+            auto sink = std::make_shared<FileWriteCallback>(file);
+            request->transferBody(sink);
+            totalBytes = sink->totalBytes();
+        }
+
+        if (totalBytes == 0) {
+            throw ArgumentException("Request body is empty; expected the .swu update image");
+        }
+
+        static const std::string boundary = "----SMBRSwUpdateBoundary7f3a9c2e";
+        const std::string preamble =
+            "--" + boundary + "\r\n"
+            "Content-Disposition: form-data; name=\"file\"; filename=\"update.swu\"\r\n"
+            "Content-Type: application/octet-stream\r\n\r\n";
+        const std::string epilogue = "\r\n--" + boundary + "--\r\n";
+
+        std::ifstream uploadFile(tempFile.path, std::ios::binary);
+        if (!uploadFile) {
+            throw std::runtime_error("Failed to reopen the buffered upload to forward it to SWUpdate");
+        }
+
+        Poco::Net::HTTPClientSession session(SWUPDATE_WEB_HOST, SWUPDATE_WEB_PORT);
+        session.setTimeout(Poco::Timespan(300, 0));
+
+        Poco::Net::HTTPRequest httpRequest(Poco::Net::HTTPRequest::HTTP_POST, "/upload", Poco::Net::HTTPMessage::HTTP_1_1);
+        httpRequest.setContentType("multipart/form-data; boundary=" + boundary);
+        httpRequest.setContentLength(static_cast<std::streamsize>(preamble.size() + totalBytes + epilogue.size()));
+
+        std::ostream* os;
+        try {
+            os = &session.sendRequest(httpRequest);
+        } catch (Poco::Exception& e) {
+            throw std::runtime_error("Failed to connect to SWUpdate's web UI on 127.0.0.1:8080: " + e.displayText());
+        }
+
+        std::stringstream responseBody;
+        Poco::Net::HTTPResponse::HTTPStatus status;
+        try {
+            *os << preamble;
+            Poco::StreamCopier::copyStream(uploadFile, *os);
+            *os << epilogue;
+
+            Poco::Net::HTTPResponse httpResponse;
+            std::istream& rs = session.receiveResponse(httpResponse);
+            Poco::StreamCopier::copyStream(rs, responseBody);
+            status = httpResponse.getStatus();
+        } catch (Poco::Exception& e) {
+            throw ArgumentException("SWUpdate rejected the uploaded file - it is likely not a valid .swu image (" + e.displayText() + ")");
+        }
+
+        if (status != Poco::Net::HTTPResponse::HTTP_OK) {
+            throw ArgumentException("SWUpdate rejected the update image (HTTP " + std::to_string(static_cast<int>(status)) + "): " + responseBody.str());
+        }
+
+        auto dto = MessageDto::createShared();
+        dto->message = "Update image uploaded. Installation in progress, check /services/swupdate/logs";
+        return createDtoResponse(Status::CODE_202, dto);
     });
 }

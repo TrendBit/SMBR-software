@@ -198,7 +198,30 @@ public:
     }
     ADD_CORS(disableService)
     ENDPOINT("POST", "/services/{service}/disable", disableService, PATH(oatpp::Enum<dto::ServiceEnum>::AsString, service));
-    
+
+    /**
+     * @brief Uploads an SWUpdate (.swu) image and installs it via SWUpdate's local web UI upload endpoint.
+     */
+    ENDPOINT_INFO(triggerSwUpdate) {
+        info->summary = "Upload and install an SWUpdate (.swu) image";
+        info->addTag("Services");
+        info->description =
+            "Forwards the raw request body (`.swu` update image) as a multipart upload to SWUpdate's own local web UI. "
+            "Requires `swupdate.service` to be running.\n\n"
+            "The call returns once the image has been fully uploaded to SWUpdate. Installation, "
+            "verification and the automatic reboot into the new slot then continue in the background. "
+            "Use `GET /services/swupdate/logs` to follow progress and confirm success";
+        info->addConsumes<String>("application/octet-stream");
+        info->addResponse<Object<MessageDto>>(Status::CODE_202, "application/json", "Update image uploaded to SWUpdate. Installation in progress")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Update image uploaded. Installation in progress, check /services/swupdate/logs"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_400, "application/json", "Empty request body or SWUpdate rejected the uploaded file as invalid")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Invalid request body: SWUpdate rejected the update image (HTTP 400)"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to reach SWUpdate's web UI")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to retrieve triggerSwUpdate: Failed to connect to SWUpdate's web UI"}}));
+    }
+    ADD_CORS(triggerSwUpdate)
+    ENDPOINT("POST", "/services/swupdate/update", triggerSwUpdate, REQUEST(std::shared_ptr<IncomingRequest>, request));
+
 private:
     struct SystemdUnitStatus {
         std::string loadState;

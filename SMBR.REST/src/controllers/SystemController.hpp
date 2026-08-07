@@ -16,6 +16,7 @@
 #include "dto/TxDroppedDto.hpp"
 #include "dto/TxErrorsDto.hpp"
 #include "dto/TxPacketsDto.hpp"
+#include "dto/VersionDto.hpp"
 
 #include <fstream>
 #include <string>
@@ -55,6 +56,28 @@ public:
     }
     ADD_CORS(getSystemModules)
     ENDPOINT("GET", "/system/modules", getSystemModules);
+
+    /**
+     * @brief Retrieves the version of the software running on the device.
+     */
+    ENDPOINT_INFO(getVersion) {
+        info->summary = "Get software version";
+        info->addTag("System");
+        info->description =
+            "Gets the version of the SMBR software (reactor-api-server) running on the device.\n"
+            "Version is in format X.Y.Z, where X is major version and Y is minor version.\n"
+            "Z is Patch version, which is incremented with commit above major.minor version.\n"
+            "Hash is the git commit hash on which was this version built.\n"
+            "Dirty flag is set to true if the software was built from a dirty git repository (uncommitted changes).";
+        auto example = VersionDto::createShared();
+        example->version = "1.3.5";
+        example->hash = "ca123fe";
+        example->dirty = false;
+        info->addResponse<Object<VersionDto>>(Status::CODE_200, "application/json", "Successfully retrieved software version")
+            .addExample("application/json", example);
+    }
+    ADD_CORS(getVersion)
+    ENDPOINT("GET", "/system/version", getVersion);
 
     /**
      * @brief Lists all detected system errors or confirms that the system is operating normally.

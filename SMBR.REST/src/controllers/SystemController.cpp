@@ -3,6 +3,7 @@
 #include "SMBR/Exceptions.hpp"
 #include "SMBR/Log.hpp"
 #include "ControllerUtils.hpp"
+#include "Version.hpp"
 
 #include <sstream>
 #include <optional>
@@ -46,6 +47,15 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SystemController
     LDEBUG("API") << "Api getSystemModules end" << LE;
     return createDtoResponse(Status::CODE_200, dtoList);
 }
+
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SystemController::getVersion() {
+    auto dto = VersionDto::createShared();
+    dto->version = std::to_string(SW_VERSION_MAJOR) + "." + std::to_string(SW_VERSION_MINOR) + "." + std::to_string(SW_VERSION_PATCH);
+    dto->hash = SW_GIT_COMMIT_HASH_STR;
+    dto->dirty = SW_GIT_DIRTY;
+    return createDtoResponse(Status::CODE_200, dto);
+}
+
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SystemController::getSystemErrors() {
     return process(__FUNCTION__, [&](){
         auto result = waitFor(systemModule->getAvailableModules());

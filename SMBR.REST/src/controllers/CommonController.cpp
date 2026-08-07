@@ -205,7 +205,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> CommonController
             mod = getModule(module);
         }
         auto fw = waitFor(mod->getFwVersion());
-        auto dto = FwVersionDto::createShared();
+        auto dto = VersionDto::createShared();
         dto->version = fw.version.c_str();
         dto->hash = fw.hash.c_str();
         dto->dirty = fw.dirty;

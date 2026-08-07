@@ -5,8 +5,8 @@
 
 #include OATPP_CODEGEN_BEGIN(DTO)
 
-class FwVersionDto : public oatpp::DTO {
-    DTO_INIT(FwVersionDto, DTO)
+class VersionDto : public oatpp::DTO {
+    DTO_INIT(VersionDto, DTO)
 
     /**
      * @brief Version string

@@ -2,7 +2,6 @@
 
 #include "BaseController.hpp"
 
-#include "dto/FwVersionDto.hpp"
 #include "dto/HwVersionDto.hpp"
 #include "dto/LoadResponseDto.hpp"
 #include "dto/MessageDto.hpp"
@@ -10,6 +9,7 @@
 #include "dto/ModuleEnum.hpp"
 #include "dto/PingResponseDto.hpp"
 #include "dto/TempDto.hpp"
+#include "dto/VersionDto.hpp"
 
 #include OATPP_CODEGEN_BEGIN(ApiController)
 
@@ -225,11 +225,11 @@ public:
             "Dirty flag is set to true if the firmware was built from a dirty git repository (uncommitted changes).\n" 
             "Different version of firmware are compatible. Core module version numbering can be vastly different from other modules, but still follows the same pattern.\n" 
             "This is because Core module is only virtual and running on SBC (Rpi).";
-        auto example = FwVersionDto::createShared();
+        auto example = VersionDto::createShared();
         example->version = "1.3.5";
         example->hash = "ca123fe";
         example->dirty = false;
-        info->addResponse<Object<FwVersionDto>>(Status::CODE_200, "application/json", "Successfully retrieved firmware version from module")
+        info->addResponse<Object<VersionDto>>(Status::CODE_200, "application/json", "Successfully retrieved firmware version from module")
             .addExample("application/json", example);
         info->queryParams.add<oatpp::Int8>("instance").required = false;
         info->queryParams["instance"].description = "Pump module instance number (1-12). Required only when module=pump, ignored otherwise.";

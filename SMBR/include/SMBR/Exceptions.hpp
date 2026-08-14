@@ -30,6 +30,12 @@ public:
     ArgumentException(const std::string& message);
 };
 
+class ConflictException : public Exception {
+public:
+    static const int Code = 409;
+    ConflictException(const std::string& message);
+};
+
 
 
 

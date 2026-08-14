@@ -54,6 +54,7 @@ class Scheduler : public IScheduler {
         };
 
         void assignNewInfo(ActiveScript::Ptr as);
+        void checkNotRunning();
 
         Poco::Thread t;
         std::atomic_bool stopped;

@@ -78,6 +78,8 @@ public:
             .addExample("application/json", exampleProcessId);
         info->addResponse<Object<MessageDto>>(Status::CODE_500, "application/json", "Failed to start scheduler")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to start scheduler"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_409, "application/json", "A recipe is currently running")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to start scheduler: Script already running"}}));
     }
     ADD_CORS(startScheduler)
     ENDPOINT("POST", "/scheduler/start", startScheduler);

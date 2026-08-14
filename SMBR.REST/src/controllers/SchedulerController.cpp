@@ -68,6 +68,11 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SchedulerControl
         scriptProcessIdDto->processId = processId;
         LDEBUG("API") << "Api startScheduler end (success)" << LE;
         return createDtoResponse(Status::CODE_200, scriptProcessIdDto);
+    } catch (ConflictException & e){
+        LWARNING("API") << "Api startScheduler end (conflict: " << e.what() << ")" << LE;
+        auto dto = MessageDto::createShared();
+        dto->message = "Failed to start scheduler: " + std::string(e.what());
+        return createDtoResponse(Status::CODE_409, dto);
     } catch (std::exception & e){
         LWARNING("API") << "Api startScheduler end (failure: " << e.what() << ")" << LE;
         auto dto = MessageDto::createShared();

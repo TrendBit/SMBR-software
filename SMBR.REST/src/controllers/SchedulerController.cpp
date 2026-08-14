@@ -30,6 +30,11 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SchedulerControl
         auto dto = MessageDto::createShared();
         dto->message = "Recipe " + nn + " selected.";
         return createDtoResponse(Status::CODE_200, dto);
+    } catch (ConflictException & e){
+        LWARNING("API") << "Api selectRecipe end (conflict: " << e.what() << ")" << LE;
+        auto dto = MessageDto::createShared();
+        dto->message = "Failed to select script: " + std::string(e.what());
+        return createDtoResponse(Status::CODE_409, dto);
     } catch (std::exception & e){
         LWARNING("API") << "Api selectRecipe end (failure: " << e.what() << ")" << LE;
         auto dto = MessageDto::createShared();

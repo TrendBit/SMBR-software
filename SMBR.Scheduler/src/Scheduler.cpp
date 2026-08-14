@@ -1,6 +1,7 @@
 #include "SMBR/Scheduler.hpp"
 #include "SMBR/Parser.hpp"
 #include "SMBR/Log.hpp"
+#include "SMBR/Exceptions.hpp"
 
 #include <fstream>
 #include <sstream>
@@ -46,10 +47,16 @@ void Scheduler::assignNewInfo(ActiveScript::Ptr as){
     }
 }
 
+void Scheduler::checkNotRunning(){
+    std::scoped_lock lock(scriptMutex);
+    if (bgScriptStarted || pendingScript.script){
+        throw ConflictException("Cannot change recipe while a script is running");
+    }
+}
+
 
 void Scheduler::setScriptFromString(const ScriptInfo & s){
-
-    stop();
+    checkNotRunning();
 
     ActiveScript::Ptr as = std::make_shared<ActiveScript>();
     as->info = s;
@@ -65,8 +72,7 @@ void Scheduler::setScriptFromString(const ScriptInfo & s){
 }
 
 void Scheduler::setScriptFromFile(const std::string & filename){
-
-    stop();    
+    checkNotRunning();
 
     ActiveScript::Ptr as = std::make_shared<ActiveScript>();
     as->info.name = filename;

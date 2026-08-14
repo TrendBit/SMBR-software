@@ -16,4 +16,8 @@ ArgumentException::ArgumentException(const std::string& message) : Exception(mes
 
 }
 
+ConflictException::ConflictException(const std::string& message) : Exception(message, Code) {
+
+}
+
 

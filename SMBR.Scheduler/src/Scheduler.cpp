@@ -100,10 +100,10 @@ ScriptInfo Scheduler::getScript() const {
 unsigned long long Scheduler::start(){
     std::scoped_lock lock(scriptMutex);
     if (bgScriptStarted){
-        throw std::runtime_error("Script already running");
+        throw ConflictException("Script already running");
     }
     if (pendingScript.script){
-        throw std::runtime_error("Script already in queue");
+        throw ConflictException("Script already in queue");
     }
     if (!uploadedScript) {
         throw std::runtime_error("No script uploaded");

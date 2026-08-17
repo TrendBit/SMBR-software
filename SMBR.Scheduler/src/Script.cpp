@@ -1,4 +1,5 @@
 #include "SMBR/Script.hpp"
+#include "SMBR/Exceptions.hpp"
 #include <stdexcept>
 #include <Poco/String.h>
 #include <Poco/NumberParser.h>
@@ -73,7 +74,7 @@ void Script::addNamedBlock(const std::string & name, std::shared_ptr<Block> bloc
 std::shared_ptr<Block> Script::getNamedBlock(const std::string & name) const {
     auto it = blocks.find(name);
     if (it == blocks.end()){
-        throw std::runtime_error("Block " + name + " not found");
+        throw ArgumentException("Block " + name + " not found");
     }
     return it->second;
 }

@@ -1,4 +1,5 @@
 #include "SMBR/Interpreter.hpp"
+#include "SMBR/Exceptions.hpp"
 #include <fstream>
 #include <sstream>
 #include <unordered_map>
@@ -85,7 +86,7 @@ ICommand::Ptr CommandFactory::create(Block::Ptr block, ParseContext::Ptr ctx){
             }
         }
         
-        throw std::runtime_error("Command " + block->line.command() + " not found");
+        throw ArgumentException("Command " + block->line.command() + " not found");
     }
     return it->second(block, ctx);
 }

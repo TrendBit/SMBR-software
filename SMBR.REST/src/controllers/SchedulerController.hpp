@@ -56,6 +56,8 @@ public:
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Recipe selected successfully"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_404, "application/json", "Recipe not found")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Recipe not found"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_400, "application/json", "Recipe content is invalid")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Invalid request body: Command wai not found"}}));
         info->addResponse<Object<MessageDto>>(Status::CODE_409, "application/json", "A recipe is currently running")
             .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Failed to select script: Cannot change recipe while a script is running"}}));
     }

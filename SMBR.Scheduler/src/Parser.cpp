@@ -1,4 +1,5 @@
 #include "SMBR/Parser.hpp"
+#include "SMBR/Exceptions.hpp"
 #include <fstream>
 #include <sstream>
 #include <unordered_map>
@@ -73,7 +74,7 @@ Script Parser::parseStream(std::string name, std::istream & s){
                 blockStack.push_back(nestedBlock);
             } else if (indent == lastBlock->indent) {
                 if (blockStack.size() < 2){
-                    throw std::runtime_error("Syntax error on line " + std::to_string(lineNumber) + ": Incorrect indentation A.");
+                    throw ArgumentException("Syntax error on line " + std::to_string(lineNumber) + ": Incorrect indentation A.");
                 }
 
                 //why pop is here
@@ -90,7 +91,7 @@ Script Parser::parseStream(std::string name, std::istream & s){
                     blockStack.pop_back();
                 }
                 if (blockStack.empty()) {
-                    throw std::runtime_error("Syntax error on line " + std::to_string(lineNumber) + ": Incorrect indentation B.");
+                    throw ArgumentException("Syntax error on line " + std::to_string(lineNumber) + ": Incorrect indentation B.");
                 }
                 Block::Ptr parentBlock = blockStack.back();
                 Block::Ptr siblingBlock = std::make_shared<Block>();
@@ -99,10 +100,10 @@ Script Parser::parseStream(std::string name, std::istream & s){
                 parentBlock->nestedBlocks.push_back(siblingBlock);
                 blockStack.push_back(siblingBlock);
             } else {
-                throw std::runtime_error("Syntax error on line " + std::to_string(lineNumber) + ": Incorrect indentation " + std::to_string(indent) + " lastBlock: " + std::to_string(lastBlock->indent));
-            } 
+                throw ArgumentException("Syntax error on line " + std::to_string(lineNumber) + ": Incorrect indentation " + std::to_string(indent) + " lastBlock: " + std::to_string(lastBlock->indent));
+            }
         } else {
-            throw std::runtime_error("Syntax error on line " + std::to_string(lineNumber) + ": Command outside of any block.");
+            throw ArgumentException("Syntax error on line " + std::to_string(lineNumber) + ": Command outside of any block.");
         }
     }
     return script;

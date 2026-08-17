@@ -2,6 +2,36 @@
 
 The version number consists of MAJOR.MINOR identifiers.
 
+## 0.8
+
+### Added
+- Added services ednpoints:
+    - post `/services/{service}/disable` - systemd disable
+    - post `/services/{service}/enable` - systemd enable
+    - post `/services/{service}/restart` - systemd restart
+    - post `/services/{service}/stop` - systemd stop
+    - post `/services/{service}/start` - systemd start
+    - get `/services/{service}/logs` - journalctl output
+    - get `/services` - to list all managed service statuses
+    - get `/services/{service}` - systemd status
+    - post `/services/swupdate/update` - upload and trigger an swu update
+    - get `/system/version` - get software version and git info
+- Added post `/core/hostname` endpoint for changing the device hostname
+- Range limits of endpoints in swagger documentation
+- New service reactor-startup-updates 
+    - Flashes any modules that don't have the same version as the rpi software
+    - Depends on core-module service
+    - Api-server service is dependant on it
+    - All files in `/firmware/binaries` are now removed and rewritten by new firmwares on swu update
+- Serial tag in all endpoints exported with telegram
+
+### Fixed
+- Enlarged CAN tx queue for interface can0
+- Changed web-control-ts submodule url to new location in Trendbit organization
+- Fixed telegram OJIP capture export
+    - NTP server in network recommended to export with correct timestamps
+- OJIP timesamp not persisting across reboot
+
 ## 0.7
 
 ### Added

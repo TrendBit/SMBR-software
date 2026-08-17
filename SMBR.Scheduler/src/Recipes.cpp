@@ -1,4 +1,5 @@
 #include "SMBR/Recipes.hpp"
+#include "SMBR/Exceptions.hpp"
 #include <stdexcept>
 #include <Poco/Path.h>
 #include <Poco/Glob.h>
@@ -38,7 +39,7 @@ ScriptInfo Recipes::getRecipeContent(const std::string & name) const {
     std::lock_guard <std::mutex> lock(mutex_);
     auto it = recipes_.find(name);
     if (it == recipes_.end()){
-        throw std::runtime_error("Script not found: " + name);
+        throw NotFoundException("Script not found: " + name);
     }
     return it->second;
 }

@@ -21,85 +21,46 @@ SchedulerController::SchedulerController(const std::shared_ptr<oatpp::web::mime:
 {}
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SchedulerController::selectRecipe(const oatpp::String& name) {
-    try {
+    return process(__FUNCTION__, [&](){
         std::string nn = decodeRecipeName(name);
-        LDEBUG("API") << "Api selectRecipe " << nn << " begin" << LE;
         auto sc = recipes_->getRecipeContent(nn);
         scheduler_->setScriptFromString(sc);
-        LDEBUG("API") << "Api selectRecipe end (success)" << LE;
         auto dto = MessageDto::createShared();
         dto->message = "Recipe " + nn + " selected.";
         return createDtoResponse(Status::CODE_200, dto);
-    } catch (ConflictException & e){
-        LWARNING("API") << "Api selectRecipe end (conflict: " << e.what() << ")" << LE;
-        auto dto = MessageDto::createShared();
-        dto->message = "Failed to select script: " + std::string(e.what());
-        return createDtoResponse(Status::CODE_409, dto);
-    } catch (std::exception & e){
-        LWARNING("API") << "Api selectRecipe end (failure: " << e.what() << ")" << LE;
-        auto dto = MessageDto::createShared();
-        dto->message = "Failed to select script: " + std::string(e.what());
-        return createDtoResponse(Status::CODE_404, dto);
-    }
+    });
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SchedulerController::getRecipe() {
-    try {
-        LDEBUG("API") << "Api getRecipe begin" << LE;
+    return process(__FUNCTION__, [&](){
         auto s = scheduler_->getScript();
         auto scriptResponseDto = ScriptDto::createShared();
         scriptResponseDto->name = s.name;
         scriptResponseDto->content = s.content;
-        LDEBUG("API") << "Api getRecipe end (success)" << LE;
         return createDtoResponse(Status::CODE_200, scriptResponseDto);
-    } catch (std::exception & e){
-        LWARNING("API") << "Api getRecipe end (failure: " << e.what() << ")" << LE;
-        auto dto = MessageDto::createShared();
-        dto->message = "Failed to retrieve recipe: " + std::string(e.what());
-        return createDtoResponse(Status::CODE_404, dto);
-    }
+    });
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SchedulerController::startScheduler() {
-    try {
-        LDEBUG("API") << "Api startScheduler begin" << LE;
+    return process(__FUNCTION__, [&](){
         auto processId = scheduler_->start();
         auto scriptProcessIdDto = ScriptProcessIdDto::createShared();
         scriptProcessIdDto->processId = processId;
-        LDEBUG("API") << "Api startScheduler end (success)" << LE;
         return createDtoResponse(Status::CODE_200, scriptProcessIdDto);
-    } catch (ConflictException & e){
-        LWARNING("API") << "Api startScheduler end (conflict: " << e.what() << ")" << LE;
-        auto dto = MessageDto::createShared();
-        dto->message = "Failed to start scheduler: " + std::string(e.what());
-        return createDtoResponse(Status::CODE_409, dto);
-    } catch (std::exception & e){
-        LWARNING("API") << "Api startScheduler end (failure: " << e.what() << ")" << LE;
-        auto dto = MessageDto::createShared();
-        dto->message = "Failed to start scheduler: " + std::string(e.what());
-        return createDtoResponse(Status::CODE_500, dto);
-    }
+    });
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SchedulerController::stopScheduler() {
-    try {
-        LDEBUG("API") << "Api stopScheduler begin" << LE;
+    return process(__FUNCTION__, [&](){
         scheduler_->stop();
-        LDEBUG("API") << "Api stopScheduler end (success)" << LE;
         auto dto = MessageDto::createShared();
         dto->message = "Script stopped successfully.";
         return createDtoResponse(Status::CODE_200, dto);
-    } catch (std::exception & e){
-        LWARNING("API") << "Api stopScheduler end (failure: " << e.what() << ")" << LE;
-        auto dto = MessageDto::createShared();
-        dto->message = "Failed to stop script: " + std::string(e.what());
-        return createDtoResponse(Status::CODE_500, dto);
-    }
+    });
 }
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SchedulerController::getSchedulerInfo() {
-    try {
-        LDEBUG("API") << "Api getSchedulerInfo begin" << LE;
+    return process(__FUNCTION__, [&](){
         RuntimeInfo info = scheduler_->getRuntimeInfo();
         auto infoResponseDto = ScriptRuntimeInfoDto::createShared();
 
@@ -121,14 +82,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SchedulerControl
         if (info.started){
             infoResponseDto->startedAt = Poco::DateTimeFormatter::format(info.startTime, "%Y-%m-%d %H:%M:%S");
         }
-        
-        LDEBUG("API") << "Api getSchedulerInfo end" << LE;
-        return createDtoResponse(Status::CODE_200, infoResponseDto);
 
-    } catch (std::exception & e){
-        LWARNING("API") << "Api getSchedulerInfo end (failure: " << e.what() << ")" << LE;
-        auto dto = MessageDto::createShared();
-        dto->message = "Failed to retrieve scheduler status: " + std::string(e.what());
-        return createDtoResponse(Status::CODE_500, dto);
-    }
+        return createDtoResponse(Status::CODE_200, infoResponseDto);
+    });
 }

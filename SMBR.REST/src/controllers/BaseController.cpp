@@ -36,6 +36,11 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRControllerBa
         dto->message = "Invalid request body: " + std::string(e.what());
         LWARNING("API") << "Api " << name << " failed with ArgumentException " << std::string(e.what()) << LE;
         return createDtoResponse(Status::CODE_400, dto);
+    } catch (ConflictException & e){
+        auto dto = MessageDto::createShared();
+        dto->message = name + " conflict: " + std::string(e.what());
+        LWARNING("API") << "Api " << name << " failed with ConflictException " << std::string(e.what()) << LE;
+        return createDtoResponse(Status::CODE_409, dto);
     } catch (std::exception & e){
         auto dto = MessageDto::createShared();
         dto->message = "Failed to retrieve " + name + ": " + std::string(e.what());
@@ -76,6 +81,11 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> SMBRControllerBa
         dto->message = "Invalid request body: " + std::string(e.what());
         LWARNING("API") << "Api " << name << " failed with ArgumentException " << std::string(e.what()) << LE;
         return createDtoResponse(Status::CODE_400, dto);
+    } catch (ConflictException & e){
+        auto dto = MessageDto::createShared();
+        dto->message = name + " conflict: " + std::string(e.what());
+        LWARNING("API") << "Api " << name << " failed with ConflictException " << std::string(e.what()) << LE;
+        return createDtoResponse(Status::CODE_409, dto);
     } catch (std::exception & e){
         auto dto = MessageDto::createShared();
         dto->message = "Failed to retrieve " + name + ": " + std::string(e.what());

@@ -93,7 +93,7 @@ ScriptInfo Scheduler::getScript() const {
     if (uploadedScript) {
         return uploadedScript->info;
     } else {
-        throw std::runtime_error("No script uploaded");
+        throw NotFoundException("No script uploaded");
     }
 }
 

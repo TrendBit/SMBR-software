@@ -2,6 +2,13 @@
 
 The version number consists of MAJOR.MINOR identifiers.
 
+## 0.9 (WIP)
+
+### Fixed
+- `/scheduler/recipe/{recipeName}` - now returns 400 for invalid recipe content
+- `/scheduler/` - endpoints now return 409 conflict when attempting to start a script while another is already running
+- `/scheduler/recipe/{recipeName}` - selecting a recipe no longer stops an already running recipe
+
 ## 0.8
 
 ### Added

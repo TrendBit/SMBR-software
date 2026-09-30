@@ -25,6 +25,7 @@ add_library(${PROJECT_NAME}
   src/controllers/PumpsController.cpp
   src/controllers/RecipesController.cpp
   src/controllers/SchedulerController.cpp
+  src/controllers/ManagerController.cpp
   src/SMBRServer.cpp
   src/APIClientImpl.cpp
   src/APIScheduler.cpp

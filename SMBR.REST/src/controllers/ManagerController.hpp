@@ -2,6 +2,7 @@
 
 #include "BaseController.hpp"
 
+#include "dto/ControlledDto.hpp"
 #include "dto/ManagedDto.hpp"
 #include "dto/MessageDto.hpp"
 
@@ -55,6 +56,20 @@ public:
     ADD_CORS(setManaged)
     ENDPOINT("POST", "/manager/managed", setManaged, BODY_DTO(Object<ManagedDto>, body));
 
+    ENDPOINT_INFO(getControlled) {
+        info->summary = "Get whether a manager actively controls this reactor";
+        info->addTag("Manager");
+        info->description =
+            "Returns whether a manager currently actively controls this reactor, and which manager.";
+        auto example = ControlledDto::createShared();
+        example->manager_id = "a1b2c3d4";
+        example->controlled = true;
+        info->addResponse<Object<ControlledDto>>(Status::CODE_200, "application/json", "Current controlled state")
+            .addExample("application/json", example);
+    }
+    ADD_CORS(getControlled)
+    ENDPOINT("GET", "/manager/controlled", getControlled);
+
 private:
     struct Flag {
         bool active = false;
@@ -63,6 +78,7 @@ private:
 
     mutable std::mutex mutex_;
     Flag managed_;
+    Flag controlled_;
 };
 
 #include OATPP_CODEGEN_END(ApiController)

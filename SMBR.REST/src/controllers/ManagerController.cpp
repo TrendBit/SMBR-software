@@ -62,3 +62,23 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> ManagerControlle
         return createDtoResponse(Status::CODE_200, dto);
     });
 }
+
+std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> ManagerController::setControlled(const oatpp::Object<ControlledDto>& body) {
+    return processBool(__FUNCTION__, [&](){
+        if (!body || !body->manager_id) {
+            throw ArgumentException("manager_id is required");
+        }
+        if (!isValidManagerId(body->manager_id)) {
+            throw ArgumentException("manager_id must be 1-" + std::to_string(MaxManagerIdLength) + " characters long");
+        }
+        if (body->controlled == nullptr) {
+            throw ArgumentException("controlled is required");
+        }
+        bool controlled = *body->controlled;
+
+        std::lock_guard<std::mutex> lock(mutex_);
+        controlled_.active = controlled;
+        controlled_.managerId = controlled ? std::string(body->manager_id) : std::string();
+        return true;
+    });
+}

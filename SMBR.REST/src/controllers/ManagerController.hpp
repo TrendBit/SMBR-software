@@ -70,6 +70,25 @@ public:
     ADD_CORS(getControlled)
     ENDPOINT("GET", "/manager/controlled", getControlled);
 
+    ENDPOINT_INFO(setControlled) {
+        info->summary = "Set whether a manager actively controls this reactor";
+        info->addTag("Manager");
+        info->description =
+            "Called by a manager to assert or clear that it actively controls this reactor. "
+            "The flag is sticky: it only changes on this call, there is no timeout.";
+        auto example = ControlledDto::createShared();
+        example->manager_id = "a1b2c3d4";
+        example->controlled = true;
+        info->addConsumes<Object<ControlledDto>>("application/json")
+            .addExample("application/json", example);
+        info->addResponse<Object<MessageDto>>(Status::CODE_200, "application/json", "Controlled state updated")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "setControlled successful"}}));
+        info->addResponse<Object<MessageDto>>(Status::CODE_400, "application/json", "Invalid request body")
+            .addExample("application/json", oatpp::Fields<oatpp::String>({{"message", "Invalid request body: manager_id is required"}}));
+    }
+    ADD_CORS(setControlled)
+    ENDPOINT("POST", "/manager/controlled", setControlled, BODY_DTO(Object<ControlledDto>, body));
+
 private:
     struct Flag {
         bool active = false;

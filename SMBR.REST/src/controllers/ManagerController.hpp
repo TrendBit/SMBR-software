@@ -6,6 +6,8 @@
 #include "dto/ManagedDto.hpp"
 #include "dto/MessageDto.hpp"
 
+#include "ControlledState.hpp"
+
 #include <mutex>
 #include <string>
 
@@ -21,7 +23,8 @@
 class ManagerController : public SMBRControllerBase {
 public:
     ManagerController(const std::shared_ptr<oatpp::web::mime::ContentMappers>& apiContentMappers,
-                      std::shared_ptr<ISystemModule> systemModule);
+                      std::shared_ptr<ISystemModule> systemModule,
+                      std::shared_ptr<ControlledState> controlledState);
 
     ENDPOINT_INFO(getManaged) {
         info->summary = "Get whether a manager sees this reactor";
@@ -97,7 +100,7 @@ private:
 
     mutable std::mutex mutex_;
     Flag managed_;
-    Flag controlled_;
+    std::shared_ptr<ControlledState> controlledState_;
 };
 
 #include OATPP_CODEGEN_END(ApiController)

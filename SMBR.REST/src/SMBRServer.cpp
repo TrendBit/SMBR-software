@@ -13,6 +13,7 @@
 #include "controllers/SchedulerController.hpp"
 #include "controllers/ManagerController.hpp"
 
+#include "ControlledState.hpp"
 #include "SMBR/Recipes.hpp"
 #include "SMBR/Scheduler.hpp"
 
@@ -45,6 +46,7 @@ void SMBRServer::run()
 
     auto scheduler = std::make_shared<Scheduler>(systemModule);
     auto recipes = std::make_shared<Recipes>("/data/recipes/", "/home/reactor/recipes/");
+    auto controlledState = std::make_shared<ControlledState>();
 
     std::vector<std::shared_ptr<oatpp::web::server::api::ApiController>> controllers = {
         std::make_shared<SystemController>(contentMappers, systemModule),
@@ -56,7 +58,7 @@ void SMBRServer::run()
         std::make_shared<PumpsController>(contentMappers, systemModule),
         std::make_shared<RecipesController>(contentMappers, systemModule, recipes),
         std::make_shared<SchedulerController>(contentMappers, systemModule, scheduler, recipes),
-        std::make_shared<ManagerController>(contentMappers, systemModule)
+        std::make_shared<ManagerController>(contentMappers, systemModule, controlledState)
     };
 
     oatpp::web::server::api::Endpoints docEndpoints;

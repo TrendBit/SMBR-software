@@ -11,8 +11,10 @@ namespace {
 }
 
 ManagerController::ManagerController(const std::shared_ptr<oatpp::web::mime::ContentMappers>& apiContentMappers,
-                                     std::shared_ptr<ISystemModule> systemModule)
+                                     std::shared_ptr<ISystemModule> systemModule,
+                                     std::shared_ptr<ControlledState> controlledState)
     : SMBRControllerBase(apiContentMappers, systemModule)
+    , controlledState_(controlledState)
 {}
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> ManagerController::getManaged() {
@@ -51,11 +53,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> ManagerControlle
 
 std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> ManagerController::getControlled() {
     return process(__FUNCTION__, [&](){
-        Flag flag;
-        {
-            std::lock_guard<std::mutex> lock(mutex_);
-            flag = controlled_;
-        }
+        auto flag = controlledState_->get();
         auto dto = ControlledDto::createShared();
         dto->controlled = flag.active;
         dto->manager_id = flag.active ? oatpp::String(flag.managerId) : nullptr;
@@ -76,9 +74,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> ManagerControlle
         }
         bool controlled = *body->controlled;
 
-        std::lock_guard<std::mutex> lock(mutex_);
-        controlled_.active = controlled;
-        controlled_.managerId = controlled ? std::string(body->manager_id) : std::string();
+        controlledState_->set(body->manager_id, controlled);
         return true;
     });
 }

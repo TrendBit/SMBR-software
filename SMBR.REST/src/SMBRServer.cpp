@@ -11,6 +11,7 @@
 #include "controllers/PumpsController.hpp"
 #include "controllers/RecipesController.hpp"
 #include "controllers/SchedulerController.hpp"
+#include "controllers/ManagerController.hpp"
 
 #include "SMBR/Recipes.hpp"
 #include "SMBR/Scheduler.hpp"
@@ -54,7 +55,8 @@ void SMBRServer::run()
         std::make_shared<SensorController>(contentMappers, systemModule),
         std::make_shared<PumpsController>(contentMappers, systemModule),
         std::make_shared<RecipesController>(contentMappers, systemModule, recipes),
-        std::make_shared<SchedulerController>(contentMappers, systemModule, scheduler, recipes)
+        std::make_shared<SchedulerController>(contentMappers, systemModule, scheduler, recipes),
+        std::make_shared<ManagerController>(contentMappers, systemModule)
     };
 
     oatpp::web::server::api::Endpoints docEndpoints;

@@ -80,6 +80,9 @@ public:
             return nullptr;
         }
 
+        // Drain the unread body, otherwise on a keep-alive connection it would be parsed as the beginning of the next request.
+        request->readBodyToString();
+
         auto error = MessageDto::createShared();
         error->message = "Reactor is currently controlled by manager " + flag.managerId;
         auto response = OutgoingResponse::createShared(

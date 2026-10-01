@@ -22,8 +22,21 @@ private:
     std::shared_ptr<ControlledState> m_controlledState;
     std::shared_ptr<oatpp::data::mapping::ObjectMapper> m_objectMapper;
 
-    static std::string pathWithoutQuery(const std::string & path) {
-        return path.substr(0, path.find('?'));
+    /**
+     * @brief Brings the path to the form used in the lists below.
+     */
+    static std::string normalizePath(const std::string & path) {
+        const std::string withoutQuery = path.substr(0, path.find('?'));
+        std::string result = "/";
+        for (char c : withoutQuery) {
+            if (c != '/' || result.back() != '/') {
+                result += c;
+            }
+        }
+        if (result.size() > 1 && result.back() == '/') {
+            result.pop_back();
+        }
+        return result;
     }
 
     /**
@@ -67,7 +80,7 @@ public:
     std::shared_ptr<OutgoingResponse> intercept(const std::shared_ptr<IncomingRequest>& request) override {
         const auto & startingLine = request->getStartingLine();
         std::string method = startingLine.method.std_str();
-        std::string path = pathWithoutQuery(startingLine.path.std_str());
+        std::string path = normalizePath(startingLine.path.std_str());
 
         if (method == "OPTIONS") {
             return nullptr;

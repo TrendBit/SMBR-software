@@ -39,14 +39,14 @@ void SMBRServer::run()
 {
     oatpp::Environment::init();
 
-    AppComponent components;
+    auto controlledState = std::make_shared<ControlledState>();
+    AppComponent components(controlledState);
 
     OATPP_COMPONENT(std::shared_ptr<oatpp::web::server::HttpRouter>, router);
     OATPP_COMPONENT(std::shared_ptr<oatpp::web::mime::ContentMappers>, contentMappers);
 
     auto scheduler = std::make_shared<Scheduler>(systemModule);
     auto recipes = std::make_shared<Recipes>("/data/recipes/", "/home/reactor/recipes/");
-    auto controlledState = std::make_shared<ControlledState>();
 
     std::vector<std::shared_ptr<oatpp::web::server::api::ApiController>> controllers = {
         std::make_shared<SystemController>(contentMappers, systemModule),

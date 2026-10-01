@@ -8,6 +8,7 @@
 
 #include "ControlledState.hpp"
 
+#include <chrono>
 #include <mutex>
 #include <string>
 
@@ -30,7 +31,8 @@ public:
         info->summary = "Get whether a manager sees this reactor";
         info->addTag("Manager");
         info->description =
-            "Returns whether a manager currently sees this reactor on the network, and which manager.";
+            "Returns whether a manager currently sees this reactor on the network, and which manager. "
+            "Reports not managed once the manager has not refreshed the flag for 90 seconds.";
         auto example = ManagedDto::createShared();
         example->manager_id = "a1b2c3d4";
         example->managed = true;
@@ -45,7 +47,8 @@ public:
         info->addTag("Manager");
         info->description =
             "Called by a manager to assert or clear that it sees this reactor on the network. "
-            "The flag is sticky: it only changes on this call, there is no timeout.";
+            "The manager must repeat the call periodically: without a refresh for "
+            "90 seconds the reactor reports itself as not managed.";
         auto example = ManagedDto::createShared();
         example->manager_id = "a1b2c3d4";
         example->managed = true;
@@ -100,6 +103,7 @@ private:
 
     mutable std::mutex mutex_;
     Flag managed_;
+    std::chrono::steady_clock::time_point managedSetAt_;
     std::shared_ptr<ControlledState> controlledState_;
 };
 

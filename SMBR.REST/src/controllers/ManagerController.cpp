@@ -5,6 +5,9 @@
 namespace {
     constexpr size_t MaxManagerIdLength = 64;
 
+    /** @brief How long a managed=true assertion stays valid without being refreshed by the manager. */
+    constexpr std::chrono::seconds ManagedTimeout{90};
+
     bool isValidManagerId(const std::string & managerId) {
         return !managerId.empty() && managerId.size() <= MaxManagerIdLength;
     }
@@ -23,6 +26,9 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> ManagerControlle
         {
             std::lock_guard<std::mutex> lock(mutex_);
             flag = managed_;
+            if (std::chrono::steady_clock::now() - managedSetAt_ > ManagedTimeout) {
+                flag = Flag();
+            }
         }
         auto dto = ManagedDto::createShared();
         dto->managed = flag.active;
@@ -47,6 +53,7 @@ std::shared_ptr<oatpp::web::protocol::http::outgoing::Response> ManagerControlle
         std::lock_guard<std::mutex> lock(mutex_);
         managed_.active = managed;
         managed_.managerId = managed ? std::string(body->manager_id) : std::string();
+        managedSetAt_ = std::chrono::steady_clock::now();
         return true;
     });
 }

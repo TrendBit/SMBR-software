@@ -8,6 +8,7 @@
 #include <thread>
 #include <atomic>
 #include <deque>
+#include <functional>
 
 #include <SMBR/IScheduler.hpp>
 #include <SMBR/Script.hpp>
@@ -21,7 +22,7 @@ class Scheduler : public IScheduler {
     public:    
         typedef std::shared_ptr <Scheduler> Ptr;
         
-        Scheduler(ISystemModule::Ptr systemModule);
+        Scheduler(ISystemModule::Ptr systemModule, std::function<void()> onScriptFinished = {});
         ~Scheduler();
 
         void setScriptFromString(const ScriptInfo & s) override;
@@ -39,6 +40,7 @@ class Scheduler : public IScheduler {
     private:
 
         ISystemModule::Ptr systemModule;
+        std::function<void()> onScriptFinished;
 
         struct ActiveScript {
             typedef std::shared_ptr <ActiveScript> Ptr;

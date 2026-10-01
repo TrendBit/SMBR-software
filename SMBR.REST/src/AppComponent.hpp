@@ -9,6 +9,8 @@
 #include "oatpp-swagger/Resources.hpp"
 #include "interceptors/ResponseInterceptor.hpp"
 #include "interceptors/ErrorHandler.hpp"
+#include "interceptors/ManagerControlGuard.hpp"
+#include "ControlledState.hpp"
 
 /**
  * @class AppComponent
@@ -17,7 +19,17 @@
  * The order of components initialization is from top to bottom.
  */
 class AppComponent {
+private:
+  std::shared_ptr<ControlledState> m_controlledState;
+
 public:
+
+  /**
+   * @param controlledState Shared "controlled by manager" flag, consulted by ManagerControlGuard.
+   */
+  explicit AppComponent(const std::shared_ptr<ControlledState>& controlledState)
+    : m_controlledState(controlledState)
+  {}
 
   /**
    * @brief Function to get the local IP address.
@@ -85,7 +97,7 @@ public:
    * 
    * This component handles incoming connections and delegates the requests to the appropriate route.
    */
-  OATPP_CREATE_COMPONENT(std::shared_ptr<oatpp::network::ConnectionHandler>, serverConnectionHandler)([] {
+  OATPP_CREATE_COMPONENT(std::shared_ptr<oatpp::network::ConnectionHandler>, serverConnectionHandler)([this] {
     OATPP_COMPONENT(std::shared_ptr<oatpp::web::server::HttpRouter>, router);
     OATPP_COMPONENT(std::shared_ptr<oatpp::web::mime::ContentMappers>, apiContentMappers);
     
@@ -93,6 +105,7 @@ public:
     
     auto connectionHandler = oatpp::web::server::HttpConnectionHandler::createShared(router);
     connectionHandler->setErrorHandler(std::make_shared<CustomErrorHandler>(mapper));
+    connectionHandler->addRequestInterceptor(std::make_shared<ManagerControlGuard>(m_controlledState, mapper));
     return connectionHandler;
   }());
 

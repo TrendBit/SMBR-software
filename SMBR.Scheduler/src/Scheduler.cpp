@@ -16,7 +16,8 @@
 
 static const int OutputBufferSize = 100;
 
-Scheduler::Scheduler(ISystemModule::Ptr systemModule) : systemModule(systemModule), t("scheduler.bg"), stopped(false) {
+Scheduler::Scheduler(ISystemModule::Ptr systemModule, std::function<void()> onScriptFinished)
+    : systemModule(systemModule), onScriptFinished(std::move(onScriptFinished)), t("scheduler.bg"), stopped(false) {
     
     bgScriptStarted = false;
     bgScriptStopped = true;
@@ -232,6 +233,14 @@ void Scheduler::run(){
             }
 
             bgScriptStarted = false;   
+
+            if (onScriptFinished) {
+                try {
+                    onScriptFinished();
+                } catch (...){
+
+                }
+            }
         }
         //sleep for 1s
         std::this_thread::sleep_for(std::chrono::seconds(1));

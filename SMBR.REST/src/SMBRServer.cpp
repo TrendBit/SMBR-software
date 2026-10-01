@@ -45,7 +45,12 @@ void SMBRServer::run()
     OATPP_COMPONENT(std::shared_ptr<oatpp::web::server::HttpRouter>, router);
     OATPP_COMPONENT(std::shared_ptr<oatpp::web::mime::ContentMappers>, contentMappers);
 
-    auto scheduler = std::make_shared<Scheduler>(systemModule);
+    auto scheduler = std::make_shared<Scheduler>(systemModule, [controlledState]() {
+        if (controlledState->get().active) {
+            LNOTICE("API") << "Recipe ended, releasing manager control" << LE;
+            controlledState->set("", false);
+        }
+    });
     auto recipes = std::make_shared<Recipes>("/data/recipes/", "/home/reactor/recipes/");
 
     std::vector<std::shared_ptr<oatpp::web::server::api::ApiController>> controllers = {

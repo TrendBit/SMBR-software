@@ -6,6 +6,7 @@
 #include "dto/MessageDto.hpp"
 #include "ControlledState.hpp"
 
+#include <set>
 #include <string>
 
 /**
@@ -23,6 +24,24 @@ private:
 
     static std::string pathWithoutQuery(const std::string & path) {
         return path.substr(0, path.find('?'));
+    }
+
+    /**
+     * @brief GET endpoints that change reactor state despite the method, so they are guarded too.
+     */
+    static bool isMutatingGet(const std::string & path) {
+        static const std::set<std::string> paths = {
+            "/control/heater/turn_off",
+            "/control/cuvette_pump/stop",
+            "/control/aerator/stop",
+            "/control/mixer/stop",
+            "/sensor/oled/clear_custom_text",
+        };
+        if (paths.count(path)) {
+            return true;
+        }
+        // /pumps/{instance_index}/stop/{pump_index}
+        return path.rfind("/pumps/", 0) == 0 && path.find("/stop/") != std::string::npos;
     }
 
 public:
@@ -57,7 +76,7 @@ public:
             return nullptr;
         }
 
-        if (method == "GET") {
+        if (method == "GET" && !isMutatingGet(path)) {
             return nullptr;
         }
 

@@ -44,6 +44,16 @@ private:
         return path.rfind("/pumps/", 0) == 0 && path.find("/stop/") != std::string::npos;
     }
 
+    /**
+     * @brief Non-GET endpoints that are safe to call even while a manager controls the reactor.
+     */
+    static bool isAllowedNonGet(const std::string & path) {
+        static const std::set<std::string> paths = {
+            "/sensor/spectrophotometer/measure_all",
+        };
+        return paths.count(path) > 0;
+    }
+
 public:
     ManagerControlGuard(const std::shared_ptr<ControlledState>& controlledState,
                         const std::shared_ptr<oatpp::data::mapping::ObjectMapper>& objectMapper)
@@ -77,6 +87,9 @@ public:
         }
 
         if (method == "GET" && !isMutatingGet(path)) {
+            return nullptr;
+        }
+        if (method != "GET" && isAllowedNonGet(path)) {
             return nullptr;
         }
 

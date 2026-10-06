@@ -107,7 +107,9 @@ public:
         }
 
         // Drain the unread body, otherwise on a keep-alive connection it would be parsed as the beginning of the next request.
-        request->readBodyToString();
+        if (request->getHeader("Content-Length") || request->getHeader("Transfer-Encoding")) {
+            request->readBodyToString();
+        }
 
         auto error = MessageDto::createShared();
         error->message = "Reactor is currently controlled by manager " + flag.managerId;

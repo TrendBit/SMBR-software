@@ -183,7 +183,9 @@ oatpp::Object<ServiceStatusDto> ServicesController::toServiceStatusDto(const std
     dto->sub_state = status.subState;
     dto->enabled = (status.unitFileState == "enabled" || status.unitFileState == "enabled-runtime");
     dto->main_pid = status.mainPid;
-    dto->since = status.since;
+    if (!status.since.empty()) {
+        dto->since = status.since;
+    }
     return dto;
 }
 
